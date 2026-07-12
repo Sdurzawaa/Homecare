@@ -30,7 +30,7 @@ PGUSER=sadam
 PGPASSWORD=your_password
 PORT=5000
 CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
-ADMIN_API_KEY=codotGilak
+ADMIN_API_KEY=your_admin_api_key_here
 ```
 
 > Catatan: semua endpoint write (`POST`, `PUT`, `DELETE`) sekarang memerlukan `ADMIN_API_KEY`. Simpan key ini di `server/.env` dan jangan commit file `.env`.
