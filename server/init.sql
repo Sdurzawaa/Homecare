@@ -1,0 +1,20 @@
+CREATE SCHEMA IF NOT EXISTS website_co;
+
+CREATE TABLE IF NOT EXISTS website_co.pricing (
+  id SERIAL PRIMARY KEY,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  image TEXT NOT NULL,
+  duration INTEGER NOT NULL,
+  price INTEGER NOT NULL,
+  recommended BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS website_co.testimoni (
+	id_testi SERIAL PRIMARY KEY,
+	teks TEXT NOT NULL,
+	author TEXT NOT NULL,
+	latarBelakang TEXT NOT NULL,
+	INITIAL TEXT NOT NULL
+);

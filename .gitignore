@@ -1,0 +1,20 @@
+# Node modules
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Vite build output
+client/dist/
+
+# Environment files
+*.env
+server/.env
+client/.env.local
+
+# Logs
+*.log
+server/server-error.log
+
+# OS files
+.DS_Store
+Thumbs.db

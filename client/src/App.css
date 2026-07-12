@@ -1,0 +1,280 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #f8fff3;
+  --bg-alt: #e8f0e6;
+  --ink: #16241d;
+  --ink-soft: #4b5d54;
+  --pine: #2f5d4f;
+  --pine-deep: #1c3a30;
+  --honey: #e2a23b;
+  --honey-deep: #c2811f;
+  --card: #ffffff;
+  --line: #cfe0cd;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --header-h: 84px;
+}
+
+@media (max-width: 425px) {
+  :root { --header-h: 68px; }
+}
+
+* { box-sizing: border-box; }
+
+.page-shell {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.6;
+  overflow-x: hidden;
+  padding-top: var(--header-h);
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--pine);
+  margin: 0 0 0.5rem;
+}
+
+/* Header */
+
+
+/* Hero */
+
+.visual-card {
+  position: relative;
+  z-index: 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 2rem 1.9rem 1.8rem;
+  width: 100%;
+  max-width: 340px;
+  transform: rotate(2deg);
+  box-shadow: 0 18px 40px -22px rgba(28, 58, 48, 0.35);
+}
+
+.visual-card::after {
+  content: '';
+  display: block;
+  height: 46px;
+  margin: 1.3rem 0 0.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' fill='none'%3E%3Cpath d='M0 30 H60 L75 8 L90 52 L105 18 L118 30 H160 L172 12 L186 48 L198 30 H300' stroke='%23E2A23B' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.visual-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-alt);
+  color: var(--pine-deep);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  margin-bottom: 0.9rem;
+}
+
+.visual-details p { font-size: 0.92rem; color: var(--ink-soft); margin: 0; }
+
+/* Section shared */
+
+
+/* About / alt section */
+.alt-section { background: var(--bg-alt); border-radius: 32px; }
+
+.about-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3rem; align-items: center; }
+.about-grid h3 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 2.3vw, 2rem); margin: 0.3rem 0 1rem; }
+.about-grid > div:first-child > p { color: var(--ink-soft); font-size: 0.98rem; margin: 0 0 1.3rem; }
+
+.about-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.about-list li { position: relative; padding-left: 1.7rem; font-size: 0.95rem; color: var(--ink-soft); }
+.about-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--honey);
+}
+
+.about-stat {
+  display: grid;
+  gap: 1rem;
+  background: var(--pine-deep);
+  border-radius: 20px;
+  padding: 1.8rem;
+}
+.about-stat > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 0.9rem;
+}
+.about-stat > div:last-child { border-bottom: none; padding-bottom: 0; }
+.about-stat span { font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; color: var(--honey); }
+.about-stat p { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.75); }
+
+/* Testimonials */
+
+
+/* Contact */
+
+
+/* Footer */
+.site-footer { text-align: center; padding: 2.4rem 1.5rem 3rem; color: var(--ink-soft); font-size: 0.85rem; }
+
+/* Floating WhatsApp button */
+#wa-chat {
+  position: fixed;
+  bottom: 1.8rem;
+  right: 1.8rem;
+  z-index: 60;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--honey);
+  color: var(--pine-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  box-shadow: 0 10px 24px -10px rgba(28, 58, 48, 0.5);
+}
+#wa-chat::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--honey);
+  opacity: 0.55;
+  animation: wa-pulse 2.4s ease-out infinite;
+}
+@keyframes wa-pulse {
+  0% { transform: scale(0.85); opacity: 0.55; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Focus states */
+.button:focus-visible,
+.site-nav a:focus-visible,
+.nav-toggle:focus-visible,
+#wa-chat:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+
+
+@media (max-width: 720px) {
+  .nav-toggle { display: flex; }
+
+  .site-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0.2rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 12px 24px -16px rgba(28, 58, 48, 0.25);
+    padding: 0.6rem 1.2rem 1rem;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+  }
+  .site-nav.is-open {
+    max-height: 320px;
+    opacity: 1;
+  }
+  .site-nav a { padding: 0.75rem 0.9rem; }
+}
+
+/* ===== SCROLL ANIMATIONS ===== */
+
+/* Main scroll fade up animation */
+@keyframes scrollFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Stagger animations untuk card elements */
+@keyframes scrollStaggerFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Apply animations to sections */
+.scroll-fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-fade-up.scroll-animated {
+  opacity: 1;
+  transform: none;
+  animation: scrollFadeUp 0.6s ease-out forwards;
+}
+
+/* Stagger animations untuk cards */
+.scroll-stagger {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.scroll-fade-up.scroll-animated .scroll-stagger {
+  animation: scrollStaggerFadeUp 0.6s ease-out forwards;
+  opacity: 1;
+}
+
+.scroll-fade-up.scroll-animated .scroll-stagger:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.scroll-fade-up.scroll-animated .scroll-stagger:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.scroll-fade-up.scroll-animated .scroll-stagger:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.scroll-fade-up.scroll-animated .scroll-stagger:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Optional: Disable animations untuk reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-fade-up,
+  .scroll-stagger {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none !important;
+  }
+}

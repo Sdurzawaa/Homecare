@@ -1,0 +1,3 @@
+# ignore environment files and logs
+.env
+server-error.log
