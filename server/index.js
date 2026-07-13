@@ -53,6 +53,11 @@ const isObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value);
 
 const validateAdminKey = (req, res, next) => {
+  const method = String(req.method || "").toUpperCase();
+  if (method === "GET" || method === "HEAD") {
+    return next();
+  }
+
   const apiKey =
     req.headers["x-api-key"] ||
     (typeof req.headers.authorization === "string"
