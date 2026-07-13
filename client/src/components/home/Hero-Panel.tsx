@@ -1,6 +1,17 @@
-function Hero() {
+interface HeroProps {
+  heroRef?: React.RefObject<HTMLElement>;
+}
+
+import type { RefObject } from "react";
+
+interface HeroProps {
+  heroRef?: RefObject<HTMLElement>;
+}
+
+function Hero({ heroRef }: HeroProps) {
   return (
     <section
+      ref={heroRef}
       id="home"
       className="min-h-[90vh] flex items-center overflow-hidden
                  pt-[calc(var(--header-h,72px)+1rem)] pb-[4.5rem]
