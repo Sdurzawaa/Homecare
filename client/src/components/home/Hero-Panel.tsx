@@ -1,7 +1,7 @@
 import type { ReactElement, RefObject } from "react";
 
 interface HeroProps {
-  heroRef?: RefObject<HTMLElement>;
+  heroRef?: RefObject<HTMLElement | null>;
 }
 
 function Hero({ heroRef }: HeroProps): ReactElement {
@@ -66,30 +66,6 @@ function Hero({ heroRef }: HeroProps): ReactElement {
                 Lihat Layanan
               </a>
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[var(--ink-soft,#4A5551)]">
-              <span className="rounded-full bg-[var(--bg-alt,#FAF7F0)] px-3 py-2 font-medium text-[var(--pine,#1c3a30)]">
-                Layanan cepat:
-              </span>
-              <a
-                href="#services"
-                className="rounded-full border border-[rgba(28,58,48,0.16)] bg-white px-3 py-2 text-[var(--ink-soft,#4A5551)] transition hover:bg-[var(--pine)] hover:text-white"
-              >
-                Perawatan Kehamilan
-              </a>
-              <a
-                href="#services"
-                className="rounded-full border border-[rgba(28,58,48,0.16)] bg-white px-3 py-2 text-[var(--ink-soft,#4A5551)] transition hover:bg-[var(--pine)] hover:text-white"
-              >
-                Persalinan
-              </a>
-              <a
-                href="#services"
-                className="rounded-full border border-[rgba(28,58,48,0.16)] bg-white px-3 py-2 text-[var(--ink-soft,#4A5551)] transition hover:bg-[var(--pine)] hover:text-white"
-              >
-                Perawatan Nifas
-              </a>
-            </div>
-
             {/* Mini Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#E2E8E6)] pt-8 w-full">
               <div>

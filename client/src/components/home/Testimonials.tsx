@@ -1,22 +1,45 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  type RefObject,
+} from "react";
 
 const DRAG_THRESHOLD = 60;
 const TRANSITION = "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)";
 const GAP = 22; // 1.4rem ≈ 22px
 
-import React from "react";
+interface TestimonialItem {
+  id: number;
+  text: string;
+  author: string;
+  role: string;
+  initial: string;
+}
+
+interface ApiTestimonialItem {
+  id_testi?: number;
+  id?: number;
+  teks?: string;
+  text?: string;
+  author: string;
+  latarBelakang?: string;
+  role?: string;
+  initial: string;
+}
 
 type TestimonialsProps = {
-  testimonialsRef?: React.RefObject<HTMLElement>;
+  testimonialsRef?: RefObject<HTMLElement | null>;
 };
 
 export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [cardWidth, setCardWidth] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [testimonials, setTestimonials] = useState([
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [dragging, setDragging] = useState<boolean>(false);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [cardWidth, setCardWidth] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([
     {
       id: 1,
       text: "Layanan homecare ini membuat karyawan kami dapat pulih tanpa harus keluar kantor. Sangat membantu untuk dengan waktu terbatas.",
@@ -39,12 +62,12 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
       initial: "A",
     },
   ]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const trackRef = useRef(null);
-  const containerRef = useRef(null);
-  const dragStartX = useRef(0);
-  const isDragging = useRef(false);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const dragStartX = useRef<number>(0);
+  const isDragging = useRef<boolean>(false);
 
   const total = testimonials.length;
 
@@ -84,9 +107,9 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
         );
         if (!response.ok) throw new Error("Gagal memuat testimoni");
         const data = await response.json();
-        const normalized = data.map((item) => ({
-          id: item.id_testi ?? item.id,
-          text: item.teks ?? item.text,
+        const normalized = data.map((item: ApiTestimonialItem) => ({
+          id: item.id_testi ?? item.id ?? 0,
+          text: item.teks ?? item.text ?? "",
           author: item.author,
           role: item.latarBelakang ?? item.role ?? "",
           initial: item.initial,
@@ -94,9 +117,11 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
         setTestimonials(normalized);
       } catch (fetchError) {
         console.error(fetchError);
-        setError(
-          fetchError.message || "Terjadi kesalahan saat memuat testimoni",
-        );
+        const message =
+          fetchError instanceof Error
+            ? fetchError.message
+            : String(fetchError ?? "Terjadi kesalahan saat memuat testimoni");
+        setError(message);
       }
     }
 
@@ -119,17 +144,19 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
   }, [maxIndex]);
 
   // Pointer/touch drag
-  const onPointerDown = (e) => {
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
-    dragStartX.current = e.clientX ?? e.touches?.[0]?.clientX;
+    dragStartX.current = e.clientX;
     setDragging(true);
     setDragOffset(0);
   };
 
   const onPointerMove = useCallback(
-    (e) => {
+    (e: PointerEvent | TouchEvent) => {
       if (!isDragging.current) return;
-      const x = e.clientX ?? e.touches?.[0]?.clientX;
+      const x =
+        (e as PointerEvent).clientX ??
+        (e as TouchEvent).touches?.[0]?.clientX;
       if (x == null) return;
       const delta = x - dragStartX.current;
       if (!canMove) {

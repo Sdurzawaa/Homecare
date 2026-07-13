@@ -1,10 +1,10 @@
 import type { ReactElement, RefObject } from "react";
 
 type AchievementsProps = {
-  achievementsRef?: RefObject<HTMLElement>;
-  achievementsCard1?: RefObject<HTMLDivElement>;
-  achievementsCard2?: RefObject<HTMLDivElement>;
-  achievementsCard3?: RefObject<HTMLDivElement>;
+  achievementsRef?: RefObject<HTMLElement | null>;
+  achievementsCard1?: RefObject<HTMLDivElement | null>;
+  achievementsCard2?: RefObject<HTMLDivElement | null>;
+  achievementsCard3?: RefObject<HTMLDivElement | null>;
 };
 
 function Achievements({
@@ -35,7 +35,7 @@ function Achievements({
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1200px] space-y-[90px] max-[768px]:space-y-[60px]">
-        {/* Achievement 1: Perawatan dengan Hati — Image Left */}
+        {/* Achievement card #1 — Perawatan dengan Hati */}
         <div
           className="scroll-stagger flex flex-col items-center gap-10 opacity-0 lg:flex-row lg:gap-16"
           ref={achievementsCard1}
@@ -66,7 +66,7 @@ function Achievements({
           </div>
         </div>
 
-        {/* Achievement 2: Tenaga Terlatih & Bersertifikat — Image Right */}
+        {/* Achievement card #2 — Tenaga Terlatih & Bersertifikat */}
         <div
           className="scroll-stagger flex flex-col items-center gap-10 opacity-0 lg:flex-row-reverse lg:gap-16"
           ref={achievementsCard2}
@@ -134,7 +134,7 @@ function Achievements({
           </div>
         </div>
 
-        {/* Achievement 3: Dipercaya Ribuan Keluarga — Image Left */}
+        {/* Achievement card #3 — Dipercaya Ribuan Keluarga */}
         <div
           className="scroll-stagger flex flex-col items-center gap-10 opacity-0 lg:flex-row lg:gap-16"
           ref={achievementsCard3}

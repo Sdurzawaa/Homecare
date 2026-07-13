@@ -150,7 +150,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Read all pricing cards
+// ROUTE: Testimoni - Read all cards
 app.get("/api/testimoni", validateAdminKey, async (req, res) => {
   try {
     const result = await pool.query(
@@ -173,7 +173,7 @@ app.get("/api/testimoni", validateAdminKey, async (req, res) => {
   }
 });
 
-// Read single testimoni card
+// ROUTE: Testimoni - Read single card by id_testi
 app.get(
   "/api/testimoni/:id_testi",
   validateNumericIdParam,
@@ -204,7 +204,7 @@ app.get(
   },
 );
 
-// Create testimoni card
+// ROUTE: Testimoni - Create card
 app.post(
   "/api/testimoni",
   validateAdminKey,
@@ -230,7 +230,7 @@ app.post(
   },
 );
 
-// Update testimoni card
+// ROUTE: Testimoni - Update card by id_testi
 app.put(
   "/api/testimoni/:id_testi",
   validateNumericIdParam,
@@ -263,7 +263,7 @@ app.put(
   },
 );
 
-// Delete testimoni card
+// ROUTE: Testimoni - Delete card by id_testi
 app.delete(
   "/api/testimoni/:id_testi",
   validateNumericIdParam,
@@ -288,7 +288,7 @@ app.delete(
   },
 );
 
-// Read all pricing cards
+// ROUTE: Pricing - Read all cards
 app.get("/api/pricing", validateAdminKey, async (req, res) => {
   try {
     const result = await pool.query(
@@ -305,7 +305,24 @@ app.get("/api/pricing", validateAdminKey, async (req, res) => {
   }
 });
 
-// Read single pricing card
+// ROUTE: Pricing - Read categories
+app.get("/api/pricing/categories", validateAdminKey, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT category, title, description FROM website_co.pricing_categories ORDER BY category ASC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/pricing/categories error", error);
+    fs.appendFileSync(
+      "server-error.log",
+      `GET /api/pricing/categories error: ${error.stack || error}\n`,
+    );
+    res.status(500).json({ error: "Gagal mengambil kategori pricing" });
+  }
+});
+
+// ROUTE: Pricing - Read single card by id
 app.get(
   "/api/pricing/:id",
   validateNumericIdParam,
@@ -337,7 +354,7 @@ app.get(
   },
 );
 
-// Create pricing card
+// ROUTE: Pricing - Create card
 app.post(
   "/api/pricing",
   validateAdminKey,
@@ -367,7 +384,7 @@ app.post(
   },
 );
 
-// Update pricing card
+// ROUTE: Pricing - Update card by id
 app.put(
   "/api/pricing/:id",
   validateNumericIdParam,
@@ -409,7 +426,7 @@ app.put(
   },
 );
 
-// Delete pricing card
+// ROUTE: Pricing - Delete card by id
 app.delete(
   "/api/pricing/:id",
   validateNumericIdParam,

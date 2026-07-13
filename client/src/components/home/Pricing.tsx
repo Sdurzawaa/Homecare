@@ -12,51 +12,23 @@ import Modal from "./Modal";
 const WHATSAPP_NUMBER = "6285773780406";
 const API_URL = import.meta.env.VITE_API_URL || "";
 
-const categoryInfo = {
-  Semua: {
-    title: "Paket Layanan Pilihan",
-    description:
-      "Temukan perawatan ibu dan bayi yang tersedia untuk kehamilan, persalinan, nifas, bayi baru lahir, imunisasi, dan keluarga berencana. Semua layanan ditangani langsung oleh bidan berpengalaman dan bisa dipesan kapan saja sesuai kebutuhan Anda.",
-  },
-  "Perawatan Kehamilan": {
-    title: "Perawatan Kehamilan",
-    description:
-      "Layanan pemeriksaan dan dukungan kehamilan, termasuk monitoring janin, gizi, dan penanganan keluhan agar ibu tetap nyaman selama masa hamil. Cocok untuk pemeriksaan rutin bulanan maupun konsultasi keluhan mendadak.",
-  },
-  Persalinan: {
-    title: "Pendampingan Persalinan",
-    description:
-      "Layanan support penuh pada proses persalinan normal, IMD, dan perawatan luka jalan lahir untuk kelahiran yang aman dan nyaman. Bidan mendampingi dari awal proses hingga bayi lahir dengan selamat, di rumah maupun fasilitas kesehatan.",
-  },
-  "Perawatan Nifas": {
-    title: "Perawatan Nifas",
-    description:
-      "Perawatan pasca melahirkan untuk memulihkan tubuh ibu, mendukung produksi ASI, dan mendeteksi tanda bahaya nifas sejak dini. Meliputi kunjungan rutin, pijat oksitosin, hingga konsultasi menyusui.",
-  },
-  "Perawatan Bayi Baru Lahir": {
-    title: "Perawatan Bayi Baru Lahir",
-    description:
-      "Layanan neonatus, perawatan tali pusat, pijat bayi, dan pemeriksaan tumbuh kembang untuk menjaga kesehatan si kecil sejak awal. Membantu orang tua baru merasa lebih tenang dalam merawat bayi di rumah.",
-  },
-  Imunisasi: {
-    title: "Layanan Imunisasi",
-    description:
-      "Pemberian vaksin dasar, booster, dan suntik awal untuk menjaga kekebalan tubuh bayi dan anak sesuai jadwal nasional. Jadwal imunisasi dipantau agar tidak ada yang terlewat.",
-  },
-  "Keluarga Berencana": {
-    title: "Keluarga Berencana",
-    description:
-      "Konsultasi dan prosedur KB untuk rencana keluarga yang sehat dengan pilihan metode kontrasepsi yang tepat dan aman. Termasuk pemasangan, pelepasan, hingga penggantian metode sesuai kondisi tubuh.",
-  },
-  "Kesehatan Reproduksi": {
-    title: "Kesehatan Reproduksi",
-    description:
-      "Layanan pemeriksaan dan konsultasi reproduksi untuk deteksi dini, skrining pra-nikah, dan edukasi kesehatan wanita. Membantu menjaga kesehatan reproduksi di setiap fase kehidupan.",
-  },
-};
+interface PricingCategory {
+  category: string;
+  title: string;
+  description: string;
+}
 
-// Urutan kategori tetap & konsisten, gak tergantung urutan data dari API
-const CATEGORY_ORDER = Object.keys(categoryInfo);
+interface Treatment {
+  id: number;
+  category: string;
+  title: string;
+  description: string;
+  image: string;
+  duration: number;
+  price: number;
+  recommended: boolean;
+  benefits?: string[];
+}
 
 function formatDuration(minutes: number) {
   if (minutes >= 1440) {
@@ -225,11 +197,13 @@ const TreatmentCard = memo(function TreatmentCard({
   );
 });
 
-function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) {
-  const [treatments, setTreatments] = useState([]);
+function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement | null> }) {
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [categoriesInfo, setCategoriesInfo] = useState<PricingCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // `selectedCategory` = state "cepat", dipakai untuk highlight tab & judul.
   // Update ini SELALU sinkron & murah, jadi tab langsung terasa responsif
@@ -244,14 +218,14 @@ function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) 
   const deferredCategory = useDeferredValue(selectedCategory);
   const isPendingCategory = selectedCategory !== deferredCategory;
 
-  const [imageError, setImageError] = useState({});
-  const tabsScrollRef = useRef(null);
+  const [imageError, setImageError] = useState<Record<string | number, boolean>>({});
+  const tabsScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const el = tabsScrollRef.current;
     if (!el) return;
 
-    const onWheel = (e) => {
+    const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
         el.scrollBy({ left: e.deltaY, behavior: "smooth" });
@@ -262,6 +236,19 @@ function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) 
     return () => el.removeEventListener("wheel", onWheel);
   }, [loading, error]);
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/pricing/categories`);
+      if (!response.ok) {
+        throw new Error("Gagal memuat kategori pricing");
+      }
+      const data = await response.json();
+      setCategoriesInfo(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchPricing = async () => {
     setLoading(true);
     setError(null);
@@ -271,54 +258,95 @@ function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) 
         throw new Error("Gagal memuat data pricing");
       }
       const data = await response.json();
-      setTreatments(data);
+      setTreatments(
+        data.map((item: any) => ({
+          ...item,
+          duration: Number(item.duration),
+          price: Number(item.price),
+        })) as Treatment[],
+      );
     } catch (err) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    fetchCategories();
     fetchPricing();
   }, []);
 
-  const categories = useMemo(() => {
-    const available = new Set(treatments.map((t) => t.category));
-    return ["Semua", ...CATEGORY_ORDER.filter((c) => available.has(c))];
-  }, [treatments]);
+  const categoryInfoMap = useMemo(
+    () =>
+      categoriesInfo.reduce<Record<string, { title: string; description: string }>>(
+        (acc, item) => {
+          acc[item.category] = {
+            title: item.title,
+            description: item.description,
+          };
+          return acc;
+        },
+        {},
+      ),
+    [categoriesInfo],
+  );
+
+  const categories = useMemo<string[]>(() => {
+    const orderedCategories = ["Semua"];
+    const seen = new Set<string>();
+
+    for (const categoryInfo of categoriesInfo) {
+      if (!seen.has(categoryInfo.category)) {
+        seen.add(categoryInfo.category);
+        orderedCategories.push(categoryInfo.category);
+      }
+    }
+
+    for (const treatment of treatments) {
+      if (!seen.has(treatment.category)) {
+        seen.add(treatment.category);
+        orderedCategories.push(treatment.category);
+      }
+    }
+
+    return orderedCategories;
+  }, [categoriesInfo, treatments]);
 
   useEffect(() => {
-    console.log("[PRICING] listener ke-mount"); // <-- DEBUG 3, harus muncul SEKALI pas Pricing pertama kali render
+    console.log("[PRICING] listener ke-mount");
 
-    const onSelectCategory = (e) => {
-      console.log("[PRICING] event ketangkep, detail:", e.detail); // <-- DEBUG 4
-      const category = e.detail;
-      if (category && categoryInfo[category]) {
-        console.log("[PRICING] setSelectedCategory ->", category); // <-- DEBUG 5
+    const onSelectCategory = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      const category = customEvent.detail;
+      console.log("[PRICING] event ketangkep, detail:", category);
+
+      // Cek terhadap `categories` (gabungan categoriesInfo + treatments),
+      // bukan cuma categoryInfoMap. Ini decouple selection dari load
+      // metadata title/description yang mungkin telat/gagal fetch.
+      if (category && (category === "Semua" || categories.includes(category))) {
+        console.log("[PRICING] setSelectedCategory ->", category);
         setSelectedCategory(category);
       } else {
-        console.log("[PRICING] category gak match categoryInfo:", category); // <-- DEBUG 6
+        console.log("[PRICING] category tidak ditemukan di daftar categories:", category);
       }
     };
 
     const pendingCategory = sessionStorage.getItem("pendingServiceCategory");
-    if (pendingCategory && categoryInfo[pendingCategory]) {
-      console.log(
-        "[PRICING] pakai pendingCategory dari sessionStorage:",
-        pendingCategory,
-      ); // <-- DEBUG 7
+    if (pendingCategory && (pendingCategory === "Semua" || categories.includes(pendingCategory))) {
+      console.log("[PRICING] pakai pendingCategory dari sessionStorage:", pendingCategory);
       setSelectedCategory(pendingCategory);
       sessionStorage.removeItem("pendingServiceCategory");
     }
 
     window.addEventListener("select-service-category", onSelectCategory);
     return () => {
-      console.log("[PRICING] listener di-cleanup"); // <-- DEBUG 8, kalo ini muncul PAS lu klik navbar, berarti Pricing lagi re-mount di waktu yang salah
+      console.log("[PRICING] listener di-cleanup");
       window.removeEventListener("select-service-category", onSelectCategory);
     };
-  }, []);
+  }, [categories]);
 
   useEffect(() => {
     const container = tabsScrollRef.current;
@@ -337,26 +365,35 @@ function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) 
     container.scrollBy({ left: offset, behavior: "smooth" });
   }, [selectedCategory]);
 
-  // Filtering pakai deferredCategory, BUKAN selectedCategory — inilah yang
-  // membuat pekerjaan berat ini tidak lagi ikut nebeng di update sinkron
-  // saat tombol tab diklik.
+  // Filter berdasarkan kategori yang dipilih, lalu cari di dalam hasil tersebut.
+  // Ini memastikan search hanya berjalan pada kategori terpilih.
   const filteredTreatments = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     const list =
-      deferredCategory === "Semua"
+      selectedCategory === "Semua"
         ? treatments
-        : treatments.filter((t) => t.category === deferredCategory);
+        : treatments.filter((t) => t.category === selectedCategory);
 
-    return [...list].sort(
+    const searched = query
+      ? list.filter(
+          (t) =>
+            t.title.toLowerCase().includes(query) ||
+            t.description.toLowerCase().includes(query) ||
+            t.category.toLowerCase().includes(query),
+        )
+      : list;
+
+    return [...searched].sort(
       (a, b) => (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0),
     );
-  }, [treatments, deferredCategory]);
+  }, [treatments, selectedCategory, searchQuery]);
 
-  const handleCardClick = useCallback((treatment) => {
+  const handleCardClick = useCallback((treatment: Treatment) => {
     setSelectedTreatment(treatment);
   }, []);
   const handleCloseModal = useCallback(() => setSelectedTreatment(null), []);
   const handleImageError = useCallback(
-    (id) => setImageError((prev) => ({ ...prev, [id]: true })),
+    (id: string | number) => setImageError((prev) => ({ ...prev, [id]: true })),
     [],
   );
 
@@ -430,12 +467,30 @@ function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) 
 
           <div>
             <h2 className="m-0 mb-3 font-[family-name:var(--font-display)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
-              {categoryInfo[selectedCategory]?.title || selectedCategory}
+              {categoryInfoMap[selectedCategory]?.title || selectedCategory}
             </h2>
             <p className="m-0 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
-              {categoryInfo[selectedCategory]?.description ||
+              {categoryInfoMap[selectedCategory]?.description ||
                 "Pilih kategori untuk melihat layanan yang tersedia."}
             </p>
+
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <label className="sr-only" htmlFor="pricing-search">
+                Cari layanan
+              </label>
+              <input
+                id="pricing-search"
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari layanan, kategori, atau deskripsi"
+                className="w-full max-w-xl rounded-full border border-[var(--line)] bg-white px-4 py-3 text-sm text-[var(--ink)] shadow-sm outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/10"
+              />
+
+              <p className="text-sm text-[var(--ink-soft)]">
+                Menampilkan <strong>{filteredTreatments.length}</strong> dari <strong>{treatments.length}</strong> jasa
+              </p>
+            </div>
           </div>
         </div>
       )}

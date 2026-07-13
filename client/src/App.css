@@ -28,7 +28,6 @@
   background: var(--bg);
   line-height: 1.6;
   overflow-x: hidden;
-  padding-top: var(--header-h);
 }
 
 .eyebrow {

@@ -8,21 +8,22 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { name: "Beranda", href: "#home" },
   { name: "Kenapa Kami", href: "#about" },
-  { name: "Testimoni", href: "#testimonials" },
   { name: "Kontak", href: "#contact" },
+  { name: "Testimoni", href: "#testimonials" },
 ];
 
-// Kategori ini harus persis sama dengan key di `categoryInfo` pada Pricing.jsx,
-// karena label ini yang dikirim lewat custom event "select-service-category"
-// dan dipakai Pricing.jsx buat `setSelectedCategory(category)`.
-const SERVICE_ITEMS = [
-  { name: "Perawatan Kehamilan", href: "#services" },
-  { name: "Persalinan", href: "#services" },
-  { name: "Perawatan Nifas", href: "#services" },
-  { name: "Perawatan Bayi Baru Lahir", href: "#services" },
-  { name: "Imunisasi", href: "#services" },
-  { name: "Keluarga Berencana", href: "#services" },
-  { name: "Kesehatan Reproduksi", href: "#services" },
+// Kategori layanan — ambil dari API pricing/categories agar selalu sinkron
+// dengan data di database. Jika fetch gagal, pakai fallback statis.
+type ServiceItem = { key: string; label: string; href: string };
+
+const DEFAULT_SERVICE_ITEMS: ServiceItem[] = [
+  { key: "Perawatan Kehamilan", label: "Perawatan Kehamilan", href: "#services" },
+  { key: "Persalinan", label: "Persalinan", href: "#services" },
+  { key: "Perawatan Nifas", label: "Perawatan Nifas", href: "#services" },
+  { key: "Perawatan Bayi Baru Lahir", label: "Perawatan Bayi Baru Lahir", href: "#services" },
+  { key: "Imunisasi", label: "Imunisasi", href: "#services" },
+  { key: "Keluarga Berencana", label: "Keluarga Berencana", href: "#services" },
+  { key: "Kesehatan Reproduksi", label: "Kesehatan Reproduksi", href: "#services" },
 ];
 
 const COLLAPSE_SCROLL_THRESHOLD = 50;
@@ -135,6 +136,35 @@ export function AnimatedNavFramer() {
   const serviceDropdownRef = React.useRef<HTMLDivElement>(null);
   const drawerRef = React.useRef<HTMLDivElement>(null);
   const navContentRef = React.useRef<HTMLDivElement>(null);
+
+  // serviceItems diambil dari API supaya labelnya persis sama dengan DB
+  const [serviceItems, setServiceItems] = React.useState<ServiceItem[]>(
+    DEFAULT_SERVICE_ITEMS,
+  );
+
+  React.useEffect(() => {
+    let mounted = true;
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/pricing/categories`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        if (Array.isArray(data) && data.length) {
+          setServiceItems(
+            data.map((c: any) => ({ key: String(c.category), label: String(c.title ?? c.category), href: "#services" })),
+          );
+        }
+      } catch (err) {
+        // fallback: keep DEFAULT_SERVICE_ITEMS
+        // console.debug("Failed to fetch pricing categories", err);
+      }
+    };
+    fetchCategories();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Lebar asli konten nav pas expanded, diukur sekali (+ tiap resize) biar
   // animasi width gak pernah harus nebak-nebak lewat "auto".
@@ -367,13 +397,15 @@ export function AnimatedNavFramer() {
               shrink-0 di kedua anak-nya nyegah teks/ikon ke-squeeze pas
               lebar parent lagi diinterpolasi di tengah animasi. */}
           <div ref={navContentRef} className="flex flex-shrink-0 items-center">
-          <motion.div
+          <motion.a
+            href="#home"
+            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleLinkClick(e, "#home")}
             variants={logoVariants}
             className="flex flex-shrink-0 items-center gap-2 pl-4 pr-2 text-[var(--ink-soft)]"
           >
             <img src="/first-aid-kit-doctor-svgrepo-com.svg" alt="Homecare" className="h-5 w-5" />
             <span className="text-sm font-semibold">Homecare</span>
-          </motion.div>
+          </motion.a>
 
           <motion.div
             variants={contentVariants}
@@ -446,15 +478,15 @@ export function AnimatedNavFramer() {
             role="menu"
           >
             <div className="grid grid-cols-1 gap-2 p-3">
-              {SERVICE_ITEMS.map((item) => (
+              {serviceItems.map((item) => (
                 <a
-                  key={item.name}
+                  key={item.key}
                   href={item.href}
                   role="menuitem"
-                  onClick={(e) => handleServiceItemClick(e, item)}
+                  onClick={(e) => handleServiceItemClick(e, { name: item.key, href: item.href })}
                   className="rounded-2xl px-3 py-2 text-sm text-[var(--ink-soft)] transition-colors duration-150 hover:bg-[var(--pine)] hover:text-white"
                 >
-                  {item.name}
+                  {item.label}
                 </a>
               ))}
             </div>
@@ -565,14 +597,14 @@ export function AnimatedNavFramer() {
               )}
             >
               <div className="flex flex-col gap-0.5 py-1 pl-3">
-                {SERVICE_ITEMS.map((item) => (
+                {serviceItems.map((item) => (
                   <a
-                    key={item.name}
+                    key={item.key}
                     href={item.href}
-                    onClick={(e) => handleServiceItemClick(e, item)}
+                    onClick={(e) => handleServiceItemClick(e, { name: item.key, href: item.href })}
                     className="rounded-xl px-4 py-2.5 text-[0.9rem] font-medium text-[var(--ink-soft)] transition-all duration-150 hover:translate-x-1 hover:text-[var(--pine)]"
                   >
-                    {item.name}
+                    {item.label}
                   </a>
                 ))}
               </div>

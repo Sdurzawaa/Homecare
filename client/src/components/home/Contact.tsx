@@ -1,7 +1,7 @@
 import type { ReactElement, RefObject } from "react";
 
 type ContactProps = {
-  contactRef?: RefObject<HTMLElement>;
+  contactRef?: RefObject<HTMLElement | null>;
 };
 
 function Contact({ contactRef }: ContactProps): ReactElement {
