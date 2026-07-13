@@ -4,7 +4,13 @@ const DRAG_THRESHOLD = 60;
 const TRANSITION = "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)";
 const GAP = 22; // 1.4rem ≈ 22px
 
-export default function Testimonials({ testimonialsRef }) {
+import React from "react";
+
+type TestimonialsProps = {
+  testimonialsRef?: React.RefObject<HTMLElement>;
+};
+
+export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);

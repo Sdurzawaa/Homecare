@@ -1,15 +1,23 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 const ANIMATION_DURATION = 280; // ms — harus sama dengan duration di className
 
-function Modal({ isOpen, onClose, children, title = null }) {
+type ModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  children?: ReactNode;
+  title?: string | null;
+};
+
+function Modal({ isOpen, onClose, children, title = null }: ModalProps): ReactElement | null {
   // `visible` = apakah DOM-nya ada (termasuk saat exit animation)
   // `entered` = apakah sudah fully entered (trigger class animasi)
   const [visible, setVisible] = useState(false);
   const [entered, setEntered] = useState(false);
-  const modalContentRef = useRef(null);
-  const exitTimerRef = useRef(null);
+  const modalContentRef = useRef<HTMLDivElement | null>(null);
+  const exitTimerRef = useRef<number | undefined>(undefined);
 
   // Stable close handler: jalankan exit animation dulu, baru unmount
   const handleClose = useCallback(() => {
@@ -53,7 +61,7 @@ function Modal({ isOpen, onClose, children, title = null }) {
   useEffect(() => {
     if (!visible) return;
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         handleClose();
         return;
@@ -61,7 +69,7 @@ function Modal({ isOpen, onClose, children, title = null }) {
 
       // Tab trap
       if (e.key === "Tab") {
-        const focusable = modalContentRef.current?.querySelectorAll(
+        const focusable = modalContentRef.current?.querySelectorAll<HTMLElement>(
           'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
         if (!focusable?.length) return;
@@ -85,7 +93,9 @@ function Modal({ isOpen, onClose, children, title = null }) {
 
     // Auto-focus tombol close
     const focusTimer = setTimeout(() => {
-      modalContentRef.current?.querySelector("[data-modal-close]")?.focus();
+      modalContentRef.current
+        ?.querySelector<HTMLElement>("[data-modal-close]")
+        ?.focus();
     }, ANIMATION_DURATION);
 
     return () => {

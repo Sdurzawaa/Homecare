@@ -1,9 +1,18 @@
+import type { ReactElement, RefObject } from "react";
+
+type AchievementsProps = {
+  achievementsRef?: RefObject<HTMLElement>;
+  achievementsCard1?: RefObject<HTMLDivElement>;
+  achievementsCard2?: RefObject<HTMLDivElement>;
+  achievementsCard3?: RefObject<HTMLDivElement>;
+};
+
 function Achievements({
   achievementsRef,
   achievementsCard1,
   achievementsCard2,
   achievementsCard3,
-}) {
+}: AchievementsProps): ReactElement {
   return (
     <section
       className="scroll-fade-up relative overflow-hidden bg-[linear-gradient(to_right,#f5fbf9_0%,#ffffff_60%,#fffbf7_100%)] px-5 py-20 sm:px-6 md:px-8 lg:px-12"

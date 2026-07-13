@@ -58,7 +58,7 @@ const categoryInfo = {
 // Urutan kategori tetap & konsisten, gak tergantung urutan data dari API
 const CATEGORY_ORDER = Object.keys(categoryInfo);
 
-function formatDuration(minutes) {
+function formatDuration(minutes: number) {
   if (minutes >= 1440) {
     const days = Math.floor(minutes / 1440);
     return days === 1 ? "24 jam" : `${days} hari`;
@@ -71,7 +71,7 @@ function formatDuration(minutes) {
   return `${minutes} menit`;
 }
 
-function buildWhatsAppLink(title, price) {
+function buildWhatsAppLink(title: string, price: number) {
   const message = `Halo, saya tertarik dengan layanan "${title}" (Rp${price.toLocaleString("id-ID")}). Apakah bisa dibantu info lebih lanjut?`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
@@ -110,6 +110,12 @@ const TreatmentCard = memo(function TreatmentCard({
   hasError,
   onClick,
   onImageError,
+}: {
+  treatment: any;
+  index: number;
+  hasError: boolean;
+  onClick: () => void;
+  onImageError: () => void;
 }) {
   return (
     <article
@@ -219,7 +225,7 @@ const TreatmentCard = memo(function TreatmentCard({
   );
 });
 
-function Pricing({ pricingRef }) {
+function Pricing({ pricingRef }: { pricingRef?: React.RefObject<HTMLElement> }) {
   const [treatments, setTreatments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
