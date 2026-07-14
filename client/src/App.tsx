@@ -17,9 +17,9 @@ function App() {
   const testimonialsRef = useScrollAnimation({ threshold: 0.1 });
   const contactRef = useScrollAnimation({ threshold: 0.3 });
   const pricingRef = useScrollAnimation({ threshold: 0.1 });
-  const achievementsCard1 = useScrollAnimation({ threshold: 0.2 });
-  const achievementsCard2 = useScrollAnimation({ threshold: 0.6 });
-  const achievementsCard3 = useScrollAnimation({ threshold: 1 });
+  const achievementsCard1 = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
+  const achievementsCard2 = useScrollAnimation<HTMLDivElement>({ threshold: 0.6 });
+  const achievementsCard3 = useScrollAnimation<HTMLDivElement>({ threshold: 1 });
 
   return (
     <div className="page-shell">

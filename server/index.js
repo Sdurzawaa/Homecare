@@ -145,6 +145,11 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Validate API key
+app.get("/api/validate-key", validateAdminKey, (req, res) => {
+  res.json({ valid: true });
+});
+
 // Read all testimoni (public)
 app.get("/api/testimoni", async (req, res) => {
   try {

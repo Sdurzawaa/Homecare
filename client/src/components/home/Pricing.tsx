@@ -122,7 +122,7 @@ const TreatmentCard = memo(function TreatmentCard({
     <article
       onClick={onClick}
       className="scroll-stagger group relative flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-[var(--line)] bg-white [content-visibility:auto] [contain-intrinsic-size:340px] transition-transform duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(28,58,48,0.15)] focus-within:ring-2 focus-within:ring-[var(--pine)] focus-within:ring-offset-2"
-      style={{ animationDelay: `${index * 80}ms` }}
+      style={{ animationDelay: `${index * 140}ms` }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {

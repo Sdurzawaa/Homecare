@@ -16,10 +16,11 @@ function Hero({ heroRef }: HeroProps) {
       <div className="max-w-[1240px] mx-auto px-[clamp(1.5rem,5vw,4rem)] w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left Column: Content */}
-          <div className="order-2 lg:order-1 flex flex-col items-start gap-6 animate-fade-in-up">
+          <div className="order-2 lg:order-1 flex flex-col items-start gap-6">
             {/* Trust Badge */}
             <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2 shadow-sm
+              style={{ animationDelay: "0.15s" }}
+              className="inline-flex animate-fade-in-up items-center gap-2 rounded-full px-4 py-2 shadow-sm
                          bg-[var(--bg-alt,#FAF7F0)] border border-[var(--line,#E2E8E6)]
                          text-[var(--pine,#1c3a30)]"
             >
@@ -30,35 +31,41 @@ function Hero({ heroRef }: HeroProps) {
             </div>
 
             <h1
-              className="font-[family-name:var(--font-display,'Source_Serif_4',serif)]
+              style={{ animationDelay: "0.25s" }}
+              className="animate-fade-in-up font-[family-name:var(--font-display,'Source_Serif_4',serif)]
                          text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.1]
                          tracking-[-0.02em] text-[var(--pine,#1c3a30)] max-w-xl"
             >
               Kenyamanan Perawatan Medis di Rumah Anda
             </h1>
 
-            <p className="text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#4A5551)] max-w-lg">
+            <p
+              style={{ animationDelay: "0.35s" }}
+              className="animate-fade-in-up text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#4A5551)] max-w-lg"
+            >
               Menghadirkan tenaga profesional medis berpengalaman untuk merawat
               orang terkasih dengan penuh kasih sayang dan kenyamanan maksimal.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4">
+            <div
+              style={{ animationDelay: "0.45s" }}
+              className="animate-fade-in-up flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4"
+            >
               <a
                 href="#contact"
                 style={{ color: "#ffffff" }}
-                className="w-full sm:w-auto whitespace-nowrap rounded-full px-8 py-4 text-[0.92rem]
+                className="w-full sm:w-auto whitespace-nowrap rounded-full px-9 py-4 text-[0.92rem]
                            font-semibold !text-white no-underline flex items-center justify-center gap-2
                            bg-[#36735D] shadow-[0_16px_30px_-22px_rgba(28,58,48,0.5)]
                            transition-all duration-300 hover:-translate-y-1 hover:brightness-[0.9]"
               >
                 Konsultasi Gratis
                 <span aria-hidden="true" style={{ color: "#ffffff" }}>
-                  →
                 </span>
               </a>
               <a
                 href="#services"
-                className="w-full sm:w-auto whitespace-nowrap rounded-full px-8 py-4 text-[0.92rem]
+                className="w-full sm:w-auto whitespace-nowrap rounded-full px-7 py-4 text-[0.92rem]
                            font-semibold no-underline flex items-center justify-center
                            border-2 border-[var(--pine,#1c3a30)] text-[var(--pine,#1c3a30)]
                            transition-colors hover:bg-[var(--bg-alt,#FAF7F0)]"
@@ -66,32 +73,11 @@ function Hero({ heroRef }: HeroProps) {
                 Lihat Layanan
               </a>
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[var(--ink-soft,#4A5551)]">
-              <span className="rounded-full bg-[var(--bg-alt,#FAF7F0)] px-3 py-2 font-medium text-[var(--pine,#1c3a30)]">
-                Layanan cepat:
-              </span>
-              <a
-                href="#services"
-                className="rounded-full border border-[rgba(28,58,48,0.16)] bg-white px-3 py-2 text-[var(--ink-soft,#4A5551)] transition hover:bg-[var(--pine)] hover:text-white"
-              >
-                Perawatan Kehamilan
-              </a>
-              <a
-                href="#services"
-                className="rounded-full border border-[rgba(28,58,48,0.16)] bg-white px-3 py-2 text-[var(--ink-soft,#4A5551)] transition hover:bg-[var(--pine)] hover:text-white"
-              >
-                Persalinan
-              </a>
-              <a
-                href="#services"
-                className="rounded-full border border-[rgba(28,58,48,0.16)] bg-white px-3 py-2 text-[var(--ink-soft,#4A5551)] transition hover:bg-[var(--pine)] hover:text-white"
-              >
-                Perawatan Nifas
-              </a>
-            </div>
-
             {/* Mini Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#E2E8E6)] pt-8 w-full">
+            <div
+              style={{ animationDelay: "0.55s" }}
+              className="animate-fade-in-up grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#E2E8E6)] pt-8 w-full"
+            >
               <div>
                 <div className="font-bold text-[1.5rem] text-[var(--pine,#1c3a30)]">
                   24/7
@@ -120,7 +106,7 @@ function Hero({ heroRef }: HeroProps) {
           </div>
 
           {/* Right Column: Image */}
-          <div className="order-1 lg:order-2 relative animate-fade-in-scale">
+          <div className="order-1 lg:order-2 relative animate-fade-in-scale" style={{ animationDelay: "0.5s" }}>
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-[var(--pine,#1c3a30)]/10 rounded-full blur-3xl -z-10"></div>
             <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[var(--pine,#1c3a30)]/10 rounded-full blur-3xl -z-10"></div>
 
@@ -169,7 +155,7 @@ function Hero({ heroRef }: HeroProps) {
          (animate-bounce-subtle dipakai di Floating Info Card supaya melayang halus) */}
       <style>{`
         @keyframes fadeInUp {
-          0% { opacity: 0; transform: translateY(20px); }
+          0% { opacity: 0; transform: translateY(30px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeInScale {
@@ -182,9 +168,15 @@ function Hero({ heroRef }: HeroProps) {
         }
         .animate-fade-in-up {
           animation: fadeInUp 0.8s ease-out forwards;
+          will-change: opacity, transform;
+          backface-visibility: hidden;
+          transform: translateZ(0);
         }
         .animate-fade-in-scale {
           animation: fadeInScale 0.8s ease-out forwards;
+          will-change: opacity, transform;
+          backface-visibility: hidden;
+          transform: translateZ(0);
         }
         .animate-bounce-subtle {
           animation: bounceSubtle 3s ease-in-out infinite;

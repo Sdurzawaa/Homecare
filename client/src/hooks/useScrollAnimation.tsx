@@ -6,12 +6,12 @@ interface IntersectionOptions extends IntersectionObserverInit {
   root?: Element | Document | null;
 }
 
-export const useScrollAnimation = (options: IntersectionOptions = {}): RefObject<HTMLElement | null> => {
-  const elementRef = useRef<HTMLElement | null>(null);
-  const defaultOptions: IntersectionObserverInit = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px',
-    ...options,
+export const useScrollAnimation = <T extends HTMLElement = HTMLElement>(options: IntersectionOptions = {}): RefObject<T | null> => {
+  const elementRef = useRef<T | null>(null);
+  const observerOptions = {
+    threshold: options.threshold ?? 0.1,
+    rootMargin: options.rootMargin ?? '0px 0px -50px 0px',
+    root: options.root ?? null,
   };
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export const useScrollAnimation = (options: IntersectionOptions = {}): RefObject
         entry.target.classList.add('scroll-animated');
         observer.unobserve(entry.target);
       }
-    }, defaultOptions);
+    }, observerOptions);
 
     if (elementRef.current) {
       observer.observe(elementRef.current);
@@ -31,7 +31,7 @@ export const useScrollAnimation = (options: IntersectionOptions = {}): RefObject
         observer.unobserve(elementRef.current);
       }
     };
-  }, [defaultOptions]);
+  }, [observerOptions.threshold, observerOptions.rootMargin, observerOptions.root]);
 
   return elementRef;
 };

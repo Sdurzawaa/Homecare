@@ -244,10 +244,12 @@
 .scroll-stagger {
   opacity: 0;
   transform: translateY(30px);
+  will-change: opacity, transform;
+  backface-visibility: hidden;
 }
 
 .scroll-fade-up.scroll-animated .scroll-stagger {
-  animation: scrollStaggerFadeUp 0.6s ease-out forwards;
+  animation: scrollStaggerFadeUp 0.75s ease-out forwards;
   opacity: 1;
 }
 
@@ -276,4 +278,36 @@
     transition: none;
     animation: none !important;
   }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes writeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-write-in {
+  opacity: 0;
+  animation: writeIn 0.85s ease-out forwards;
+  will-change: opacity, transform;
 }

@@ -1,10 +1,11 @@
-import type { Ref } from "react";
+import { useState, type Ref } from "react";
 
 interface ContactProps {
   contactRef?: Ref<HTMLElement | null>;
 }
 
 function Contact({ contactRef }: ContactProps) {
+  const [mapActive, setMapActive] = useState(false);
   const address =
     "AKR Tower Jl. Panjang No.5 Level M, RT.11/RW.10, Kb. Jeruk, Kec. Kb. Jeruk, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11530";
   const mapsQuery = encodeURIComponent(address);
@@ -124,16 +125,30 @@ function Contact({ contactRef }: ContactProps) {
         </div>
 
         {/* Kolom kanan: peta lokasi asli, bukan panel CTA generik */}
-        <div className="overflow-hidden rounded-[20px] border border-[var(--line)] shadow-[0_16px_40px_-24px_rgba(28,58,48,0.35)] min-h-[320px] lg:min-h-full">
+        <div className="relative overflow-hidden rounded-[20px] border border-[var(--line)] shadow-[0_16px_40px_-24px_rgba(28,58,48,0.35)] min-h-[320px] lg:min-h-full">
           <iframe
             title="Lokasi Homecare"
             src={`https://www.google.com/maps?q=${mapsQuery}&output=embed`}
             width="100%"
             height="100%"
-            style={{ border: 0, minHeight: "320px", display: "block" }}
+            style={{
+              border: 0,
+              minHeight: "320px",
+              display: "block",
+              pointerEvents: mapActive ? "auto" : "none",
+            }}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           />
+          {!mapActive && (
+            <button
+              type="button"
+              onClick={() => setMapActive(true)}
+              className="absolute inset-0 flex items-center justify-center bg-[rgba(255,255,255,0.88)] text-[var(--pine)] transition hover:bg-[rgba(255,255,255,0.95)]"
+            >
+              Klik untuk mengaktifkan peta
+            </button>
+          )}
         </div>
       </div>
     </section>
