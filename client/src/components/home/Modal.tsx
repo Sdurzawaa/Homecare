@@ -1,15 +1,22 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 const ANIMATION_DURATION = 280; // ms — harus sama dengan duration di className
 
-function Modal({ isOpen, onClose, children, title = null }) {
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children?: ReactNode;
+  title?: string | null;
+}
+
+function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
   // `visible` = apakah DOM-nya ada (termasuk saat exit animation)
   // `entered` = apakah sudah fully entered (trigger class animasi)
   const [visible, setVisible] = useState(false);
   const [entered, setEntered] = useState(false);
-  const modalContentRef = useRef(null);
-  const exitTimerRef = useRef(null);
+  const modalContentRef = useRef<HTMLDivElement | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Stable close handler: jalankan exit animation dulu, baru unmount
   const handleClose = useCallback(() => {
@@ -23,7 +30,7 @@ function Modal({ isOpen, onClose, children, title = null }) {
   useEffect(() => {
     if (isOpen) {
       // Batalkan exit timer kalau modal dibuka lagi sebelum selesai
-      clearTimeout(exitTimerRef.current);
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
       setVisible(true);
 
       // Double-RAF: pastikan browser sudah commit paint pertama
@@ -46,14 +53,16 @@ function Modal({ isOpen, onClose, children, title = null }) {
       );
     }
 
-    return () => clearTimeout(exitTimerRef.current);
+    return () => {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
   }, [isOpen]);
 
   // Keyboard handler terpisah dari effect mount/unmount
   useEffect(() => {
     if (!visible) return;
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         handleClose();
         return;
@@ -66,8 +75,8 @@ function Modal({ isOpen, onClose, children, title = null }) {
         );
         if (!focusable?.length) return;
 
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
+        const first = focusable[0] as HTMLElement;
+        const last = focusable[focusable.length - 1] as HTMLElement;
         const active = document.activeElement;
 
         if (e.shiftKey && active === first) {
@@ -85,7 +94,7 @@ function Modal({ isOpen, onClose, children, title = null }) {
 
     // Auto-focus tombol close
     const focusTimer = setTimeout(() => {
-      modalContentRef.current?.querySelector("[data-modal-close]")?.focus();
+      (modalContentRef.current?.querySelector("[data-modal-close]") as HTMLElement | null)?.focus();
     }, ANIMATION_DURATION);
 
     return () => {

@@ -145,8 +145,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Read all pricing cards
-app.get("/api/testimoni", validateAdminKey, async (req, res) => {
+// Read all testimoni (public)
+app.get("/api/testimoni", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT 
@@ -168,11 +168,10 @@ app.get("/api/testimoni", validateAdminKey, async (req, res) => {
   }
 });
 
-// Read single testimoni card
+// Read single testimoni (public)
 app.get(
   "/api/testimoni/:id_testi",
   validateNumericIdParam,
-  validateAdminKey,
   async (req, res) => {
     const { id_testi } = req.params;
     try {
@@ -182,7 +181,7 @@ app.get(
         teks,
         author,
         latarBelakang,
-        INITIAL 
+        initial 
       FROM website_co.testimoni WHERE id_testi = $1`,
         [id_testi],
       );
@@ -199,7 +198,7 @@ app.get(
   },
 );
 
-// Create testimoni card
+// Create testimoni card (admin only)
 app.post(
   "/api/testimoni",
   validateAdminKey,
@@ -283,8 +282,8 @@ app.delete(
   },
 );
 
-// Read all pricing cards
-app.get("/api/pricing", validateAdminKey, async (req, res) => {
+// Read all pricing (public)
+app.get("/api/pricing", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, category, title, description, image, duration, price, recommended FROM website_co.pricing ORDER BY id ASC`,
@@ -300,16 +299,12 @@ app.get("/api/pricing", validateAdminKey, async (req, res) => {
   }
 });
 
-// Read single pricing card
-app.get(
-  "/api/pricing/:id",
-  validateNumericIdParam,
-  validateAdminKey,
-  async (req, res) => {
-    const { id } = req.params;
-    try {
-      const result = await pool.query(
-        `SELECT 
+// Read single pricing (public)
+app.get("/api/pricing/:id", validateNumericIdParam, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT 
         id,
         category,
         title,
@@ -319,20 +314,19 @@ app.get(
         price, 
         recommended 
       FROM website_co.pricing WHERE id = $1`,
-        [id],
-      );
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Pricing card tidak ditemukan" });
-      }
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("GET /api/pricing/:id error", error);
-      res.status(500).json({ error: "Gagal mengambil pricing" });
+      [id],
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Pricing card tidak ditemukan" });
     }
-  },
-);
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("GET /api/pricing/:id error", error);
+    res.status(500).json({ error: "Gagal mengambil pricing" });
+  }
+});
 
-// Create pricing card
+// Create pricing card (admin only)
 app.post(
   "/api/pricing",
   validateAdminKey,

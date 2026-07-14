@@ -1,16 +1,28 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, type Ref } from "react";
 
 const DRAG_THRESHOLD = 60;
 const TRANSITION = "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)";
 const GAP = 22; // 1.4rem ≈ 22px
 
-export default function Testimonials({ testimonialsRef }) {
+interface Testimonial {
+  id: number;
+  text: string;
+  author: string;
+  role: string;
+  initial: string;
+}
+
+interface TestimonialsProps {
+  testimonialsRef?: Ref<HTMLDivElement>;
+}
+
+export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [cardWidth, setCardWidth] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [testimonials, setTestimonials] = useState([
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([
     {
       id: 1,
       text: "Layanan homecare ini membuat karyawan kami dapat pulih tanpa harus keluar kantor. Sangat membantu untuk dengan waktu terbatas.",
@@ -33,10 +45,10 @@ export default function Testimonials({ testimonialsRef }) {
       initial: "A",
     },
   ]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const trackRef = useRef(null);
-  const containerRef = useRef(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const dragStartX = useRef(0);
   const isDragging = useRef(false);
 
@@ -77,19 +89,20 @@ export default function Testimonials({ testimonialsRef }) {
           `${import.meta.env.VITE_API_URL || ""}/api/testimoni`,
         );
         if (!response.ok) throw new Error("Gagal memuat testimoni");
-        const data = await response.json();
+        const data = await response.json() as Array<Record<string, unknown>>;
         const normalized = data.map((item) => ({
-          id: item.id_testi ?? item.id,
-          text: item.teks ?? item.text,
-          author: item.author,
-          role: item.latarBelakang ?? item.role ?? "",
-          initial: item.initial,
-        }));
+          id: typeof item.id_testi === 'number' ? item.id_testi : item.id,
+          text: typeof item.teks === 'string' ? item.teks : item.text,
+          author: String(item.author ?? ''),
+          role: typeof item.latarBelakang === 'string' ? item.latarBelakang : item.role ?? "",
+          initial: String(item.initial ?? ''),
+        })) as Testimonial[];
         setTestimonials(normalized);
-      } catch (fetchError) {
+      } catch (fetchError: unknown) {
         console.error(fetchError);
+        const message = fetchError instanceof Error ? fetchError.message : String(fetchError);
         setError(
-          fetchError.message || "Terjadi kesalahan saat memuat testimoni",
+          message || "Terjadi kesalahan saat memuat testimoni",
         );
       }
     }
@@ -113,17 +126,18 @@ export default function Testimonials({ testimonialsRef }) {
   }, [maxIndex]);
 
   // Pointer/touch drag
-  const onPointerDown = (e) => {
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
-    dragStartX.current = e.clientX ?? e.touches?.[0]?.clientX;
+    dragStartX.current = e.clientX ?? (e as any).touches?.[0]?.clientX;
     setDragging(true);
     setDragOffset(0);
   };
 
   const onPointerMove = useCallback(
-    (e) => {
+    (e: Event) => {
+      const pointerEvent = e as any; // Allow both PointerEvent and TouchEvent
       if (!isDragging.current) return;
-      const x = e.clientX ?? e.touches?.[0]?.clientX;
+      const x = pointerEvent.clientX ?? pointerEvent.touches?.[0]?.clientX;
       if (x == null) return;
       const delta = x - dragStartX.current;
       if (!canMove) {

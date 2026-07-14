@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type Ref,
 } from "react";
 import Modal from "./Modal";
 
@@ -53,12 +54,31 @@ const categoryInfo = {
     description:
       "Layanan pemeriksaan dan konsultasi reproduksi untuk deteksi dini, skrining pra-nikah, dan edukasi kesehatan wanita. Membantu menjaga kesehatan reproduksi di setiap fase kehidupan.",
   },
-};
+} as const;
+
+type ServiceCategory = Exclude<keyof typeof categoryInfo, undefined>;
+type PricingCategory = ServiceCategory | "Semua";
+
+interface Treatment {
+  id: number | string;
+  category: ServiceCategory;
+  title: string;
+  duration: number;
+  price: number;
+  image: string;
+  description: string;
+  recommended?: boolean;
+  benefits?: string[];
+}
+
+interface PricingProps {
+  pricingRef?: Ref<HTMLDivElement>;
+}
 
 // Urutan kategori tetap & konsisten, gak tergantung urutan data dari API
-const CATEGORY_ORDER = Object.keys(categoryInfo);
+const CATEGORY_ORDER = Object.keys(categoryInfo) as ServiceCategory[];
 
-function formatDuration(minutes) {
+function formatDuration(minutes: number) {
   if (minutes >= 1440) {
     const days = Math.floor(minutes / 1440);
     return days === 1 ? "24 jam" : `${days} hari`;
@@ -71,7 +91,7 @@ function formatDuration(minutes) {
   return `${minutes} menit`;
 }
 
-function buildWhatsAppLink(title, price) {
+function buildWhatsAppLink(title: string, price: number) {
   const message = `Halo, saya tertarik dengan layanan "${title}" (Rp${price.toLocaleString("id-ID")}). Apakah bisa dibantu info lebih lanjut?`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
@@ -110,6 +130,12 @@ const TreatmentCard = memo(function TreatmentCard({
   hasError,
   onClick,
   onImageError,
+}: {
+  treatment: Treatment;
+  index: number;
+  hasError: boolean;
+  onClick: () => void;
+  onImageError: () => void;
 }) {
   return (
     <article
@@ -219,16 +245,16 @@ const TreatmentCard = memo(function TreatmentCard({
   );
 });
 
-function Pricing({ pricingRef }) {
-  const [treatments, setTreatments] = useState([]);
+function Pricing({ pricingRef }: PricingProps) {
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedTreatment, setSelectedTreatment] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
 
   // `selectedCategory` = state "cepat", dipakai untuk highlight tab & judul.
   // Update ini SELALU sinkron & murah, jadi tab langsung terasa responsif
   // begitu diklik meski grid di bawahnya berat.
-  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [selectedCategory, setSelectedCategory] = useState<PricingCategory>("Semua");
 
   // `deferredCategory` = versi "tertunda" dari selectedCategory, khusus
   // dipakai untuk memfilter & me-render grid card yang berat (banyak
@@ -238,14 +264,14 @@ function Pricing({ pricingRef }) {
   const deferredCategory = useDeferredValue(selectedCategory);
   const isPendingCategory = selectedCategory !== deferredCategory;
 
-  const [imageError, setImageError] = useState({});
-  const tabsScrollRef = useRef(null);
+  const [imageError, setImageError] = useState<Record<string, boolean>>({});
+  const tabsScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const el = tabsScrollRef.current;
     if (!el) return;
 
-    const onWheel = (e) => {
+    const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
         el.scrollBy({ left: e.deltaY, behavior: "smooth" });
@@ -266,9 +292,10 @@ function Pricing({ pricingRef }) {
       }
       const data = await response.json();
       setTreatments(data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
@@ -280,16 +307,18 @@ function Pricing({ pricingRef }) {
 
   const categories = useMemo(() => {
     const available = new Set(treatments.map((t) => t.category));
-    return ["Semua", ...CATEGORY_ORDER.filter((c) => available.has(c))];
+    return ["Semua" as const, ...CATEGORY_ORDER.filter((c) => available.has(c))];
   }, [treatments]);
 
   useEffect(() => {
     console.log("[PRICING] listener ke-mount"); // <-- DEBUG 3, harus muncul SEKALI pas Pricing pertama kali render
 
-    const onSelectCategory = (e) => {
-      console.log("[PRICING] event ketangkep, detail:", e.detail); // <-- DEBUG 4
-      const category = e.detail;
-      if (category && categoryInfo[category]) {
+    const onSelectCategory = (event: Event) => {
+      const customEvent = event as CustomEvent<PricingCategory>;
+      const category = customEvent.detail;
+      console.log("[PRICING] event ketangkep, detail:", category); // <-- DEBUG 4
+
+      if (category === "Semua" || category in categoryInfo) {
         console.log("[PRICING] setSelectedCategory ->", category); // <-- DEBUG 5
         setSelectedCategory(category);
       } else {
@@ -298,12 +327,15 @@ function Pricing({ pricingRef }) {
     };
 
     const pendingCategory = sessionStorage.getItem("pendingServiceCategory");
-    if (pendingCategory && categoryInfo[pendingCategory]) {
+    if (
+      pendingCategory &&
+      (pendingCategory === "Semua" || pendingCategory in categoryInfo)
+    ) {
       console.log(
         "[PRICING] pakai pendingCategory dari sessionStorage:",
         pendingCategory,
       ); // <-- DEBUG 7
-      setSelectedCategory(pendingCategory);
+      setSelectedCategory(pendingCategory as PricingCategory);
       sessionStorage.removeItem("pendingServiceCategory");
     }
 
@@ -319,7 +351,7 @@ function Pricing({ pricingRef }) {
     if (!container) return;
     const activeButton = container.querySelector(
       `[data-category="${CSS.escape(selectedCategory)}"]`,
-    );
+    ) as HTMLButtonElement | null;
     if (!activeButton) return;
     const containerRect = container.getBoundingClientRect();
     const buttonRect = activeButton.getBoundingClientRect();
@@ -338,19 +370,22 @@ function Pricing({ pricingRef }) {
     const list =
       deferredCategory === "Semua"
         ? treatments
-        : treatments.filter((t) => t.category === deferredCategory);
+        : treatments.filter(
+            (t) => t.category === (deferredCategory as ServiceCategory),
+          );
 
     return [...list].sort(
       (a, b) => (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0),
     );
   }, [treatments, deferredCategory]);
 
-  const handleCardClick = useCallback((treatment) => {
+  const handleCardClick = useCallback((treatment: Treatment) => {
     setSelectedTreatment(treatment);
   }, []);
   const handleCloseModal = useCallback(() => setSelectedTreatment(null), []);
   const handleImageError = useCallback(
-    (id) => setImageError((prev) => ({ ...prev, [id]: true })),
+    (id: string | number) =>
+      setImageError((prev) => ({ ...prev, [id]: true })),
     [],
   );
 
@@ -424,11 +459,18 @@ function Pricing({ pricingRef }) {
 
           <div>
             <h2 className="m-0 mb-3 font-[family-name:var(--font-display)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
-              {categoryInfo[selectedCategory]?.title || selectedCategory}
+              {selectedCategory === "Semua"
+                ? categoryInfo.Semua?.title
+                : selectedCategory in categoryInfo
+                  ? categoryInfo[selectedCategory as ServiceCategory]?.title
+                  : selectedCategory}
             </h2>
             <p className="m-0 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
-              {categoryInfo[selectedCategory]?.description ||
-                "Pilih kategori untuk melihat layanan yang tersedia."}
+              {selectedCategory === "Semua"
+                ? categoryInfo.Semua?.description
+                : selectedCategory in categoryInfo
+                  ? categoryInfo[selectedCategory as ServiceCategory]?.description
+                  : "Pilih kategori untuk melihat layanan yang tersedia."}
             </p>
           </div>
         </div>
@@ -478,7 +520,7 @@ function Pricing({ pricingRef }) {
       <Modal
         isOpen={!!selectedTreatment}
         onClose={handleCloseModal}
-        title={selectedTreatment?.title}
+        title={selectedTreatment?.title || null}
       >
         {selectedTreatment && (
           <div className="max-h-[85vh] w-full overflow-y-auto overflow-x-hidden">
