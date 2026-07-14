@@ -66,7 +66,7 @@ interface Treatment {
 }
 
 interface PricingProps {
-  pricingRef?: Ref<HTMLDivElement>;
+  pricingRef?: Ref<HTMLElement | null>;
 }
 
 const CATEGORY_ORDER = Object.keys(categoryInfo) as ServiceCategory[];

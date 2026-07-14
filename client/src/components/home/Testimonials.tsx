@@ -13,7 +13,7 @@ interface Testimonial {
 }
 
 interface TestimonialsProps {
-  testimonialsRef?: Ref<HTMLDivElement>;
+  testimonialsRef?: Ref<HTMLElement | null>;
 }
 
 export default function Testimonials({ testimonialsRef }: TestimonialsProps) {

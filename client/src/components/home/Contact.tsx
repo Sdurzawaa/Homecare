@@ -1,4 +1,10 @@
-function Contact({ contactRef }) {
+import type { Ref } from "react";
+
+interface ContactProps {
+  contactRef?: Ref<HTMLElement | null>;
+}
+
+function Contact({ contactRef }: ContactProps) {
   const address =
     "AKR Tower Jl. Panjang No.5 Level M, RT.11/RW.10, Kb. Jeruk, Kec. Kb. Jeruk, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11530";
   const mapsQuery = encodeURIComponent(address);

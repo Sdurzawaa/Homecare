@@ -1,11 +1,7 @@
-interface HeroProps {
-  heroRef?: React.RefObject<HTMLElement>;
-}
-
 import type { RefObject } from "react";
 
 interface HeroProps {
-  heroRef?: RefObject<HTMLElement>;
+  heroRef?: RefObject<HTMLElement | null>;
 }
 
 function Hero({ heroRef }: HeroProps) {

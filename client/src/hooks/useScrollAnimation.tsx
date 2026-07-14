@@ -6,8 +6,8 @@ interface IntersectionOptions extends IntersectionObserverInit {
   root?: Element | Document | null;
 }
 
-export const useScrollAnimation = (options: IntersectionOptions = {}): RefObject<HTMLElement> => {
-  const elementRef = useRef<HTMLElement>(null);
+export const useScrollAnimation = (options: IntersectionOptions = {}): RefObject<HTMLElement | null> => {
+  const elementRef = useRef<HTMLElement | null>(null);
   const defaultOptions: IntersectionObserverInit = {
     threshold: 0.1,
     rootMargin: '0px 0px -50px 0px',
