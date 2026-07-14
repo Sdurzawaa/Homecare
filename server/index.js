@@ -299,6 +299,60 @@ app.get("/api/pricing", async (req, res) => {
   }
 });
 
+// Read all pricing categories (public)
+app.get("/api/pricing-categories", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, category, title, description FROM website_co.pricing_categories ORDER BY id ASC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/pricing-categories error", error);
+    fs.appendFileSync(
+      "server-error.log",
+      `GET /api/pricing-categories error: ${error.stack || error}\n`,
+    );
+    res.status(500).json({ error: "Gagal mengambil data kategori pricing" });
+  }
+});
+
+// Search pricing cards by category and query (public)
+app.get("/api/pricing/search", async (req, res) => {
+  try {
+    const { category, q } = req.query;
+    const conditions = [];
+    const params = [];
+
+    if (category && category !== "Semua") {
+      params.push(category);
+      conditions.push(`category = $${params.length}`);
+    }
+
+    if (q && typeof q === "string" && q.trim() !== "") {
+      params.push(`%${q.trim()}%`);
+      const paramNum = params.length;
+      conditions.push(
+        `(title ILIKE $${paramNum} OR description ILIKE $${paramNum})`,
+      );
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const result = await pool.query(
+      `SELECT id, category, title, description, image, duration, price, recommended FROM website_co.pricing ${whereClause} ORDER BY recommended DESC, title ASC`,
+      params,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/pricing/search error", error);
+    fs.appendFileSync(
+      "server-error.log",
+      `GET /api/pricing/search error: ${error.stack || error}\n`,
+    );
+    res.status(500).json({ error: "Gagal mencari data pricing" });
+  }
+});
+
 // Read single pricing (public)
 app.get("/api/pricing/:id", validateNumericIdParam, async (req, res) => {
   const { id } = req.params;

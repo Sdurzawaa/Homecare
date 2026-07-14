@@ -1,7 +1,6 @@
 import {
   memo,
   useCallback,
-  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -14,11 +13,6 @@ const WHATSAPP_NUMBER = "6285773780406";
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 const categoryInfo = {
-  Semua: {
-    title: "Paket Layanan Pilihan",
-    description:
-      "Temukan perawatan ibu dan bayi yang tersedia untuk kehamilan, persalinan, nifas, bayi baru lahir, imunisasi, dan keluarga berencana. Semua layanan ditangani langsung oleh bidan berpengalaman dan bisa dipesan kapan saja sesuai kebutuhan Anda.",
-  },
   "Perawatan Kehamilan": {
     title: "Perawatan Kehamilan",
     description:
@@ -75,7 +69,6 @@ interface PricingProps {
   pricingRef?: Ref<HTMLDivElement>;
 }
 
-// Urutan kategori tetap & konsisten, gak tergantung urutan data dari API
 const CATEGORY_ORDER = Object.keys(categoryInfo) as ServiceCategory[];
 
 function formatDuration(minutes: number) {
@@ -112,18 +105,6 @@ function CardSkeleton() {
   );
 }
 
-// -----------------------------------------------------------------------
-// TreatmentCard diekstrak jadi komponen sendiri + dibungkus memo().
-// Alasan performa:
-// - Sebelumnya card di-render inline di dalam .map() pada komponen induk,
-//   jadi setiap kali Pricing re-render (misal gara-gara state imageError
-//   berubah untuk SATU gambar), SEMUA card ikut re-render walau propsnya
-//   sama persis. Dengan memo(), React membandingkan props dulu dan skip
-//   re-render kalau tidak ada yang berubah.
-// - hasError dikirim sebagai boolean tunggal (bukan seluruh object
-//   imageError), supaya card lain tidak dianggap "berubah" saat error
-//   terjadi di card lain.
-// -----------------------------------------------------------------------
 const TreatmentCard = memo(function TreatmentCard({
   treatment,
   index,
@@ -151,7 +132,6 @@ const TreatmentCard = memo(function TreatmentCard({
         }
       }}
     >
-      {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[var(--bg-alt)] to-white">
         {treatment.recommended && (
           <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-[var(--pine)] shadow-sm backdrop-blur-sm">
@@ -169,13 +149,7 @@ const TreatmentCard = memo(function TreatmentCard({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--bg-alt)]">
-            <svg
-              className="h-12 w-12 text-[var(--line)]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
+            <svg className="h-12 w-12 text-[var(--line)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <path d="M21 15l-5-5L5 21" />
@@ -185,20 +159,13 @@ const TreatmentCard = memo(function TreatmentCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </div>
 
-      {/* Content Container */}
       <div className="flex flex-1 flex-col p-[1.6rem]">
         <div className="mb-2 flex items-center justify-between gap-3">
           <span className="text-[0.7rem] font-bold uppercase tracking-widest text-[var(--pine)]/70">
             {treatment.category}
           </span>
           <div className="flex flex-shrink-0 items-center gap-1 text-[var(--pine)]">
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
@@ -231,11 +198,7 @@ const TreatmentCard = memo(function TreatmentCard({
             onClick={(e) => e.stopPropagation()}
             aria-label={`Pesan ${treatment.title} via WhatsApp`}
           >
-            <svg
-              className="h-5 w-5 text-white"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
+            <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a8.06 8.06 0 00-8.052 8.05 8.056 8.056 0 002.064 5.476l-.323 1.179 1.213-.323a8.035 8.035 0 003.86.962h.005a8.074 8.074 0 008.064-8.053 8.047 8.047 0 00-2.357-5.671 8.047 8.047 0 00-5.707-2.36zM12.071 0C5.717 0 .429 5.287.429 11.643c0 2.259.584 4.43 1.697 6.29L0 24l6.514-1.708C9.03 23.41 10.82 24 12.071 24c6.355 0 11.643-5.288 11.643-11.643 0-3.128-1.286-6.082-3.623-8.418C18.154 1.286 15.199 0 12.071 0z" />
             </svg>
           </a>
@@ -250,20 +213,9 @@ function Pricing({ pricingRef }: PricingProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
-
-  // `selectedCategory` = state "cepat", dipakai untuk highlight tab & judul.
-  // Update ini SELALU sinkron & murah, jadi tab langsung terasa responsif
-  // begitu diklik meski grid di bawahnya berat.
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<PricingCategory>("Semua");
-
-  // `deferredCategory` = versi "tertunda" dari selectedCategory, khusus
-  // dipakai untuk memfilter & me-render grid card yang berat (banyak
-  // gambar, SVG, animasi). React akan menunda render ulang grid ini di
-  // background dengan prioritas rendah, jadi klik tab tidak lagi memblok
-  // main thread sampai ratusan ms (ini akar masalah INP 968ms di profiler).
-  const deferredCategory = useDeferredValue(selectedCategory);
-  const isPendingCategory = selectedCategory !== deferredCategory;
-
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const tabsScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -286,7 +238,20 @@ function Pricing({ pricingRef }: PricingProps) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/api/pricing`);
+      let url = `${API_URL}/api/pricing`;
+
+      if (searchQuery.trim() || selectedCategory !== "Semua") {
+        const params = new URLSearchParams();
+        if (selectedCategory !== "Semua") {
+          params.append("category", selectedCategory);
+        }
+        if (searchQuery.trim()) {
+          params.append("q", searchQuery);
+        }
+        url = `${API_URL}/api/pricing/search?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Gagal memuat data pricing");
       }
@@ -303,26 +268,25 @@ function Pricing({ pricingRef }: PricingProps) {
 
   useEffect(() => {
     fetchPricing();
-  }, []);
-
-  const categories = useMemo(() => {
-    const available = new Set(treatments.map((t) => t.category));
-    return ["Semua" as const, ...CATEGORY_ORDER.filter((c) => available.has(c))];
-  }, [treatments]);
+  }, [selectedCategory, searchQuery]);
 
   useEffect(() => {
-    console.log("[PRICING] listener ke-mount"); // <-- DEBUG 3, harus muncul SEKALI pas Pricing pertama kali render
+    const debounce = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 300);
 
+    return () => window.clearTimeout(debounce);
+  }, [searchInput]);
+
+  const categories = useMemo(() => ["Semua" as const, ...CATEGORY_ORDER], []);
+
+  useEffect(() => {
     const onSelectCategory = (event: Event) => {
       const customEvent = event as CustomEvent<PricingCategory>;
       const category = customEvent.detail;
-      console.log("[PRICING] event ketangkep, detail:", category); // <-- DEBUG 4
 
       if (category === "Semua" || category in categoryInfo) {
-        console.log("[PRICING] setSelectedCategory ->", category); // <-- DEBUG 5
         setSelectedCategory(category);
-      } else {
-        console.log("[PRICING] category gak match categoryInfo:", category); // <-- DEBUG 6
       }
     };
 
@@ -331,17 +295,12 @@ function Pricing({ pricingRef }: PricingProps) {
       pendingCategory &&
       (pendingCategory === "Semua" || pendingCategory in categoryInfo)
     ) {
-      console.log(
-        "[PRICING] pakai pendingCategory dari sessionStorage:",
-        pendingCategory,
-      ); // <-- DEBUG 7
       setSelectedCategory(pendingCategory as PricingCategory);
       sessionStorage.removeItem("pendingServiceCategory");
     }
 
     window.addEventListener("select-service-category", onSelectCategory);
     return () => {
-      console.log("[PRICING] listener di-cleanup"); // <-- DEBUG 8, kalo ini muncul PAS lu klik navbar, berarti Pricing lagi re-mount di waktu yang salah
       window.removeEventListener("select-service-category", onSelectCategory);
     };
   }, []);
@@ -363,21 +322,11 @@ function Pricing({ pricingRef }: PricingProps) {
     container.scrollBy({ left: offset, behavior: "smooth" });
   }, [selectedCategory]);
 
-  // Filtering pakai deferredCategory, BUKAN selectedCategory — inilah yang
-  // membuat pekerjaan berat ini tidak lagi ikut nebeng di update sinkron
-  // saat tombol tab diklik.
   const filteredTreatments = useMemo(() => {
-    const list =
-      deferredCategory === "Semua"
-        ? treatments
-        : treatments.filter(
-            (t) => t.category === (deferredCategory as ServiceCategory),
-          );
-
-    return [...list].sort(
+    return [...treatments].sort(
       (a, b) => (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0),
     );
-  }, [treatments, deferredCategory]);
+  }, [treatments]);
 
   const handleCardClick = useCallback((treatment: Treatment) => {
     setSelectedTreatment(treatment);
@@ -389,13 +338,17 @@ function Pricing({ pricingRef }: PricingProps) {
     [],
   );
 
+  const activeInfo =
+    selectedCategory === "Semua"
+      ? undefined
+      : categoryInfo[selectedCategory as ServiceCategory];
+
   return (
     <section
       className="scroll-fade-up mx-auto max-w-[1240px] px-[clamp(1.5rem,5vw,4rem)] py-[4.5rem]"
       id="services"
       ref={pricingRef}
     >
-      {/* Section Header */}
       <div className="mb-12 max-w-3xl">
         <span className="mb-4 inline-block text-[0.75rem] font-bold uppercase tracking-[0.15em] text-[var(--pine)]">
           Layanan &amp; Tarif
@@ -412,7 +365,6 @@ function Pricing({ pricingRef }: PricingProps) {
         </p>
       </div>
 
-      {/* Error state */}
       {error && (
         <div className="mb-10 flex flex-col items-start gap-3 rounded-[12px] border border-[#f3c6d4] bg-[#fdf1f4] px-5 py-4">
           <p className="m-0 text-[0.9rem] text-[#b10f4c]">
@@ -428,10 +380,9 @@ function Pricing({ pricingRef }: PricingProps) {
         </div>
       )}
 
-      {/* Category tabs and info */}
-      {!loading && !error && (
+      {!error && (
         <div className="mb-12">
-          <div className="mb-10 border-b border-[var(--line)]">
+          <div className="mb-8 border-b border-[var(--line)]">
             <div
               ref={tabsScrollRef}
               className="flex gap-8 overflow-x-auto pb-3 [scrollbar-width:thin] [scrollbar-color:var(--line,#E2E8E6)_transparent] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--line,#E2E8E6)]"
@@ -457,26 +408,58 @@ function Pricing({ pricingRef }: PricingProps) {
             </div>
           </div>
 
-          <div>
-            <h2 className="m-0 mb-3 font-[family-name:var(--font-display)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
-              {selectedCategory === "Semua"
-                ? categoryInfo.Semua?.title
-                : selectedCategory in categoryInfo
-                  ? categoryInfo[selectedCategory as ServiceCategory]?.title
-                  : selectedCategory}
-            </h2>
-            <p className="m-0 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
-              {selectedCategory === "Semua"
-                ? categoryInfo.Semua?.description
-                : selectedCategory in categoryInfo
-                  ? categoryInfo[selectedCategory as ServiceCategory]?.description
-                  : "Pilih kategori untuk melihat layanan yang tersedia."}
-            </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-xl">
+              <h2 className="m-0 mb-2 font-[family-name:var(--font-display)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
+                {activeInfo?.title || selectedCategory}
+              </h2>
+              <p className="m-0 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
+                {activeInfo?.description ||
+                  "Pilih kategori untuk melihat layanan yang tersedia."}
+              </p>
+            </div>
+
+            <div className="relative w-full sm:w-72 sm:flex-shrink-0">
+              <span className="pointer-events-none absolute left-4 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center text-[var(--ink-soft)]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </span>
+              <input
+                id="search-pricing"
+                type="text"
+                autoComplete="off"
+                placeholder="Cari layanan..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full rounded-full border border-[var(--line)] bg-white py-2.5 pl-10 pr-9 text-[0.9rem] text-[var(--ink)] shadow-sm outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/10"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => setSearchInput("")}
+                  aria-label="Hapus pencarian"
+                  className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-[var(--ink-soft)] transition-colors duration-200 hover:bg-[var(--bg-alt)] hover:text-[var(--pine)]"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
+
+          {!loading && (
+            <p className="m-0 mt-4 text-sm text-[var(--ink-soft)]">
+              Menampilkan <strong>{filteredTreatments.length}</strong> layanan
+              {selectedCategory !== "Semua" ? ` di ${selectedCategory}` : ""}
+              {searchQuery ? ` untuk "${searchQuery}"` : ""}.
+            </p>
+          )}
         </div>
       )}
 
-      {/* Loading skeleton */}
       {loading && (
         <div className="grid grid-cols-1 gap-[1.6rem] sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -485,7 +468,6 @@ function Pricing({ pricingRef }: PricingProps) {
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && !error && filteredTreatments.length === 0 && (
         <div className="rounded-[12px] border border-[var(--line)] bg-[var(--bg-alt)] px-6 py-12 text-center">
           <p className="m-0 text-[0.95rem] text-[var(--ink-soft)]">
@@ -494,15 +476,8 @@ function Pricing({ pricingRef }: PricingProps) {
         </div>
       )}
 
-      {/* Cards Grid — opacity turun sedikit saat kategori baru masih
-          "pending" (deferredCategory belum menyusul selectedCategory),
-          supaya user tetap dapat feedback visual walau grid belum update. */}
       {!loading && !error && filteredTreatments.length > 0 && (
-        <div
-          className={`grid grid-cols-1 gap-[1.6rem] transition-opacity duration-150 sm:grid-cols-2 lg:grid-cols-4 ${
-            isPendingCategory ? "opacity-60" : "opacity-100"
-          }`}
-        >
+        <div className="grid grid-cols-1 gap-[1.6rem] sm:grid-cols-2 lg:grid-cols-4">
           {filteredTreatments.map((treatment, index) => (
             <TreatmentCard
               key={treatment.id}
@@ -516,7 +491,6 @@ function Pricing({ pricingRef }: PricingProps) {
         </div>
       )}
 
-      {/* Modal */}
       <Modal
         isOpen={!!selectedTreatment}
         onClose={handleCloseModal}
@@ -538,13 +512,7 @@ function Pricing({ pricingRef }: PricingProps) {
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-[var(--bg-alt)]">
-                    <svg
-                      className="h-12 w-12 text-[var(--line)]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    >
+                    <svg className="h-12 w-12 text-[var(--line)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
                       <path d="M21 15l-5-5L5 21" />
@@ -564,11 +532,7 @@ function Pricing({ pricingRef }: PricingProps) {
                 <div>
                   {selectedTreatment.recommended && (
                     <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#d7eddd] px-3.5 py-1.5">
-                      <svg
-                        className="h-4 w-4 text-[var(--pine)]"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
+                      <svg className="h-4 w-4 text-[var(--pine)]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2l-2.81 6.63L2 9.24l5.46 4.73L5.82 21z" />
                       </svg>
                       <span className="text-[0.78rem] font-bold text-[var(--pine-deep)]">
@@ -586,13 +550,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
                   <div className="mb-8 flex flex-wrap gap-6 text-[var(--ink-soft)]">
                     <div className="flex items-center gap-2">
-                      <svg
-                        className="h-5 w-5 text-[var(--pine)]"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
+                      <svg className="h-5 w-5 text-[var(--pine)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
@@ -601,13 +559,7 @@ function Pricing({ pricingRef }: PricingProps) {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <svg
-                        className="h-5 w-5 text-[var(--pine)]"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
+                      <svg className="h-5 w-5 text-[var(--pine)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="2" y="6" width="20" height="12" rx="2" />
                         <path d="M2 10h20" />
                         <path d="M6 15h4" />
@@ -627,11 +579,7 @@ function Pricing({ pricingRef }: PricingProps) {
                       <ul className="mb-8 space-y-3">
                         {selectedTreatment.benefits.map((benefit, i) => (
                           <li key={i} className="flex items-start gap-3">
-                            <svg
-                              className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--pine)]"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                            >
+                            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--pine)]" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.5l-4.3-4.3 1.4-1.4 2.9 2.9 6.3-6.3 1.4 1.4-7.7 7.7z" />
                             </svg>
                             <span className="text-[0.92rem] leading-relaxed text-[var(--ink-soft)]">
@@ -653,11 +601,7 @@ function Pricing({ pricingRef }: PricingProps) {
                     target="_blank"
                     rel="noreferrer noopener"
                   >
-                    <svg
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a8.06 8.06 0 00-8.052 8.05 8.056 8.056 0 002.064 5.476l-.323 1.179 1.213-.323a8.035 8.035 0 003.86.962h.005a8.074 8.074 0 008.064-8.053 8.047 8.047 0 00-2.357-5.671 8.047 8.047 0 00-5.707-2.36zM12.071 0C5.717 0 .429 5.287.429 11.643c0 2.259.584 4.43 1.697 6.29L0 24l6.514-1.708C9.03 23.41 10.82 24 12.071 24c6.355 0 11.643-5.288 11.643-11.643 0-3.128-1.286-6.082-3.623-8.418C18.154 1.286 15.199 0 12.071 0z" />
                     </svg>
                     Pesan via WhatsApp
