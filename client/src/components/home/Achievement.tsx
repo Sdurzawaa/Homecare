@@ -19,13 +19,12 @@ function Achievements({
       id="about"
       ref={achievementsRef}
     >
-      {/* Decorative background — tekstur dot pattern halus */}
-      <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.04] [background-image:radial-gradient(circle,var(--pine)_1px,transparent_1px)] [background-size:28px_28px]"></div>
+      {/* Layer z-0 — dekoratif, statis, isolated paint */}
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.04] [contain:strict] [background-image:radial-gradient(circle,var(--pine)_1px,transparent_1px)] [background-size:28px_28px]"></div>
+      <div className="pointer-events-none absolute -top-[20%] -right-[10%] z-0 h-[600px] w-[600px] rounded-full [contain:strict] bg-[radial-gradient(circle,rgba(47,93,79,0.05)_0%,transparent_70%)]"></div>
+      <div className="pointer-events-none absolute -bottom-[10%] -left-[5%] z-0 h-[500px] w-[500px] rounded-full [contain:strict] bg-[radial-gradient(circle,rgba(226,162,59,0.06)_0%,transparent_70%)]"></div>
 
-      {/* Decorative background — blob warna lembut di sudut */}
-      <div className="pointer-events-none absolute -top-[20%] -right-[10%] z-0 h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(47,93,79,0.05)_0%,transparent_70%)]"></div>
-      <div className="pointer-events-none absolute -bottom-[10%] -left-[5%] z-0 h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(226,162,59,0.06)_0%,transparent_70%)]"></div>
-
+      {/* Layer z-10 — konten utama */}
       <div className="relative z-10 mb-[60px] text-center max-[768px]:mb-10">
         <p className="eyebrow m-0 mb-3">Mengapa Kami</p>
 
@@ -46,10 +45,9 @@ function Achievements({
         >
           <div className="w-full lg:w-1/2 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
             <div className="relative">
-              {/* Frame shape — lapisan belakang, menciptakan efek foto dibingkai */}
               <div className="absolute -inset-3 -z-10 rotate-[-2.5deg] rounded-[30px] bg-[var(--pine)]/[0.07] sm:-inset-4"></div>
 
-              <div className="group relative overflow-hidden rounded-[24px] ring-1 ring-black/5 shadow-[0_20px_45px_-15px_rgba(28,58,48,0.28)] transition-transform duration-700 hover:scale-[1.015]">
+              <div className="group relative z-10 overflow-hidden rounded-[24px] ring-1 ring-black/5 shadow-[0_16px_32px_-14px_rgba(28,58,48,0.28)] transition-transform duration-700 will-change-transform hover:scale-[1.015]">
                 <img
                   alt="Perawatan dengan Hati"
                   className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"
@@ -58,8 +56,8 @@ function Achievements({
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(28,58,48,0.18),transparent_55%)]"></div>
               </div>
 
-              {/* Signature badge — stat kepercayaan */}
-              <div className="absolute -bottom-6 right-5 z-20 flex items-center gap-2.5 rounded-2xl bg-white/95 px-4 py-3 shadow-[0_14px_32px_-10px_rgba(28,58,48,0.35)] ring-1 ring-black/5 ">
+              {/* Layer z-20 — badge mengambang, selalu paling atas */}
+              <div className="absolute -bottom-6 right-5 z-20 flex items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-[0_10px_22px_-8px_rgba(28,58,48,0.35)] ring-1 ring-black/5">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--pine)] text-white">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 21s-7.5-4.6-10-9.3C.5 8.8 2 5 5.5 5c2 0 3.6 1.2 4.5 2.7C10.9 6.2 12.5 5 14.5 5 18 5 19.5 8.8 22 11.7 19.5 16.4 12 21 12 21z" />
@@ -109,7 +107,7 @@ function Achievements({
             <div className="relative">
               <div className="absolute -inset-3 -z-10 rotate-[2.5deg] rounded-[30px] bg-[var(--pine)]/[0.07] sm:-inset-4"></div>
 
-              <div className="group relative overflow-hidden rounded-[24px] ring-2 ring-[var(--honey)]/50 shadow-[0_20px_45px_-15px_rgba(28,58,48,0.28)] transition-transform duration-700 hover:scale-[1.015]">
+              <div className="group relative z-10 overflow-hidden rounded-[24px] ring-2 ring-[var(--honey)]/50 shadow-[0_16px_32px_-14px_rgba(28,58,48,0.28)] transition-transform duration-700 will-change-transform hover:scale-[1.015]">
                 <img
                   alt="Standar Profesional"
                   className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"
@@ -118,7 +116,7 @@ function Achievements({
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(226,162,59,0.18),transparent_55%)]"></div>
               </div>
 
-              <div className="absolute -bottom-6 left-5 z-20 flex items-center gap-2.5 rounded-2xl bg-white/95 px-4 py-3 shadow-[0_14px_32px_-10px_rgba(28,58,48,0.35)] ring-1 ring-black/5 ">
+              <div className="absolute -bottom-6 left-5 z-20 flex items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-[0_10px_22px_-8px_rgba(28,58,48,0.35)] ring-1 ring-black/5">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--pine)] text-white">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2l7 3v6c0 4.6-3 8.7-7 10-4-1.3-7-5.4-7-10V5l7-3z" />
@@ -185,7 +183,7 @@ function Achievements({
             <div className="relative">
               <div className="absolute -inset-3 -z-10 rotate-[-2.5deg] rounded-[30px] bg-[var(--pine)]/[0.07] sm:-inset-4"></div>
 
-              <div className="group relative overflow-hidden rounded-[24px] ring-1 ring-black/5 shadow-[0_20px_45px_-15px_rgba(28,58,48,0.28)] transition-transform duration-700 hover:scale-[1.015]">
+              <div className="group relative z-10 overflow-hidden rounded-[24px] ring-1 ring-black/5 shadow-[0_16px_32px_-14px_rgba(28,58,48,0.28)] transition-transform duration-700 will-change-transform hover:scale-[1.015]">
                 <img
                   alt="Kepuasan Pelanggan"
                   className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"
@@ -194,7 +192,7 @@ function Achievements({
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(28,58,48,0.18),transparent_55%)]"></div>
               </div>
 
-              <div className="absolute -bottom-6 right-5 z-20 flex items-center gap-2.5 rounded-2xl bg-white/95 px-4 py-3 shadow-[0_14px_32px_-10px_rgba(28,58,48,0.35)] ring-1 ring-black/5 backdrop-blur-sm">
+              <div className="absolute -bottom-6 right-5 z-20 flex items-center gap-2.5 rounded-2xl bg-white px-4 py-3 shadow-[0_10px_22px_-8px_rgba(28,58,48,0.35)] ring-1 ring-black/5">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--pine)] text-white">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="9" cy="8" r="3" />
@@ -229,9 +227,9 @@ function Achievements({
         </div>
       </div>
 
-      {/* Quote block — dibingkai sebagai kartu, bukan teks lepas */}
+      {/* Quote block — z-10, sejajar sama konten utama lainnya */}
       <div className="relative z-10 mt-[80px]">
-        <blockquote className="relative mx-auto max-w-3xl rounded-[28px] bg-white px-8 py-12 text-center shadow-[0_20px_50px_-25px_rgba(28,58,48,0.25)] ring-1 ring-[var(--line)] sm:px-14">
+        <blockquote className="relative mx-auto max-w-3xl rounded-[28px] bg-white px-8 py-12 text-center shadow-[0_14px_32px_-18px_rgba(28,58,48,0.25)] ring-1 ring-[var(--line)] sm:px-14">
           <span
             aria-hidden="true"
             className="pointer-events-none absolute left-6 top-3 font-[family-name:var(--font-display)] text-[5rem] leading-none text-[var(--honey)]/20 sm:text-[6rem]"

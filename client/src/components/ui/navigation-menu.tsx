@@ -367,13 +367,15 @@ export function AnimatedNavFramer() {
               shrink-0 di kedua anak-nya nyegah teks/ikon ke-squeeze pas
               lebar parent lagi diinterpolasi di tengah animasi. */}
           <div ref={navContentRef} className="flex flex-shrink-0 items-center">
-          <motion.div
+          <motion.a
+            href="#home"
             variants={logoVariants}
-            className="flex flex-shrink-0 items-center gap-2 pl-4 pr-2 text-[var(--ink-soft)]"
+            onClick={(e) => handleLinkClick(e, "#home")}
+            className="flex flex-shrink-0 items-center gap-2 pl-4 pr-2 text-[var(--ink-soft)] transition-colors duration-200 hover:text-[var(--pine)]"
           >
             <img src="/first-aid-kit-doctor-svgrepo-com.svg" alt="Homecare" className="h-5 w-5" />
             <span className="text-sm font-semibold">Homecare</span>
-          </motion.div>
+          </motion.a>
 
           <motion.div
             variants={contentVariants}

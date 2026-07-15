@@ -219,26 +219,27 @@ function Pricing({ pricingRef }: PricingProps) {
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const tabsScrollRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  const handleTabsWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     const el = tabsScrollRef.current;
     if (!el) return;
 
-    const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        el.scrollBy({ left: e.deltaY, behavior: "smooth" });
-      }
-    };
+    const hasHorizontalOverflow = el.scrollWidth > el.clientWidth;
+    if (!hasHorizontalOverflow) return;
 
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, [loading, error]);
+    const isHorizontalGesture =
+      event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+
+    if (!isHorizontalGesture) return;
+      event.preventDefault();
+      event.stopPropagation();
+      el.scrollLeft += event.deltaX !== 0 ? event.deltaX : event.deltaY;
+  }, []);
 
   const fetchPricing = async () => {
     setLoading(true);
     setError(null);
     try {
-      let url = `${API_URL}/api/pricing`;
+      let url = `${API_URL}/api/public/pricing`;
 
       if (searchQuery.trim() || selectedCategory !== "Semua") {
         const params = new URLSearchParams();
@@ -248,7 +249,7 @@ function Pricing({ pricingRef }: PricingProps) {
         if (searchQuery.trim()) {
           params.append("q", searchQuery);
         }
-        url = `${API_URL}/api/pricing/search?${params.toString()}`;
+        url = `${API_URL}/api/public/pricing/search?${params.toString()}`;
       }
 
       const response = await fetch(url);
@@ -385,6 +386,7 @@ function Pricing({ pricingRef }: PricingProps) {
           <div className="mb-8 border-b border-[var(--line)]">
             <div
               ref={tabsScrollRef}
+              onWheel={handleTabsWheel}
               className="flex gap-8 overflow-x-auto pb-3 [scrollbar-width:thin] [scrollbar-color:var(--line,#E2E8E6)_transparent] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--line,#E2E8E6)]"
             >
               {categories.map((category) => {

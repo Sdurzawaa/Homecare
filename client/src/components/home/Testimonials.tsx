@@ -1,11 +1,7 @@
-import { useState, useRef, useCallback, useEffect, type Ref } from "react";
-
-const DRAG_THRESHOLD = 60;
-const TRANSITION = "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)";
-const GAP = 22; // 1.4rem ≈ 22px
+import { useEffect, useMemo, useState, type Ref } from "react";
 
 interface Testimonial {
-  id: number;
+  id: number | string;
   text: string;
   author: string;
   role: string;
@@ -16,320 +12,214 @@ interface TestimonialsProps {
   testimonialsRef?: Ref<HTMLElement | null>;
 }
 
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
+  {
+    id: 1,
+    text: "Layanan homecare ini membuat karyawan kami dapat pulih tanpa harus keluar kantor. Sangat membantu untuk dengan waktu terbatas.",
+    author: "Siti",
+    role: "Pemilik Café",
+    initial: "S",
+  },
+  {
+    id: 2,
+    text: "Konsultasi dokter di rumah membuat keluarga kami lebih nyaman dan percaya diri. Respon cepat dan personal.",
+    author: "Budi",
+    role: "Mitra Usaha",
+    initial: "B",
+  },
+  {
+    id: 3,
+    text: "Tim perawat profesional, ramah, dan sangat berpengalaman. Ibu saya sekarang lebih tenang dan keluarga juga merasa lega.",
+    author: "Ani",
+    role: "Staff Perusahaan",
+    initial: "A",
+  },
+];
+
+// Semakin kecil angkanya, semakin cepat marquee berjalan.
+const MARQUEE_DURATION_SECONDS = 10;
+const MARQUEE_COLUMN_OFFSETS = [0, 4, 2];
+
+function StarRow() {
+  return (
+    <div className="mb-4 flex items-center gap-1 text-[var(--honey)]" aria-label="Rating 5 dari 5 bintang">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <svg key={i} className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2.5l2.9 6.4 7 .7-5.3 4.7 1.6 6.9-6.2-3.6-6.2 3.6 1.6-6.9-5.3-4.7 7-.7z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
+  return (
+    <li className="group/card w-full max-w-xs flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-8 shadow-[0_10px_30px_-18px_rgba(28,58,48,0.25)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(28,58,48,0.3)] focus-within:-translate-y-1.5">
+      <span
+        aria-hidden="true"
+        className="mb-3 block font-[family-name:var(--font-display)] text-[2.25rem] leading-none text-[var(--honey)]/25"
+      >
+        "
+      </span>
+
+      <StarRow />
+
+      <p className="m-0 mb-6 font-[family-name:var(--font-display)] text-[0.92rem] italic leading-[1.65] text-[var(--ink)]">
+        {testimonial.text}
+      </p>
+
+      <div className="flex items-center gap-3 border-t border-[var(--line)] pt-5">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--pine)]/10 text-[0.85rem] font-semibold text-[var(--pine)] ring-2 ring-transparent transition-colors duration-300 group-hover/card:ring-[var(--pine)]/25">
+          {testimonial.initial}
+        </div>
+        <div>
+          <p className="m-0 text-[0.88rem] font-semibold text-[var(--ink)]">{testimonial.author}</p>
+          <p className="m-0 text-[0.75rem] text-[var(--ink-soft)]">{testimonial.role}</p>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function TestimonialColumn({
+  items,
+  duration,
+  className = "",
+}: {
+  items: Testimonial[];
+  duration: number;
+  className?: string;
+}) {
+  return (
+    <div className={`group h-full overflow-hidden ${className}`}>
+      <ul
+        className="testimonial-track m-0 flex list-none flex-col gap-6 p-0 pb-6 group-hover:[animation-play-state:paused]"
+        style={{ animationDuration: `${duration}s` }}
+      >
+        {[0, 1].map((dup) =>
+          items.map((t, i) => (
+            <TestimonialCard key={`${dup}-${t.id}-${i}`} testimonial={t} />
+          )),
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function splitIntoColumns(items: Testimonial[], columnCount: number) {
+  const columns: Testimonial[][] = Array.from({ length: columnCount }, () => []);
+  items.forEach((item, i) => {
+    columns[i % columnCount].push(item);
+  });
+  return columns;
+}
+
 export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [cardWidth, setCardWidth] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([
-    {
-      id: 1,
-      text: "Layanan homecare ini membuat karyawan kami dapat pulih tanpa harus keluar kantor. Sangat membantu untuk dengan waktu terbatas.",
-      author: "Siti",
-      role: "Pemilik Café",
-      initial: "S",
-    },
-    {
-      id: 2,
-      text: "Konsultasi dokter di rumah membuat keluarga kami lebih nyaman dan percaya diri. Respon cepat dan personal.",
-      author: "Budi",
-      role: "Mitra Usaha",
-      initial: "B",
-    },
-    {
-      id: 3,
-      text: "Tim perawat profesional, ramah, dan sangat berpengalaman. Ibu saya sekarang lebih tenang dan keluarga juga merasa lega.",
-      author: "Ani",
-      role: "Staff Perusahaan",
-      initial: "A",
-    },
-  ]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
   const [error, setError] = useState<string | null>(null);
-
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const dragStartX = useRef(0);
-  const isDragging = useRef(false);
-
-  const total = testimonials.length;
-
-  // Responsive: 1 card di mobile (<768), 2 card di desktop
-  useEffect(() => {
-    const update = () => {
-      if (!containerRef.current) return;
-      const w = containerRef.current.offsetWidth;
-      const mobile = window.innerWidth < 768; // pakai viewport width buat breakpoint
-      setIsMobile(mobile);
-      if (mobile) {
-        // 1 card = full container width
-        setCardWidth(w);
-      } else {
-        // 2 card + 1 gap
-        setCardWidth(Math.floor((w - GAP) / 2));
-      }
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    if (containerRef.current) ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  // Clamp currentIndex kalau isMobile berubah
-  const cardsVisible = isMobile ? 1 : 2;
-  const maxIndex = Math.max(0, total - cardsVisible);
-  const canMove = total > cardsVisible;
-  const canPrev = canMove;
-  const canNext = canMove;
 
   useEffect(() => {
     async function fetchTestimonials() {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/testimoni`,
+          `${import.meta.env.VITE_API_URL || ""}/api/public/testimoni`,
         );
         if (!response.ok) throw new Error("Gagal memuat testimoni");
-        const data = await response.json() as Array<Record<string, unknown>>;
+        const data = (await response.json()) as Array<Record<string, unknown>>;
         const normalized = data.map((item) => ({
-          id: typeof item.id_testi === 'number' ? item.id_testi : item.id,
-          text: typeof item.teks === 'string' ? item.teks : item.text,
-          author: String(item.author ?? ''),
-          role: typeof item.latarBelakang === 'string' ? item.latarBelakang : item.role ?? "",
-          initial: String(item.initial ?? ''),
+          id: typeof item.id_testi === "number" ? item.id_testi : (item.id as number | string),
+          text: typeof item.teks === "string" ? item.teks : (item.text as string),
+          author: String(item.author ?? ""),
+          role:
+            typeof item.latarBelakang === "string"
+              ? item.latarBelakang
+              : ((item.role as string) ?? ""),
+          initial: String(item.initial ?? ""),
         })) as Testimonial[];
-        setTestimonials(normalized);
+        if (normalized.length > 0) setTestimonials(normalized);
       } catch (fetchError: unknown) {
         console.error(fetchError);
         const message = fetchError instanceof Error ? fetchError.message : String(fetchError);
-        setError(
-          message || "Terjadi kesalahan saat memuat testimoni",
-        );
+        setError(message || "Terjadi kesalahan saat memuat testimoni");
       }
     }
 
     fetchTestimonials();
   }, []);
 
-  const goNext = useCallback(() => {
-    if (!canMove) return;
-    setCurrentIndex((i) => (i + 1) % (maxIndex + 1));
-  }, [canMove, maxIndex]);
+  // Marquee cuma masuk akal kalau kontennya cukup banyak buat 3 kolom.
+  // Kalau dikit, fallback ke grid statis biar ga awkward loop 1 kartu doang.
+  const useMarquee = testimonials.length >= 6;
 
-  const goPrev = useCallback(() => {
-    if (!canMove) return;
-    setCurrentIndex((i) => (i - 1 + maxIndex + 1) % (maxIndex + 1));
-  }, [canMove, maxIndex]);
-
-  // Clamp index saat resize ubah mode
-  useEffect(() => {
-    setCurrentIndex((i) => Math.min(i, maxIndex));
-  }, [maxIndex]);
-
-  // Pointer/touch drag
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    isDragging.current = true;
-    dragStartX.current = e.clientX ?? (e as any).touches?.[0]?.clientX;
-    setDragging(true);
-    setDragOffset(0);
-  };
-
-  const onPointerMove = useCallback(
-    (e: Event) => {
-      const pointerEvent = e as any; // Allow both PointerEvent and TouchEvent
-      if (!isDragging.current) return;
-      const x = pointerEvent.clientX ?? pointerEvent.touches?.[0]?.clientX;
-      if (x == null) return;
-      const delta = x - dragStartX.current;
-      if (!canMove) {
-        setDragOffset(delta * 0.2);
-        return;
-      }
-      setDragOffset(delta);
-    },
-    [canMove],
+  const columns = useMemo(
+    () => (useMarquee ? splitIntoColumns(testimonials, 3) : []),
+    [testimonials, useMarquee],
   );
-
-  const onPointerUp = useCallback(() => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    setDragging(false);
-    if (!canMove) {
-      setDragOffset(0);
-      return;
-    }
-
-    if (dragOffset < -DRAG_THRESHOLD) goNext();
-    else if (dragOffset > DRAG_THRESHOLD) goPrev();
-    setDragOffset(0);
-  }, [dragOffset, canMove, goNext, goPrev]);
-
-  useEffect(() => {
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("touchmove", onPointerMove, { passive: true });
-    window.addEventListener("touchend", onPointerUp);
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("touchmove", onPointerMove);
-      window.removeEventListener("touchend", onPointerUp);
-    };
-  }, [onPointerMove, onPointerUp]);
-
-  // Dots: satu dot per "posisi" yang bisa di-navigate
-  // maxIndex + 1 = jumlah posisi unik
-  const dotCount = maxIndex + 1;
 
   return (
     <section
-      className="scroll-fade-up mx-auto max-w-[1240px] px-[clamp(1.5rem,5vw,4rem)] py-[4.5rem]"
+      className="scroll-fade-up relative mx-auto max-w-[1240px] overflow-hidden px-[clamp(1.5rem,5vw,4rem)] py-[4.5rem]"
       id="testimonials"
       ref={testimonialsRef}
     >
+      <style>{`
+        @keyframes testimonial-marquee {
+          from { transform: translateY(0); }
+          to { transform: translateY(-50%); }
+        }
+        .testimonial-track {
+          animation-name: testimonial-marquee;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .testimonial-track {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
       {error && (
         <div className="mb-6 rounded-[14px] border border-[#f2c7c2] bg-[#fff1f0] px-5 py-4 text-sm text-[#b02a37]">
           ⚠️ {error}
         </div>
       )}
-      {/* Header */}
-      <div className="mx-auto mt-0 mb-12 max-w-[42rem] text-center">
+
+      <div className="relative z-10 mx-auto mb-14 max-w-[42rem] text-center">
         <p className="eyebrow">Testimoni</p>
         <h3 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium text-[var(--ink)]">
           Pelanggan merasa lebih tenang dan sehat
         </h3>
       </div>
 
-      {/* Carousel */}
-      <div className="relative">
+      {useMarquee ? (
         <div
-          className="overflow-hidden"
-          ref={containerRef}
-          style={{ touchAction: "pan-y" }}
+          className="relative flex h-[640px] justify-center gap-6 [mask-image:linear-gradient(to_bottom,transparent,black_8%,black_92%,transparent)]"
+          role="region"
+          aria-label="Testimoni pelanggan"
         >
-          <div
-            ref={trackRef}
-            className="flex"
-            style={{
-              gap: `${GAP}px`,
-              transform: cardWidth
-                ? `translateX(${-(currentIndex * (cardWidth + GAP)) + dragOffset}px)`
-                : "none",
-              transition: dragging ? "none" : TRANSITION,
-              cursor: dragging ? "grabbing" : "grab",
-              userSelect: "none",
-            }}
-            onPointerDown={onPointerDown}
-            onTouchStart={(e) => {
-              dragStartX.current = e.touches[0].clientX;
-              isDragging.current = true;
-              setDragging(true);
-            }}
-          >
-            {testimonials.map((t, i) => {
-              // Card visible = dalam rentang currentIndex sampai currentIndex + cardsVisible - 1
-              const isVisible =
-                i >= currentIndex && i < currentIndex + cardsVisible;
-
-              return (
-                <div
-                  key={t.id}
-                  className="flex-shrink-0 rounded-[18px] border border-[var(--line)] bg-[var(--card)] p-[1.8rem] transition-opacity duration-300"
-                  style={{
-                    width: cardWidth
-                      ? `${cardWidth}px`
-                      : isMobile
-                        ? "100%"
-                        : "calc(50% - 0.7rem)",
-                    opacity: isVisible ? 1 : 0.35,
-                    pointerEvents: isVisible ? "auto" : "none",
-                  }}
-                >
-                  <div
-                    className="mb-4 font-[family-name:var(--font-display)] text-[2.5rem] leading-none text-[#5b2333]/20 select-none"
-                    aria-hidden="true"
-                  >
-                    "
-                  </div>
-
-                  <p className="m-0 mb-6 font-[family-name:var(--font-display)] text-[0.95rem] italic leading-[1.6] text-[var(--ink)]">
-                    {t.text}
-                  </p>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#5b2333]/10 text-[0.8rem] font-semibold text-[#5b2333]">
-                      {t.initial}
-                    </div>
-                    <div>
-                      <p className="m-0 text-[0.85rem] font-semibold text-[var(--ink)]">
-                        {t.author}
-                      </p>
-                      <p className="m-0 text-[0.75rem] text-[var(--ink-soft)]">
-                        {t.role}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <TestimonialColumn
+            items={columns[0]}
+            duration={MARQUEE_DURATION_SECONDS + MARQUEE_COLUMN_OFFSETS[0]}
+          />
+          <TestimonialColumn
+            items={columns[1]}
+            duration={MARQUEE_DURATION_SECONDS + MARQUEE_COLUMN_OFFSETS[1]}
+            className="hidden md:block"
+          />
+          <TestimonialColumn
+            items={columns[2]}
+            duration={MARQUEE_DURATION_SECONDS + MARQUEE_COLUMN_OFFSETS[2]}
+            className="hidden lg:block"
+          />
         </div>
-
-        {/* Nav + dots */}
-        <div className="mt-6 flex items-center justify-between">
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-transparent text-[var(--ink)] transition-[transform,border-color,background,opacity] duration-200 hover:-translate-y-1 hover:border-[var(--honey)] hover:bg-[var(--bg-alt)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
-            onClick={goPrev}
-            disabled={!canMove}
-            aria-label="Testimonial sebelumnya"
-          >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-
-          <div className="flex gap-2">
-            {Array.from({ length: dotCount }).map((_, i) => (
-              <button
-                key={i}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === currentIndex
-                    ? "w-6 bg-[#5b2333]"
-                    : "w-2 bg-[var(--line)]"
-                }`}
-                onClick={() => setCurrentIndex(i)}
-                aria-label={`Pergi ke testimonial ${i + 1}`}
-              />
-            ))}
-          </div>
-
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-transparent text-[var(--ink)] transition-[transform,border-color,background,opacity] duration-200 hover:-translate-y-1 hover:border-[var(--honey)] hover:bg-[var(--bg-alt)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
-            onClick={goNext}
-            disabled={!canMove}
-            aria-label="Testimonial berikutnya"
-          >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      ) : (
+        <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3">
+          {testimonials.map((t) => (
+            <TestimonialCard key={t.id} testimonial={t} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
