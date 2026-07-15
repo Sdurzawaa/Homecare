@@ -8,15 +8,6 @@ import pool from "./db.js";
 
 dotenv.config();
 
-const ADMIN_API_KEY = process.env.ADMIN_API_KEY || process.env.API_KEY;
-const REQUIRE_API_KEY = /^(true|1|yes)$/i.test(
-  process.env.REQUIRE_API_KEY || "true",
-);
-
-if (REQUIRE_API_KEY && !ADMIN_API_KEY) {
-  console.warn("WARNING: API key belum diatur di server/.env");
-}
-
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -51,26 +42,6 @@ const limiter = rateLimit({
 
 const isObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value);
-
-const validateAdminKey = (req, res, next) => {
-  const apiKey =
-    req.headers["x-api-key"] ||
-    (typeof req.headers.authorization === "string"
-      ? req.headers.authorization.replace(/^Bearer\s+/i, "")
-      : undefined);
-
-  if (REQUIRE_API_KEY && !ADMIN_API_KEY) {
-    return res
-      .status(500)
-      .json({ error: "Server configuration missing API key" });
-  }
-
-  if (REQUIRE_API_KEY && apiKey !== ADMIN_API_KEY) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  next();
-};
 
 const validateNumericIdParam = (req, res, next) => {
   const id = req.params.id ?? req.params.id_testi;
@@ -145,12 +116,26 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Validate API key
-app.get("/api/validate-key", validateAdminKey, (req, res) => {
-  res.json({ valid: true });
+// Read all testimoni (public)
+app.get("/api/public/testimoni", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+       id_testi,
+       teks, 
+       author, 
+       latarBelakang, 
+       initial 
+      FROM website_co.testimoni ORDER BY id_testi ASC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/public/testimoni error", error);
+    res.status(500).json({ error: "Gagal mengambil data testimoni" });
+  }
 });
 
-// Read all testimoni (public)
+// Read all testimoni (admin only)
 app.get("/api/testimoni", async (req, res) => {
   try {
     const result = await pool.query(
@@ -204,36 +189,30 @@ app.get(
 );
 
 // Create testimoni card (admin only)
-app.post(
-  "/api/testimoni",
-  validateAdminKey,
-  validateTestimoniPayload,
-  async (req, res) => {
-    const { teks, author, latarBelakang, initial } = req.body;
-    try {
-      const result = await pool.query(
-        `INSERT INTO website_co.testimoni (
+app.post("/api/testimoni", validateTestimoniPayload, async (req, res) => {
+  const { teks, author, latarBelakang, initial } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO website_co.testimoni (
         teks,
         author,
         latarBelakang,
         initial )
        VALUES ($1, $2, $3, $4)
        RETURNING id_testi, teks, author, latarBelakang, initial`,
-        [teks, author, latarBelakang, initial],
-      );
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      console.error("POST /api/testimoni error", error);
-      res.status(500).json({ error: "Gagal membuat testimoni card" });
-    }
-  },
-);
+      [teks, author, latarBelakang, initial],
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("POST /api/testimoni error", error);
+    res.status(500).json({ error: "Gagal membuat testimoni card" });
+  }
+});
 
 // Update testimoni card
 app.put(
   "/api/testimoni/:id_testi",
   validateNumericIdParam,
-  validateAdminKey,
   validateTestimoniPayload,
   async (req, res) => {
     const { id_testi } = req.params;
@@ -266,7 +245,6 @@ app.put(
 app.delete(
   "/api/testimoni/:id_testi",
   validateNumericIdParam,
-  validateAdminKey,
   async (req, res) => {
     const { id_testi } = req.params;
     try {
@@ -288,6 +266,65 @@ app.delete(
 );
 
 // Read all pricing (public)
+app.get("/api/public/pricing", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, category, title, description, image, duration, price, recommended FROM website_co.pricing ORDER BY id ASC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/public/pricing error", error);
+    res.status(500).json({ error: "Gagal mengambil data pricing" });
+  }
+});
+
+// Read all pricing categories (public)
+app.get("/api/public/pricing-categories", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, category, title, description FROM website_co.pricing_categories ORDER BY id ASC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/public/pricing-categories error", error);
+    res.status(500).json({ error: "Gagal mengambil data kategori pricing" });
+  }
+});
+
+// Search pricing cards by category and query (public)
+app.get("/api/public/pricing/search", async (req, res) => {
+  try {
+    const { category, q } = req.query;
+    const conditions = [];
+    const params = [];
+
+    if (category && category !== "Semua") {
+      params.push(category);
+      conditions.push(`category = $${params.length}`);
+    }
+
+    if (q && typeof q === "string" && q.trim() !== "") {
+      params.push(`%${q.trim()}%`);
+      const paramNum = params.length;
+      conditions.push(
+        `(title ILIKE $${paramNum} OR description ILIKE $${paramNum})`,
+      );
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const result = await pool.query(
+      `SELECT id, category, title, description, image, duration, price, recommended FROM website_co.pricing ${whereClause} ORDER BY recommended DESC, title ASC`,
+      params,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("GET /api/public/pricing/search error", error);
+    res.status(500).json({ error: "Gagal mencari data pricing" });
+  }
+});
+
+// Read all pricing (admin only)
 app.get("/api/pricing", async (req, res) => {
   try {
     const result = await pool.query(
@@ -304,7 +341,7 @@ app.get("/api/pricing", async (req, res) => {
   }
 });
 
-// Read all pricing categories (public)
+// Read all pricing categories (admin only)
 app.get("/api/pricing-categories", async (req, res) => {
   try {
     const result = await pool.query(
@@ -321,7 +358,7 @@ app.get("/api/pricing-categories", async (req, res) => {
   }
 });
 
-// Search pricing cards by category and query (public)
+// Search pricing cards by category and query (admin only)
 app.get("/api/pricing/search", async (req, res) => {
   try {
     const { category, q } = req.query;
@@ -358,7 +395,7 @@ app.get("/api/pricing/search", async (req, res) => {
   }
 });
 
-// Read single pricing (public)
+// Read single pricing (admin only)
 app.get("/api/pricing/:id", validateNumericIdParam, async (req, res) => {
   const { id } = req.params;
   try {
@@ -386,40 +423,27 @@ app.get("/api/pricing/:id", validateNumericIdParam, async (req, res) => {
 });
 
 // Create pricing card (admin only)
-app.post(
-  "/api/pricing",
-  validateAdminKey,
-  validatePricingPayload,
-  async (req, res) => {
-    const {
-      category,
-      title,
-      description,
-      image,
-      duration,
-      price,
-      recommended,
-    } = req.body;
-    try {
-      const result = await pool.query(
-        `INSERT INTO website_co.pricing (category, title, description, image, duration, price, recommended)
+app.post("/api/pricing", validatePricingPayload, async (req, res) => {
+  const { category, title, description, image, duration, price, recommended } =
+    req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO website_co.pricing (category, title, description, image, duration, price, recommended)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, category, title, description, image, duration, price, recommended`,
-        [category, title, description, image, duration, price, recommended],
-      );
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      console.error("POST /api/pricing error", error);
-      res.status(500).json({ error: "Gagal membuat pricing card" });
-    }
-  },
-);
+      [category, title, description, image, duration, price, recommended],
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("POST /api/pricing error", error);
+    res.status(500).json({ error: "Gagal membuat pricing card" });
+  }
+});
 
 // Update pricing card
 app.put(
   "/api/pricing/:id",
   validateNumericIdParam,
-  validateAdminKey,
   validatePricingPayload,
   async (req, res) => {
     const { id } = req.params;
@@ -458,27 +482,22 @@ app.put(
 );
 
 // Delete pricing card
-app.delete(
-  "/api/pricing/:id",
-  validateNumericIdParam,
-  validateAdminKey,
-  async (req, res) => {
-    const { id } = req.params;
-    try {
-      const result = await pool.query(
-        `DELETE FROM website_co.pricing WHERE id = $1 RETURNING id`,
-        [id],
-      );
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Pricing card tidak ditemukan" });
-      }
-      res.json({ message: "Pricing card berhasil dihapus" });
-    } catch (error) {
-      console.error("DELETE /api/pricing/:id error", error);
-      res.status(500).json({ error: "Gagal menghapus pricing card" });
+app.delete("/api/pricing/:id", validateNumericIdParam, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `DELETE FROM website_co.pricing WHERE id = $1 RETURNING id`,
+      [id],
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Pricing card tidak ditemukan" });
     }
-  },
-);
+    res.json({ message: "Pricing card berhasil dihapus" });
+  } catch (error) {
+    console.error("DELETE /api/pricing/:id error", error);
+    res.status(500).json({ error: "Gagal menghapus pricing card" });
+  }
+});
 
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
