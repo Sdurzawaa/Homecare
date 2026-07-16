@@ -181,7 +181,23 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
 
       {error && (
         <div className="mb-6 rounded-[14px] border border-[#f2c7c2] bg-[#fff1f0] px-5 py-4 text-sm text-[#b02a37]">
-          ⚠️ {error}
+          <div className="flex items-center gap-2">
+            <svg
+              className="h-4 w-4 flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="8" x2="12" y2="13" />
+              <circle cx="12" cy="17" r="1" />
+            </svg>
+            <span>{error}</span>
+          </div>
         </div>
       )}
 

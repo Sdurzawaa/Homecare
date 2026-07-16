@@ -10,6 +10,28 @@ import Footer from "./components/home/Footer";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
 
 function App() {
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const isValidPath = pathname === "/" || pathname === "/index.html";
+
+  if (!isValidPath) {
+    return (
+      <div className="page-shell">
+        <main className="min-h-screen flex items-center justify-center p-6">
+          <div className="rounded-3xl border border-slate-200 bg-white/90 p-10 text-center shadow-xl shadow-slate-200/40">
+            <h1 className="mb-4 text-5xl font-bold">404</h1>
+            <p className="mb-6 text-lg text-slate-700">Halaman tidak ditemukan.</p>
+            <a
+              href="/"
+              className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Kembali ke beranda
+            </a>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Scroll animation refs untuk setiap section
   const heroRef = useScrollAnimation({ threshold: 0.3 });
   const servicesRef = useScrollAnimation({ threshold: 0.1 });

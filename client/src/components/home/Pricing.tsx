@@ -135,7 +135,15 @@ const TreatmentCard = memo(function TreatmentCard({
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[var(--bg-alt)] to-white">
         {treatment.recommended && (
           <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-[var(--pine)] shadow-sm backdrop-blur-sm">
-            ⭐ Rekomendasi
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
+            Rekomendasi
           </span>
         )}
         {!hasError ? (

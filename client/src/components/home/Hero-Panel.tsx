@@ -24,7 +24,19 @@ function Hero({ heroRef }: HeroProps) {
                          bg-[var(--bg-alt,#FAF7F0)] border border-[var(--line,#E2E8E6)]
                          text-[var(--pine,#1c3a30)]"
             >
-              <span className="text-[18px] leading-none">✓</span>
+              <span className="inline-flex h-5 w-5 items-center justify-center text-[var(--pine,#1c3a30)]" aria-hidden="true">
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
               <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em]">
                 Dipercaya 1000+ keluarga
               </span>
@@ -131,7 +143,18 @@ function Hero({ heroRef }: HeroProps) {
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-alt,#FAF7F0)]">
-                    <span className="text-[var(--pine,#1c3a30)]">✚</span>
+                    <svg
+                      className="h-5 w-5 text-[var(--pine,#1c3a30)]"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
                   </div>
                   <div>
                     <div className="font-bold text-[var(--pine,#1c3a30)]">
