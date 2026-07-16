@@ -22,6 +22,10 @@
 
 * { box-sizing: border-box; }
 
+section[id] {
+  scroll-margin-top: calc(var(--header-h, 84px) + 1.25rem);
+}
+
 .page-shell {
   font-family: var(--font-body);
   color: var(--ink);
@@ -248,6 +252,12 @@
   backface-visibility: hidden;
 }
 
+/* Individual card scroll animation support when using individual refs */
+.scroll-stagger.scroll-animated {
+  animation: scrollStaggerFadeUp 0.75s ease-out forwards;
+  opacity: 1;
+}
+
 .scroll-fade-up.scroll-animated .scroll-stagger {
   animation: scrollStaggerFadeUp 0.75s ease-out forwards;
   opacity: 1;
@@ -303,11 +313,11 @@
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
+  animation: fadeInUp 0.8s ease-out both;
 }
 
 .animate-write-in {
   opacity: 0;
-  animation: writeIn 0.85s ease-out forwards;
+  animation: writeIn 0.85s ease-out both;
   will-change: opacity, transform;
 }

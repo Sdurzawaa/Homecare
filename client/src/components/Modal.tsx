@@ -28,6 +28,9 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
   }, [onClose]);
 
   useEffect(() => {
+    let raf1: number | null = null;
+    let raf2: number | null = null;
+
     if (isOpen) {
       // Batalkan exit timer kalau modal dibuka lagi sebelum selesai
       if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
@@ -36,14 +39,11 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
       // Double-RAF: pastikan browser sudah commit paint pertama
       // sebelum kita set `entered = true` yang trigger animasi masuk.
       // Satu RAF saja kadang masih di frame yang sama → patah-patah.
-      const raf1 = requestAnimationFrame(() => {
-        const raf2 = requestAnimationFrame(() => {
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
           setEntered(true);
         });
-        return () => cancelAnimationFrame(raf2);
       });
-
-      return () => cancelAnimationFrame(raf1);
     } else {
       // Kalau parent paksa tutup dari luar (bukan lewat handleClose)
       setEntered(false);
@@ -54,6 +54,8 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
     }
 
     return () => {
+      if (raf1 !== null) cancelAnimationFrame(raf1);
+      if (raf2 !== null) cancelAnimationFrame(raf2);
       if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
     };
   }, [isOpen]);
@@ -92,6 +94,10 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
 
+    // Pause Lenis scrolling when modal is open
+    const lenis = (window as any).lenis;
+    if (lenis) lenis.stop();
+
     // Auto-focus tombol close
     const focusTimer = setTimeout(() => {
       (modalContentRef.current?.querySelector("[data-modal-close]") as HTMLElement | null)?.focus();
@@ -100,6 +106,8 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      // Resume Lenis scrolling when modal is closed
+      if (lenis) lenis.start();
       clearTimeout(focusTimer);
     };
   }, [visible, handleClose]);

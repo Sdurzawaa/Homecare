@@ -7,6 +7,7 @@ import {
   useState,
   type Ref,
 } from "react";
+import { motion } from "framer-motion";
 import Modal from "./Modal";
 
 const WHATSAPP_NUMBER = "6285773780406";
@@ -118,6 +119,8 @@ const TreatmentCard = memo(function TreatmentCard({
   onClick: () => void;
   onImageError: () => void;
 }) {
+  const [loaded, setLoaded] = useState(false);
+
   return (
     <article
       onClick={onClick}
@@ -150,7 +153,10 @@ const TreatmentCard = memo(function TreatmentCard({
           <img
             src={treatment.image}
             alt={treatment.title}
-            className="h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
+            className={`h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-110 ${
+              loaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+            }`}
+            onLoad={() => setLoaded(true)}
             onError={onImageError}
             loading="lazy"
             decoding="async"
@@ -225,23 +231,66 @@ function Pricing({ pricingRef }: PricingProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<PricingCategory>("Semua");
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
-  const tabsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
 
-  const handleTabsWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
-    const el = tabsScrollRef.current;
-    if (!el) return;
+  useEffect(() => {
+    if (!tabsEl) return;
 
-    const hasHorizontalOverflow = el.scrollWidth > el.clientWidth;
-    if (!hasHorizontalOverflow) return;
+    let animationFrameId: number | null = null;
+    let targetScrollLeft = tabsEl.scrollLeft;
 
-    const isHorizontalGesture =
-      event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+    const handleWheel = (event: WheelEvent) => {
+      const hasHorizontalOverflow = tabsEl.scrollWidth > tabsEl.clientWidth;
+      if (!hasHorizontalOverflow) return;
 
-    if (!isHorizontalGesture) return;
       event.preventDefault();
       event.stopPropagation();
-      el.scrollLeft += event.deltaX !== 0 ? event.deltaX : event.deltaY;
-  }, []);
+
+      const delta = event.deltaX !== 0 ? event.deltaX : event.deltaY;
+      
+      targetScrollLeft = Math.max(
+        0,
+        Math.min(
+          tabsEl.scrollWidth - tabsEl.clientWidth,
+          targetScrollLeft + delta
+        )
+      );
+
+      const animate = () => {
+        const current = tabsEl.scrollLeft;
+        const diff = targetScrollLeft - current;
+        
+        if (Math.abs(diff) > 0.5) {
+          tabsEl.scrollLeft += diff * 0.15; // smooth lerp speed
+          animationFrameId = requestAnimationFrame(animate);
+        } else {
+          tabsEl.scrollLeft = targetScrollLeft;
+          animationFrameId = null;
+        }
+      };
+
+      if (animationFrameId === null) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    const handleScroll = () => {
+      if (animationFrameId === null) {
+        targetScrollLeft = tabsEl.scrollLeft;
+      }
+    };
+
+    tabsEl.addEventListener("wheel", handleWheel, { passive: false });
+    tabsEl.addEventListener("scroll", handleScroll);
+
+    return () => {
+      tabsEl.removeEventListener("wheel", handleWheel);
+      tabsEl.removeEventListener("scroll", handleScroll);
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [tabsEl]);
 
   const fetchPricing = async () => {
     setLoading(true);
@@ -265,7 +314,7 @@ function Pricing({ pricingRef }: PricingProps) {
         throw new Error("Gagal memuat data pricing");
       }
       const data = await response.json();
-      setTreatments(data);
+      setTreatments(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
       console.error(err);
       const message = err instanceof Error ? err.message : String(err);
@@ -315,7 +364,7 @@ function Pricing({ pricingRef }: PricingProps) {
   }, []);
 
   useEffect(() => {
-    const container = tabsScrollRef.current;
+    const container = tabsEl;
     if (!container) return;
     const activeButton = container.querySelector(
       `[data-category="${CSS.escape(selectedCategory)}"]`,
@@ -329,7 +378,7 @@ function Pricing({ pricingRef }: PricingProps) {
       containerRect.width / 2 +
       buttonRect.width / 2;
     container.scrollBy({ left: offset, behavior: "smooth" });
-  }, [selectedCategory]);
+  }, [selectedCategory, tabsEl]);
 
   const filteredTreatments = useMemo(() => {
     return [...treatments].sort(
@@ -391,11 +440,10 @@ function Pricing({ pricingRef }: PricingProps) {
 
       {!error && (
         <div className="mb-12">
-          <div className="mb-8 border-b border-[var(--line)]">
+          <div className="mb-8 p-1.5 bg-[var(--pine)]/[0.03] border border-[var(--line)]/50 rounded-2xl">
             <div
-              ref={tabsScrollRef}
-              onWheel={handleTabsWheel}
-              className="flex gap-8 overflow-x-auto pb-3 [scrollbar-width:thin] [scrollbar-color:var(--line,#E2E8E6)_transparent] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--line,#E2E8E6)]"
+              ref={setTabsEl}
+              className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {categories.map((category) => {
                 const isActive = selectedCategory === category;
@@ -405,13 +453,22 @@ function Pricing({ pricingRef }: PricingProps) {
                     type="button"
                     data-category={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`relative min-w-max flex-shrink-0 pb-4 text-[0.95rem] font-semibold transition-colors ${
-                      isActive
-                        ? "font-bold text-[var(--pine)] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-[var(--pine)]"
-                        : "text-[var(--ink-soft)] hover:text-[var(--pine)]"
-                    }`}
+                    className="relative min-w-max flex-shrink-0 px-5 py-2 text-sm font-semibold transition-colors duration-200 rounded-xl cursor-pointer"
                   >
-                    {category}
+                    {isActive && (
+                      <motion.span
+                        layoutId="active-pricing-tab"
+                        className="absolute inset-0 bg-[var(--pine)] rounded-xl shadow-md shadow-[var(--pine)]/15"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className={`relative z-10 transition-colors duration-200 ${
+                      isActive
+                        ? "text-white font-bold"
+                        : "text-[var(--ink-soft)] hover:text-[var(--pine)]"
+                    }`}>
+                      {category}
+                    </span>
                   </button>
                 );
               })}

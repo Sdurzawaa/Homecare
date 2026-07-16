@@ -27,9 +27,7 @@ export const useScrollAnimation = <T extends HTMLElement = HTMLElement>(options:
     }
 
     return () => {
-      if (elementRef.current) {
-        observer.unobserve(elementRef.current);
-      }
+      observer.disconnect();
     };
   }, [observerOptions.threshold, observerOptions.rootMargin, observerOptions.root]);
 

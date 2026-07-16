@@ -190,13 +190,13 @@ function Hero({ heroRef }: HeroProps) {
           50% { transform: translateY(-10px); }
         }
         .animate-fade-in-up {
-          animation: fadeInUp 0.8s ease-out forwards;
+          animation: fadeInUp 0.8s ease-out both;
           will-change: opacity, transform;
           backface-visibility: hidden;
           transform: translateZ(0);
         }
         .animate-fade-in-scale {
-          animation: fadeInScale 0.8s ease-out forwards;
+          animation: fadeInScale 0.8s ease-out both;
           will-change: opacity, transform;
           backface-visibility: hidden;
           transform: translateZ(0);

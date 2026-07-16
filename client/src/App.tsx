@@ -34,7 +34,6 @@ function App() {
 
   // Scroll animation refs untuk setiap section
   const heroRef = useScrollAnimation({ threshold: 0.3 });
-  const servicesRef = useScrollAnimation({ threshold: 0.1 });
   const achievementsRef = useScrollAnimation({ threshold: 0.1 });
   const testimonialsRef = useScrollAnimation({ threshold: 0.1 });
   const contactRef = useScrollAnimation({ threshold: 0.3 });

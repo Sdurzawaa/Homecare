@@ -137,9 +137,9 @@ function Footer() {
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem] text-white/70">
               <p className="m-0">
-                Jl. Melati No. 123, Jakarta Selatan, Indonesia
+                AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia
               </p>
-              <p className="m-0">+62 812 3456 7890</p>
+              <p className="m-0">+62 857-7378-0406</p>
             </div>
           </div>
         </div>

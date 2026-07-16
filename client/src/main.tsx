@@ -15,6 +15,11 @@ const lenis = new Lenis({
   autoRaf: false,
 })
 
+// Expose lenis globally to allow components (like navigation drawer and modals) to pause scroll
+if (typeof window !== 'undefined') {
+  (window as any).lenis = lenis;
+}
+
 function raf(time: number) {
   lenis.raf(time)
   requestAnimationFrame(raf)

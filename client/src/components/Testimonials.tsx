@@ -126,16 +126,20 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
         );
         if (!response.ok) throw new Error("Gagal memuat testimoni");
         const data = (await response.json()) as Array<Record<string, unknown>>;
-        const normalized = data.map((item) => ({
-          id: typeof item.id_testi === "number" ? item.id_testi : (item.id as number | string),
-          text: typeof item.teks === "string" ? item.teks : (item.text as string),
-          author: String(item.author ?? ""),
-          role:
-            typeof item.latarBelakang === "string"
-              ? item.latarBelakang
-              : ((item.role as string) ?? ""),
-          initial: String(item.initial ?? ""),
-        })) as Testimonial[];
+        const normalized = data.map((item) => {
+          const author = String(item.author ?? "").trim();
+          const initial = String(item.initial ?? "").trim();
+          return {
+            id: typeof item.id_testi === "number" ? item.id_testi : (item.id as number | string),
+            text: typeof item.teks === "string" ? item.teks : (item.text as string),
+            author,
+            role:
+              typeof item.latarBelakang === "string"
+                ? item.latarBelakang
+                : ((item.role as string) ?? ""),
+            initial: initial !== "" ? initial : (author !== "" ? author.charAt(0).toUpperCase() : "?"),
+          };
+        }) as Testimonial[];
         if (normalized.length > 0) setTestimonials(normalized);
       } catch (fetchError: unknown) {
         console.error(fetchError);
