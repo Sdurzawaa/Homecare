@@ -1,12 +1,12 @@
 import "./App.css";
 import { AnimatedNavFramer } from "@/components/ui/navigation-menu";
-import Hero from "./components/home/Hero-Panel";
-import Achievements from "./components/home/Achievement";
-import Testimonials from "./components/home/Testimonials";
-import Pricing from "./components/home/Pricing";
+import Footer from "@/components/ui/Footer";
+import Hero from "./components/Hero-Panel";
+import Achievements from "./components/Achievement";
+import Testimonials from "./components/Testimonials";
+import Pricing from "./components/Pricing";
 
-import Contact from "./components/home/Contact";
-import Footer from "./components/home/Footer";
+import Contact from "./components/Contact";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
 
 function App() {
