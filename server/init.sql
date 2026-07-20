@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS website_co;
+CREATE SCHEMA IF NOT EXISTS public;
 
-CREATE TABLE IF NOT EXISTS website_co.pricing (
+CREATE TABLE IF NOT EXISTS public.pricing (
   id SERIAL PRIMARY KEY,
   category TEXT NOT NULL,
   title TEXT NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS website_co.pricing (
   recommended BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS website_co.testimoni (
+CREATE TABLE IF NOT EXISTS public.testimoni (
 	id_testi SERIAL PRIMARY KEY,
 	teks TEXT NOT NULL,
 	author TEXT NOT NULL,

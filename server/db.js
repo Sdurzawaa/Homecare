@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const schemaName = process.env.PGSCHEMA || "website_co";
+
 const pool = new Pool({
   host: process.env.PGHOST || "localhost",
   port: process.env.PGPORT ? Number(process.env.PGPORT) : 5432,
@@ -11,7 +13,7 @@ const pool = new Pool({
   password: process.env.PGPASSWORD,
   ssl:
     process.env.PGSSLMODE === "require" ? { rejectUnauthorized: false } : false,
-  options: "-c search_path=website_co,public",
+  options: `-c search_path=${schemaName}`,
 });
 
 export default pool;
