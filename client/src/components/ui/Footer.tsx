@@ -103,33 +103,6 @@ function Footer() {
             </div>
           </div>
 
-          {/* Bantuan */}
-          <div className="flex flex-col gap-3">
-            <h4 className="m-0 text-[0.85rem] font-semibold uppercase tracking-wide text-white/40">
-              Bantuan
-            </h4>
-            <div className="flex flex-col gap-2.5 text-[0.9rem]">
-              <a
-                href="#contact"
-                className="w-fit text-white/70 no-underline transition-colors hover:text-white"
-              >
-                Hubungi Kami
-              </a>
-              <a
-                href="#"
-                className="w-fit text-white/70 no-underline transition-colors hover:text-white"
-              >
-                Kebijakan Privasi
-              </a>
-              <a
-                href="#"
-                className="w-fit text-white/70 no-underline transition-colors hover:text-white"
-              >
-                Syarat &amp; Ketentuan
-              </a>
-            </div>
-          </div>
-
           {/* Kontak */}
           <div className="flex flex-col gap-3">
             <h4 className="m-0 text-[0.85rem] font-semibold uppercase tracking-wide text-white/40">
