@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #f8fff3;
-  --bg-alt: #e8f0e6;
-  --ink: #16241d;
-  --ink-soft: #4b5d54;
-  --pine: #2f5d4f;
-  --pine-deep: #1c3a30;
-  --honey: #e2a23b;
-  --honey-deep: #c2811f;
+  --bg: #fdf5f6; /* Soft cream background with a hint of warm pink */
+  --bg-alt: #f7e4e7; /* Soft dusty pink background */
+  --ink: #2d181b; /* Trustworthy deep warm berry/charcoal for headers & text */
+  --ink-soft: #634b4f; /* Muted warm rose-grey for body text */
+  --pine: #b24d62; /* Elegant dark rose primary color */
+  --pine-deep: #772635; /* Premium deep burgundy/cherry */
+  --honey: #cca87a; /* Sophisticated antique gold accent */
+  --honey-deep: #a17c52; /* Deep antique gold */
   --card: #ffffff;
-  --line: #cfe0cd;
+  --line: #ecd0d4; /* Soft rose border line */
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
   --header-h: 84px;
@@ -59,7 +59,7 @@ section[id] {
   width: 100%;
   max-width: 340px;
   transform: rotate(2deg);
-  box-shadow: 0 18px 40px -22px rgba(28, 58, 48, 0.35);
+  box-shadow: 0 18px 40px -22px rgba(119, 38, 53, 0.35);
 }
 
 .visual-card::after {
@@ -67,7 +67,7 @@ section[id] {
   display: block;
   height: 46px;
   margin: 1.3rem 0 0.2rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' fill='none'%3E%3Cpath d='M0 30 H60 L75 8 L90 52 L105 18 L118 30 H160 L172 12 L186 48 L198 30 H300' stroke='%23E2A23B' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' fill='none'%3E%3Cpath d='M0 30 H60 L75 8 L90 52 L105 18 L118 30 H160 L172 12 L186 48 L198 30 H300' stroke='%23cca87a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -153,7 +153,7 @@ section[id] {
   font-weight: 700;
   font-size: 0.85rem;
   text-decoration: none;
-  box-shadow: 0 10px 24px -10px rgba(28, 58, 48, 0.5);
+  box-shadow: 0 10px 24px -10px rgba(119, 38, 53, 0.5);
 }
 #wa-chat::before {
   content: '';
@@ -191,7 +191,7 @@ section[id] {
     gap: 0.2rem;
     background: var(--bg);
     border-bottom: 1px solid var(--line);
-    box-shadow: 0 12px 24px -16px rgba(28, 58, 48, 0.25);
+    box-shadow: 0 12px 24px -16px rgba(119, 38, 53, 0.25);
     padding: 0.6rem 1.2rem 1rem;
     max-height: 0;
     overflow: hidden;

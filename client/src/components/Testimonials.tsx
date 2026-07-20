@@ -54,7 +54,7 @@ function StarRow() {
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <li className="group/card w-full max-w-xs flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-8 shadow-[0_10px_30px_-18px_rgba(28,58,48,0.25)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(28,58,48,0.3)] focus-within:-translate-y-1.5">
+    <li className="group/card w-full max-w-xs flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-8 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)] focus-within:-translate-y-1.5">
       <span
         aria-hidden="true"
         className="mb-3 block font-[family-name:var(--font-display)] text-[2.25rem] leading-none text-[var(--honey)]/25"

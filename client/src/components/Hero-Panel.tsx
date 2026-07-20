@@ -11,7 +11,7 @@ function Hero({ heroRef }: HeroProps) {
       id="home"
       className="min-h-[90vh] flex items-center overflow-hidden
                  pt-[calc(var(--header-h,72px)+1rem)] pb-[4.5rem]
-                 bg-[radial-gradient(circle_at_top_right,rgba(28,58,48,0.08),transparent),linear-gradient(to_bottom,var(--bg-alt,#FAF7F0),#ffffff)]"
+                 bg-[radial-gradient(circle_at_top_right,rgba(178,77,98,0.08),transparent),linear-gradient(to_bottom,var(--bg-alt,#f7e4e7),#ffffff)]"
     >
       <div className="max-w-[1240px] mx-auto px-[clamp(1.5rem,5vw,4rem)] w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -21,10 +21,10 @@ function Hero({ heroRef }: HeroProps) {
             <div
               style={{ animationDelay: "0.15s" }}
               className="inline-flex animate-fade-in-up items-center gap-2 rounded-full px-4 py-2 shadow-sm
-                         bg-[var(--bg-alt,#FAF7F0)] border border-[var(--line,#E2E8E6)]
-                         text-[var(--pine,#1c3a30)]"
+                         bg-[var(--bg-alt,#f7e4e7)] border border-[var(--line,#ecd0d4)]
+                         text-[var(--pine,#b24d62)]"
             >
-              <span className="inline-flex h-5 w-5 items-center justify-center text-[var(--pine,#1c3a30)]" aria-hidden="true">
+              <span className="inline-flex h-5 w-5 items-center justify-center text-[var(--pine,#b24d62)]" aria-hidden="true">
               <svg
                 className="h-4 w-4"
                 viewBox="0 0 24 24"
@@ -46,14 +46,14 @@ function Hero({ heroRef }: HeroProps) {
               style={{ animationDelay: "0.25s" }}
               className="animate-fade-in-up font-[family-name:var(--font-display,'Source_Serif_4',serif)]
                          text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.1]
-                         tracking-[-0.02em] text-[var(--pine,#1c3a30)] max-w-xl"
+                         tracking-[-0.02em] text-[var(--pine-deep,#772635)] max-w-xl"
             >
               Kenyamanan Perawatan Medis di Rumah Anda
             </h1>
 
             <p
               style={{ animationDelay: "0.35s" }}
-              className="animate-fade-in-up text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#4A5551)] max-w-lg"
+              className="animate-fade-in-up text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#634b4f)] max-w-lg"
             >
               Menghadirkan tenaga profesional medis berpengalaman untuk merawat
               orang terkasih dengan penuh kasih sayang dan kenyamanan maksimal.
@@ -68,7 +68,7 @@ function Hero({ heroRef }: HeroProps) {
                 style={{ color: "#ffffff" }}
                 className="w-full sm:w-auto whitespace-nowrap rounded-full px-9 py-4 text-[0.92rem]
                            font-semibold !text-white no-underline flex items-center justify-center gap-2
-                           bg-[#36735D] shadow-[0_16px_30px_-22px_rgba(28,58,48,0.5)]
+                           bg-[var(--pine,#b24d62)] shadow-[0_16px_30px_-22px_rgba(178,77,98,0.5)]
                            transition-all duration-300 hover:-translate-y-1 hover:brightness-[0.9]"
               >
                 Konsultasi Gratis
@@ -79,8 +79,8 @@ function Hero({ heroRef }: HeroProps) {
                 href="#services"
                 className="w-full sm:w-auto whitespace-nowrap rounded-full px-7 py-4 text-[0.92rem]
                            font-semibold no-underline flex items-center justify-center
-                           border-2 border-[var(--pine,#1c3a30)] text-[var(--pine,#1c3a30)]
-                           transition-colors hover:bg-[var(--bg-alt,#FAF7F0)]"
+                           border-2 border-[var(--pine,#b24d62)] text-[var(--pine,#b24d62)]
+                           transition-colors hover:bg-[var(--bg-alt,#f7e4e7)]"
               >
                 Lihat Layanan
               </a>
@@ -88,29 +88,29 @@ function Hero({ heroRef }: HeroProps) {
             {/* Mini Stats */}
             <div
               style={{ animationDelay: "0.55s" }}
-              className="animate-fade-in-up grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#E2E8E6)] pt-8 w-full"
+              className="animate-fade-in-up grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#ecd0d4)] pt-8 w-full"
             >
               <div>
-                <div className="font-bold text-[1.5rem] text-[var(--pine,#1c3a30)]">
+                <div className="font-bold text-[1.5rem] text-[var(--pine-deep,#772635)]">
                   24/7
                 </div>
-                <div className="text-[0.9rem] text-[var(--ink-soft,#4A5551)]">
+                <div className="text-[0.9rem] text-[var(--ink-soft,#634b4f)]">
                   Siaga Medis
                 </div>
               </div>
               <div>
-                <div className="font-bold text-[1.5rem] text-[var(--pine,#1c3a30)]">
+                <div className="font-bold text-[1.5rem] text-[var(--pine-deep,#772635)]">
                   50+
                 </div>
-                <div className="text-[0.9rem] text-[var(--ink-soft,#4A5551)]">
+                <div className="text-[0.9rem] text-[var(--ink-soft,#634b4f)]">
                   Tenaga Ahli
                 </div>
               </div>
               <div className="hidden sm:block">
-                <div className="font-bold text-[1.5rem] text-[var(--pine,#1c3a30)]">
+                <div className="font-bold text-[1.5rem] text-[var(--pine-deep,#772635)]">
                   100%
                 </div>
-                <div className="text-[0.9rem] text-[var(--ink-soft,#4A5551)]">
+                <div className="text-[0.9rem] text-[var(--ink-soft,#634b4f)]">
                   Home Visit
                 </div>
               </div>
@@ -119,14 +119,14 @@ function Hero({ heroRef }: HeroProps) {
 
           {/* Right Column: Image */}
           <div className="order-1 lg:order-2 relative animate-fade-in-scale" style={{ animationDelay: "0.5s" }}>
-            <div className="absolute -top-10 -right-10 w-48 h-48 bg-[var(--pine,#1c3a30)]/10 rounded-full blur-3xl -z-10"></div>
-            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[var(--pine,#1c3a30)]/10 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute -top-10 -right-10 w-48 h-48 bg-[var(--pine-deep,#772635)]/10 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[var(--pine-deep,#772635)]/10 rounded-full blur-3xl -z-10"></div>
 
             <div className="relative group">
               <div
                 className="rounded-2xl overflow-hidden aspect-[1.79] lg:aspect-auto
-                           border border-[var(--line,#E2E8E6)]
-                           shadow-[0_16px_30px_-22px_rgba(28,58,48,0.3)]"
+                           border border-[var(--line,#ecd0d4)]
+                           shadow-[0_16px_30px_-22px_rgba(119,38,53,0.3)]"
               >
                 <img
                   alt="Bidan Profesional Homecare"
@@ -138,13 +138,13 @@ function Hero({ heroRef }: HeroProps) {
               {/* Floating Info Card */}
               <div
                 className="absolute -bottom-6 -left-6 p-5 rounded-2xl max-w-[240px] hidden md:block
-                           bg-[rgb(252,255,250)] border border-[var(--line,#E2E8E6)]
-                           shadow-[0_16px_30px_-22px_rgba(28,58,48,0.3)] animate-bounce-subtle"
+                           bg-white border border-[var(--line,#ecd0d4)]
+                           shadow-[0_16px_30px_-22px_rgba(119,38,53,0.3)] animate-bounce-subtle"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-alt,#FAF7F0)]">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-alt,#f7e4e7)]">
                     <svg
-                      className="h-5 w-5 text-[var(--pine,#1c3a30)]"
+                      className="h-5 w-5 text-[var(--pine,#b24d62)]"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -157,15 +157,15 @@ function Hero({ heroRef }: HeroProps) {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-bold text-[var(--pine,#1c3a30)]">
+                    <div className="font-bold text-[var(--pine-deep,#772635)]">
                       Sari Maharani
                     </div>
-                    <div className="text-[0.7rem] text-[var(--ink-soft,#4A5551)] uppercase tracking-wider font-bold">
+                    <div className="text-[0.7rem] text-[var(--ink-soft,#634b4f)] uppercase tracking-wider font-bold">
                       Midwife Specialist
                     </div>
                   </div>
                 </div>
-                <p className="text-[0.9rem] leading-relaxed text-[var(--ink-soft,#4A5551)]">
+                <p className="text-[0.9rem] leading-relaxed text-[var(--ink-soft,#634b4f)]">
                   "Kami merawat pasien layaknya keluarga sendiri."
                 </p>
               </div>

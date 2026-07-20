@@ -60,7 +60,7 @@ function Contact({ contactRef }: ContactProps) {
       id="contact"
       ref={contactRef}
     >
-      <div className="relative z-10 mx-auto max-w-[1180px] rounded-[28px] border border-[var(--line)] bg-[#fdfffe] p-[clamp(1.2rem,3vw,1.8rem)] shadow-[0_16px_40px_-24px_rgba(28,58,48,0.2)]">
+      <div className="relative z-10 mx-auto max-w-[1180px] rounded-[28px] border border-[var(--line)] bg-[#fdfffe] p-[clamp(1.2rem,3vw,1.8rem)] shadow-[0_16px_40px_-24px_rgba(119,38,53,0.2)]">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:items-stretch">
           <div className="flex min-w-0 flex-col justify-center">
             <p className="eyebrow mb-2">Hubungi Kami</p>

@@ -66,6 +66,86 @@ interface Treatment {
   benefits?: string[];
 }
 
+const DEFAULT_TREATMENTS: Treatment[] = [
+  {
+    id: 1,
+    category: "Perawatan Kehamilan",
+    title: "Pijat Relaksasi Ibu Hamil",
+    duration: 90,
+    price: 185000,
+    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80",
+    description: "Pijat khusus ibu hamil trimester 2 & 3 untuk mengurangi ketegangan otot punggung, mengurangi pegal, melancarkan peredaran darah, serta meningkatkan kualitas tidur ibu. Ditangani oleh bidan bersertifikat pre-natal massage.",
+    recommended: true,
+    benefits: ["Meredakan pegal pada pinggang dan punggung", "Melancarkan sirkulasi darah ibu & janin", "Mengurangi kecemasan dan stres", "Meningkatkan kualitas tidur ibu"]
+  },
+  {
+    id: 2,
+    category: "Perawatan Kehamilan",
+    title: "Pemeriksaan Kehamilan ANC (Kunjungan Rumah)",
+    duration: 60,
+    price: 120000,
+    image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80",
+    description: "Pemeriksaan kehamilan (Antenatal Care) terpadu di rumah Anda. Meliputi pemeriksaan tensi, detak jantung janin (Doppler), ukur tinggi fundus, cek urin/Hb sederhana jika diperlukan, dan konseling gizi kehamilan.",
+    recommended: false,
+    benefits: ["Pemeriksaan lengkap tanpa antre", "Konsultasi privat & nyaman di rumah", "Pemantauan tumbuh kembang janin", "Edukasi persiapan persalinan"]
+  },
+  {
+    id: 3,
+    category: "Persalinan",
+    title: "Pendampingan Persalinan & Doula",
+    duration: 1440,
+    price: 2500000,
+    image: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=600&q=80",
+    description: "Pendampingan bidan profesional sejak kontraksi awal hingga proses persalinan selesai. Memberikan pijat stimulasi, dukungan mental, bimbingan teknik pernapasan, serta inisiasi menyusu dini (IMD) yang tenang.",
+    recommended: true,
+    benefits: ["Pendampingan bidan 24 jam siaga", "Pijat relaksasi mengurangi nyeri kontraksi", "Inisiasi Menyusu Dini (IMD) terpandu", "Dukungan psikologis penuh bagi ibu"]
+  },
+  {
+    id: 4,
+    category: "Perawatan Nifas",
+    title: "Pijat Laktasi & Pijat Oksitosin Ibu Menyusui",
+    duration: 75,
+    price: 175000,
+    image: "https://images.unsplash.com/photo-1531983412531-1f49a365ffed?auto=format&fit=crop&w=600&q=80",
+    description: "Kombinasi pijat laktasi di area payudara dan pijat oksitosin di area punggung untuk merangsang produksi hormon ASI, meredakan bendungan ASI, dan memberikan relaksasi mendalam bagi ibu menyusui.",
+    recommended: true,
+    benefits: ["Melancarkan sumbatan saluran ASI", "Meningkatkan produksi hormon oksitosin", "Mengurangi nyeri & bengkak pada payudara", "Ibu rileks, ASI mengalir lancar"]
+  },
+  {
+    id: 5,
+    category: "Perawatan Bayi Baru Lahir",
+    title: "Memandikan Bayi & Edukasi Tali Pusat",
+    duration: 45,
+    price: 85000,
+    image: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=600&q=80",
+    description: "Layanan memandikan bayi baru lahir di rumah sekaligus memberikan edukasi praktis bagi orang tua tentang cara merawat tali pusat agar tetap kering dan steril untuk mencegah infeksi.",
+    recommended: false,
+    benefits: ["Praktik memandikan bayi yang aman", "Perawatan tali pusat steril & higienis", "Edukasi bagi orang tua baru", "Deteksi dini kelainan fisik bayi"]
+  },
+  {
+    id: 6,
+    category: "Perawatan Bayi Baru Lahir",
+    title: "Pijat Bayi Sehat (Baby Massage)",
+    duration: 60,
+    price: 110000,
+    image: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80",
+    description: "Pijat stimulasi tumbuh kembang bayi oleh bidan terlatih untuk melancarkan pencernaan, meningkatkan nafsu makan, membuat bayi tidur lebih nyenyak, dan merangsang perkembangan sensorik-motorik.",
+    recommended: true,
+    benefits: ["Meningkatkan kualitas & durasi tidur bayi", "Membantu meredakan kolik / kembung", "Melancarkan peredaran darah & pencernaan", "Merangsang ikatan batin ibu & anak"]
+  },
+  {
+    id: 7,
+    category: "Keluarga Berencana",
+    title: "Suntik KB Mandiri Home Visit",
+    duration: 30,
+    price: 75000,
+    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80",
+    description: "Pemberian suntikan kontrasepsi KB 1 bulan atau 3 bulan di rumah secara terjadwal. Praktis dan menjaga privasi ibu tanpa perlu repot mengantre di klinik.",
+    recommended: false,
+    benefits: ["Suntikan steril & terjadwal", "Tanpa perlu keluar rumah", "Konseling keluhan kontrasepsi", "Buku catatan suntik rapi"]
+  }
+];
+
 interface PricingProps {
   pricingRef?: Ref<HTMLElement | null>;
 }
@@ -124,7 +204,7 @@ const TreatmentCard = memo(function TreatmentCard({
   return (
     <article
       onClick={onClick}
-      className="scroll-stagger group relative flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-[var(--line)] bg-white [content-visibility:auto] [contain-intrinsic-size:340px] transition-transform duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(28,58,48,0.15)] focus-within:ring-2 focus-within:ring-[var(--pine)] focus-within:ring-offset-2"
+      className="scroll-stagger group relative flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-[var(--line)] bg-white [content-visibility:auto] [contain-intrinsic-size:340px] transition-transform duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(119,38,53,0.15)] focus-within:ring-2 focus-within:ring-[var(--pine)] focus-within:ring-offset-2"
       style={{ animationDelay: `${index * 140}ms` }}
       role="button"
       tabIndex={0}
@@ -316,9 +396,22 @@ function Pricing({ pricingRef }: PricingProps) {
       const data = await response.json();
       setTreatments(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      console.error(err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message || "Terjadi kesalahan");
+      console.error("Fetch pricing error, using fallback data:", err);
+      // Filter local default data based on category and search query so search works offline
+      let localData = [...DEFAULT_TREATMENTS];
+      if (selectedCategory !== "Semua") {
+        localData = localData.filter((t) => t.category === selectedCategory);
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        localData = localData.filter(
+          (t) =>
+            t.title.toLowerCase().includes(q) ||
+            t.description.toLowerCase().includes(q)
+        );
+      }
+      setTreatments(localData);
+      setError(null); // Clear error because we loaded fallback data
     } finally {
       setLoading(false);
     }
@@ -598,7 +691,7 @@ function Pricing({ pricingRef }: PricingProps) {
               <div className="flex flex-1 flex-col justify-between p-8 sm:p-10">
                 <div>
                   {selectedTreatment.recommended && (
-                    <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#d7eddd] px-3.5 py-1.5">
+                    <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-alt)] px-3.5 py-1.5">
                       <svg className="h-4 w-4 text-[var(--pine)]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2l-2.81 6.63L2 9.24l5.46 4.73L5.82 21z" />
                       </svg>
@@ -660,7 +753,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
                 <div className="flex justify-end border-t border-[var(--line)] pt-6">
                   <a
-                    className="inline-flex w-full items-center justify-center gap-3 whitespace-nowrap rounded-full bg-[var(--pine)] px-8 py-4 text-[0.95rem] font-bold text-white transition-transform duration-300 hover:scale-105 hover:shadow-[0_16px_32px_rgba(47,93,79,0.35)] focus-visible:outline-2 focus-visible:outline-[var(--pine)] focus-visible:outline-offset-2 sm:w-auto"
+                    className="inline-flex w-full items-center justify-center gap-3 whitespace-nowrap rounded-full bg-[var(--pine)] px-8 py-4 text-[0.95rem] font-bold text-white transition-transform duration-300 hover:scale-105 hover:shadow-[0_16px_32px_rgba(178,77,98,0.35)] focus-visible:outline-2 focus-visible:outline-[var(--pine)] focus-visible:outline-offset-2 sm:w-auto"
                     href={buildWhatsAppLink(
                       selectedTreatment.title,
                       selectedTreatment.price,

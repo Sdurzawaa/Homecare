@@ -121,6 +121,7 @@ function ChevronIcon({ open }: { open: boolean }) {
 export function AnimatedNavFramer() {
   // --- state nav desktop and tablet (pill + collapse hamburger) ---
   const [isExpanded, setExpanded] = React.useState(true);
+  const [isLockedOpen, setLockedOpen] = React.useState(false); // Kunci tetap terbuka jika diklik langsung
   const [isServiceOpen, setServiceOpen] = React.useState(false);
 
   // --- state nav mobile (bar + drawer) ---
@@ -163,6 +164,12 @@ export function AnimatedNavFramer() {
 
     if (isNavigatingRef.current) {
       lastScrollY.current = latest;
+      // Scroll-end detection: terus bersihkan timeout selama scroll masih aktif berjalan.
+      // Jika scroll berhenti selama 150ms, tandai navigasi selesai.
+      if (navigatingTimeoutRef.current) clearTimeout(navigatingTimeoutRef.current);
+      navigatingTimeoutRef.current = setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 150);
       return;
     }
 
@@ -179,17 +186,22 @@ export function AnimatedNavFramer() {
     }
 
     // Desktop/Tablet collapse/expand logic
-    if (isExpanded && canToggle && accumulatedDown.current > COLLAPSE_SCROLL_DISTANCE) {
-      setExpanded(false);
-      setServiceOpen(false);
-      lastToggleAtRef.current = Date.now();
-      accumulatedDown.current = 0;
-      accumulatedUp.current = 0;
-    } else if (!isExpanded && canToggle && accumulatedUp.current > EXPAND_SCROLL_DISTANCE) {
-      setExpanded(true);
-      lastToggleAtRef.current = Date.now();
-      accumulatedDown.current = 0;
-      accumulatedUp.current = 0;
+    // Jika navbar diklik langsung (isLockedOpen === true), abaikan scroll collapse agar tetap terbuka.
+    if (isLockedOpen) {
+      if (!isExpanded) setExpanded(true);
+    } else {
+      if (isExpanded && canToggle && accumulatedDown.current > COLLAPSE_SCROLL_DISTANCE) {
+        setExpanded(false);
+        setServiceOpen(false);
+        lastToggleAtRef.current = Date.now();
+        accumulatedDown.current = 0;
+        accumulatedUp.current = 0;
+      } else if (!isExpanded && canToggle && accumulatedUp.current > EXPAND_SCROLL_DISTANCE) {
+        setExpanded(true);
+        lastToggleAtRef.current = Date.now();
+        accumulatedDown.current = 0;
+        accumulatedUp.current = 0;
+      }
     }
 
     // Mobile headroom hide/show logic
@@ -209,9 +221,10 @@ export function AnimatedNavFramer() {
   const suppressScrollCollapse = () => {
     isNavigatingRef.current = true;
     if (navigatingTimeoutRef.current) clearTimeout(navigatingTimeoutRef.current);
+    // Timeout fallback jika tidak ada perubahan scroll (misalnya sudah di posisi target)
     navigatingTimeoutRef.current = setTimeout(() => {
       isNavigatingRef.current = false;
-    }, NAVIGATION_SUPPRESS_MS);
+    }, 500);
   };
 
   React.useEffect(() => {
@@ -240,7 +253,7 @@ export function AnimatedNavFramer() {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Klik di luar dropdown Layanan (desktop) / drawer (mobile) -> tutup.
+  // Klik di luar dropdown Layanan (desktop) / drawer (mobile) / navbar -> tutup/unlock.
   React.useEffect(() => {
     const onClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -251,6 +264,13 @@ export function AnimatedNavFramer() {
       if (!clickedInsideService) {
         setServiceOpen(false);
       }
+      
+      // Jika klik di luar navbar desktop, hilangkan kunci agar scroll collapse aktif kembali
+      const clickedInsideNav = rootRef.current && rootRef.current.contains(target);
+      if (!clickedInsideNav) {
+        setLockedOpen(false);
+      }
+
       if (
         isMobileMenuOpen &&
         drawerRef.current &&
@@ -304,11 +324,6 @@ export function AnimatedNavFramer() {
     };
 
     const observer = new IntersectionObserver((entries) => {
-      // Abaikan pencatatan scroll aktif di layar desktop (lebar >= 768px)
-      if (typeof window !== "undefined" && window.innerWidth >= 768) {
-        return;
-      }
-
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const id = entry.target.getAttribute("id");
@@ -343,10 +358,11 @@ export function AnimatedNavFramer() {
 
   // Sama seperti template asli: kalau nav lagi collapsed, klik di mana pun
   // pada nav cuma expand dulu, gak langsung navigasi.
-  const handleNavClick = () => {
-    if (!isExpanded) {
-      setExpanded(true);
-    }
+  // Jika nav diklik langsung pada area navbar, kembangkan (expand)
+  // dan kunci agar tetap terbuka (isLockedOpen = true) meskipun di-scroll.
+  const handleNavClick = (e: React.MouseEvent) => {
+    setExpanded(true);
+    setLockedOpen(true);
   };
 
   const closeAllMenus = () => {
@@ -365,6 +381,7 @@ export function AnimatedNavFramer() {
     setActiveHash(href);
     closeAllMenus();
     setExpanded(false);
+    setLockedOpen(false); // Hilangkan kunci saat navigasi link diklik
 
     // Membuka kunci body scroll butuh sedikit waktu sebelum browser memproses smooth scroll
     setTimeout(() => {
@@ -394,6 +411,7 @@ export function AnimatedNavFramer() {
     setActiveHash(item.href);
     closeAllMenus();
     setExpanded(false);
+    setLockedOpen(false); // Hilangkan kunci saat navigasi link diklik
 
     // Membuka kunci body scroll dan Lenis butuh sedikit waktu sebelum browser memproses smooth scroll
     setTimeout(() => {
@@ -524,7 +542,7 @@ export function AnimatedNavFramer() {
           <div
             ref={serviceDropdownRef}
             className={cn(
-              "absolute right-0 top-[calc(100%+0.75rem)] z-20 w-72 overflow-hidden rounded-[1.5rem] border border-[rgba(28,58,48,0.08)] bg-white/95 backdrop-blur-sm text-left shadow-[0_18px_40px_-20px_rgba(28,58,48,0.5)] transition-all duration-150",
+              "absolute right-0 top-[calc(100%+0.75rem)] z-20 w-72 overflow-hidden rounded-[1.5rem] border border-[rgba(119,38,53,0.08)] bg-white/95 backdrop-blur-sm text-left shadow-[0_18px_40px_-20px_rgba(119,38,53,0.5)] transition-all duration-150",
               isServiceOpen
                 ? "opacity-100 scale-100 pointer-events-auto"
                 : "opacity-0 scale-95 pointer-events-none"
@@ -553,8 +571,8 @@ export function AnimatedNavFramer() {
         className={cn(
           "fixed left-4 right-4 z-50 flex items-center justify-between px-5 py-2.5 rounded-full border transition-all duration-300 md:hidden",
           isMobileScrolled
-            ? "bg-white/95 border-[var(--line)] shadow-[0_8px_30px_rgba(28,58,48,0.12)] backdrop-blur-xl"
-            : "bg-white/80 border-[rgba(28,58,48,0.12)] backdrop-blur-md",
+            ? "bg-white/95 border-[var(--line)] shadow-[0_8px_30px_rgba(119,38,53,0.12)] backdrop-blur-xl"
+            : "bg-white/80 border-[rgba(119,38,53,0.12)] backdrop-blur-md",
           isMobileHeaderVisible || isMobileMenuOpen
             ? "top-4 opacity-100 translate-y-0"
             : "-translate-y-24 opacity-0 pointer-events-none"
@@ -589,7 +607,7 @@ export function AnimatedNavFramer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 220 }}
-            className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[rgba(28,58,48,0.95)] backdrop-blur-[32px] text-white md:hidden"
+            className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[rgba(119,38,53,0.95)] backdrop-blur-[32px] text-white md:hidden"
           >
             {/* Signature ambient glow */}
             <div
