@@ -1,16 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #fdf5f6; /* Soft cream background with a hint of warm pink */
-  --bg-alt: #f7e4e7; /* Soft dusty pink background */
-  --ink: #2d181b; /* Trustworthy deep warm berry/charcoal for headers & text */
-  --ink-soft: #634b4f; /* Muted warm rose-grey for body text */
-  --pine: #b24d62; /* Elegant dark rose primary color */
-  --pine-deep: #772635; /* Premium deep burgundy/cherry */
-  --honey: #cca87a; /* Sophisticated antique gold accent */
-  --honey-deep: #a17c52; /* Deep antique gold */
+  --bg: #f4dde5;
+  --bg-alt: #ead7e8;
+  --ink: #3a2435;
+  --ink-soft: #61515d;
+  --primary: #b9789f;
+  --secondary: #8b7dbd;
+  --accent: #cfd8f5;
+  --accent-2: #f0c9d8;
+  --accent-3: #e2d6ec;
   --card: #ffffff;
-  --line: #ecd0d4; /* Soft rose border line */
+  --line: #d9c7d2;
+
+  /* compatibility aliases for the rest of the UI */
+  --pine: var(--primary);
+  --pine-deep: #714a66;
+  --honey: var(--accent);
+  --honey-deep: #9aa8de;
+
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
   --header-h: 84px;

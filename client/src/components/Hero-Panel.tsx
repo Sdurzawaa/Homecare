@@ -21,12 +21,11 @@ function Hero({ heroRef }: HeroProps) {
             <div
               style={{ animationDelay: "0.15s" }}
               className="inline-flex animate-fade-in-up items-center gap-2 rounded-full px-4 py-2 shadow-sm
-                         bg-[var(--bg-alt,#f7e4e7)] border border-[var(--line,#ecd0d4)]
-                         text-[var(--pine,#b24d62)]"
+                         bg-[#f7edf1] border border-[#d9c7d2] text-[#6d3a4d]"
             >
-              <span className="inline-flex h-5 w-5 items-center justify-center text-[var(--pine,#b24d62)]" aria-hidden="true">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#6d3a4d] text-white" aria-hidden="true">
               <svg
-                className="h-4 w-4"
+                className="h-3.5 w-3.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -37,7 +36,7 @@ function Hero({ heroRef }: HeroProps) {
                 <path d="M5 13l4 4L19 7" />
               </svg>
             </span>
-              <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em]">
+              <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[#6d3a4d]">
                 Dipercaya 1000+ keluarga
               </span>
             </div>
@@ -122,33 +121,30 @@ function Hero({ heroRef }: HeroProps) {
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-[var(--pine-deep,#772635)]/10 rounded-full blur-3xl -z-10"></div>
             <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[var(--pine-deep,#772635)]/10 rounded-full blur-3xl -z-10"></div>
 
-            <div className="relative group">
+            <div className="relative group mx-auto w-full max-w-[520px]">
               <div
-                className="rounded-2xl overflow-hidden aspect-[1.79] lg:aspect-auto
-                           border border-[var(--line,#ecd0d4)]
+                className="relative overflow-hidden rounded-2xl border border-[var(--line,#ecd0d4)]
                            shadow-[0_16px_30px_-22px_rgba(119,38,53,0.3)]"
               >
                 <img
                   alt="Bidan Profesional Homecare"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBz81uB9lgsoWalmu5vT7pO9J7GNX5Cqr5LPX7GcA-tinFcNGHAgchIOImKmn5qVnx2LspE-Jkl5Ki_sT134lQSzvOBEnPCZUSsst1RvnXYozg-4s0aopik56yO7s44jUQx_2-EXj4RX1uPOblp40O_-4AfhDCgzFbFxFwdSKMpbxtKmMArZWDEJ5q9WV6CwoQZpty42uiMBVQD7lDPV6_G_hvJ7p4seiLc8qoRPyr4MAmWhu1myk_t"
+                  className="h-auto w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  src="/Person.jpg"
                 />
               </div>
 
               {/* Floating Info Card */}
               <div
-                className="absolute -bottom-6 -left-6 p-5 rounded-2xl max-w-[240px] hidden md:block
-                           bg-white border border-[var(--line,#ecd0d4)]
-                           shadow-[0_16px_30px_-22px_rgba(119,38,53,0.3)] animate-bounce-subtle"
+                className="absolute -bottom-4 left-3 z-20 w-[calc(100%-1.5rem)] max-w-[220px] rounded-[18px] bg-[#f8f5f4]/95 p-3 shadow-[0_18px_36px_-20px_rgba(74,51,60,0.35)] ring-1 ring-[#eadfe3] animate-bounce-subtle sm:-bottom-5 sm:left-4 sm:max-w-[230px] md:-bottom-7 md:-left-4 md:w-[250px]"
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-alt,#f7e4e7)]">
+                <div className="mb-2 flex items-center gap-2.5 sm:gap-3">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#e9d7e7] text-[#5f3d55] sm:h-10 sm:w-10">
                     <svg
-                      className="h-5 w-5 text-[var(--pine,#b24d62)]"
+                      className="h-4 w-4 sm:h-5 sm:w-5"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
+                      strokeWidth="2.3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       aria-hidden="true"
@@ -156,17 +152,17 @@ function Hero({ heroRef }: HeroProps) {
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                   </div>
-                  <div>
-                    <div className="font-bold text-[var(--pine-deep,#772635)]">
-                      Sari Maharani
+                  <div className="min-w-0">
+                    <div className="text-[0.7rem] font-bold leading-snug text-[#5a2d43] sm:text-[0.85rem]">
+                      Bd. Risma, S.Keb., CBMT
                     </div>
-                    <div className="text-[0.7rem] text-[var(--ink-soft,#634b4f)] uppercase tracking-wider font-bold">
+                    <div className="mt-[2px] text-[0.5rem] font-semibold uppercase tracking-[0.14em] text-[#7e5b69] sm:text-[0.58rem]">
                       Midwife Specialist
                     </div>
                   </div>
                 </div>
-                <p className="text-[0.9rem] leading-relaxed text-[var(--ink-soft,#634b4f)]">
-                  "Kami merawat pasien layaknya keluarga sendiri."
+                <p className="m-0 text-[0.68rem] leading-relaxed italic text-[#6b4d5a] sm:text-[0.78rem]">
+                  “Dari Pelukan Pertama, untuk Tumbuh Kembang Terbaik.”
                 </p>
               </div>
             </div>

@@ -15,24 +15,24 @@ interface Channel {
 function Contact({ contactRef }: ContactProps) {
   const [mapActive, setMapActive] = useState(false);
   const address =
-    "AKR Tower Jl. Panjang No.5 Level M, RT.11/RW.10, Kb. Jeruk, Kec. Kb. Jeruk, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11530";
+    "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama ";
   const mapsQuery = encodeURIComponent(address);
 
   const channels: Channel[] = [
     {
-      href: "https://wa.me/6285773780406",
+      href: "https://wa.me/6285892006905",
       external: true,
       label: "Telepon / WhatsApp",
-      value: "+62 857-7378-0406",
+      value: "+62 858-9200-6905",
       icon: (
         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" />
       ),
     },
     {
-      href: "mailto:homecare@gmail.com",
+      href: "mailto:bidanrismacare@gmail.com",
       external: false,
       label: "Email",
-      value: "homecare@gmail.com",
+      value: "bidanrismacare@gmail.com",
       icon: (
         <>
           <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -105,7 +105,7 @@ function Contact({ contactRef }: ContactProps) {
             </div>
 
             <a
-              href="https://wa.me/6285773780406"
+              href="https://wa.me/6285892006905"
               target="_blank"
               rel="noreferrer noopener"
               className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92]"
@@ -117,14 +117,7 @@ function Contact({ contactRef }: ContactProps) {
 
           {/* Card belakang (bg-alt + border + shadow) udah dihapus, map sekarang langsung nempel di section */}
           <div className="relative h-[440px] sm:h-[520px] lg:h-auto lg:min-h-[620px] overflow-hidden rounded-[20px]">
-            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between border-b border-[var(--line)]/70 bg-white px-4 py-2.5">
-              <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-[var(--ink-soft)]">
-                Lokasi Kami
-              </span>
-              <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-[var(--pine)]">
-                {mapActive ? "Aktif" : "Standby"}
-              </span>
-            </div>
+
 
             <iframe
               title="Lokasi Homecare"

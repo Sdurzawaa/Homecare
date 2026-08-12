@@ -73,10 +73,9 @@ function Achievements({
 
           <div className="w-full pt-2 lg:w-1/2 lg:pt-0 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
             <p
-              className="m-0 mb-3 inline-flex items-center gap-1.5 text-[0.75rem] font-[family-name:var(--font-display)] font-bold uppercase tracking-[1px] text-[var(--honey)] animate-fade-in-up"
+              className="m-0 mb-3 inline-flex items-center text-[0.68rem] font-[family-name:var(--font-body)] font-semibold uppercase tracking-[0.12em] text-[#8d5a6d] animate-fade-in-up"
               style={{ animationDelay: "0.45s" }}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--honey)]"></span>
               Kepercayaan Keluarga
             </p>
             <h3
@@ -132,8 +131,7 @@ function Achievements({
           </div>
 
           <div className="w-full pt-8 lg:w-1/2 lg:pt-0">
-            <p className="m-0 mb-3 inline-flex items-center gap-1.5 text-[0.75rem] font-[family-name:var(--font-display)] font-bold uppercase tracking-[1px] text-[var(--honey)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--honey)]"></span>
+            <p className="m-0 mb-3 inline-flex items-center text-[0.68rem] font-[family-name:var(--font-body)] font-semibold uppercase tracking-[0.12em] text-[#6476b8]">
               Standar Profesional
             </p>
             <h3 className="m-0 mb-5 font-[family-name:var(--font-display)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
@@ -210,8 +208,7 @@ function Achievements({
           </div>
 
           <div className="w-full pt-8 lg:w-1/2 lg:pt-0">
-            <p className="m-0 mb-3 inline-flex items-center gap-1.5 text-[0.75rem] font-[family-name:var(--font-display)] font-bold uppercase tracking-[1px] text-[var(--honey)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--honey)]"></span>
+            <p className="m-0 mb-3 inline-flex items-center text-[0.68rem] font-[family-name:var(--font-body)] font-semibold uppercase tracking-[0.12em] text-[#9C5C73]">
               Kepuasan Pelanggan
             </p>
             <h3 className="m-0 mb-5 font-[family-name:var(--font-display)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
