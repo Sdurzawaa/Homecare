@@ -7,6 +7,30 @@ import Footer from "./ui/Footer";
 const ADMIN_TOKEN_KEY = "homecare-admin-token";
 const SECTION_KEYS = ["hero", "about", "contact", "footer"];
 
+// Cookie utility functions
+const setCookie = (name: string, value: string, days: number = 30) => {
+  if (typeof document === "undefined") return;
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+};
+
+const getCookie = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i].trim();
+    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length));
+  }
+  return null;
+};
+
+const deleteCookie = (name: string) => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+};
+
 interface PricingFormState {
   category: string;
   title: string;
@@ -74,7 +98,7 @@ export default function Admin() {
     if (typeof window === "undefined") return null;
     return localStorage.getItem(ADMIN_TOKEN_KEY);
   });
-  const [loginForm, setLoginForm] = useState({ username: "admin", password: "admin123" });
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
   const [selectedSection, setSelectedSection] = useState("hero");
@@ -89,6 +113,17 @@ export default function Admin() {
   const [passwordError, setPasswordError] = useState("");
   const [showPreview, setShowPreview] = useState(true);
   const [successModal, setSuccessModal] = useState<{ title: string; message: string } | null>(null);
+  const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+  } | null>(null);
+  const [adminTab, setAdminTab] = useState<"sections" | "pricing">("sections");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showPricingFormModal, setShowPricingFormModal] = useState(false);
+  const [editingPricingModal, setEditingPricingModal] = useState<any | null>(null);
 
   const sectionOptions = useMemo(
     () =>
@@ -107,6 +142,19 @@ export default function Admin() {
   );
 
   const currentSection = sectionData[selectedSection] || defaultSections[selectedSection as keyof typeof defaultSections] || {};
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const isAnyModalOpen = Boolean(successModal || errorModal || confirmModal || showPricingFormModal || editingPricingModal);
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = isAnyModalOpen ? "hidden" : previousOverflow;
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [successModal, errorModal, confirmModal, showPricingFormModal, editingPricingModal]);
 
   const request = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
@@ -131,6 +179,8 @@ export default function Admin() {
     setToken(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem(ADMIN_TOKEN_KEY);
+      deleteCookie(ADMIN_TOKEN_KEY);
+      deleteCookie("admin-pricing-form");
     }
   };
 
@@ -144,7 +194,7 @@ export default function Admin() {
       ]);
 
       const pricingData = Array.isArray(pricingRes) ? pricingRes : [];
-      const sectionDataRes = sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {};
+      const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
 
       const merged = {
         ...defaultSections,
@@ -170,8 +220,43 @@ export default function Admin() {
     }
   }, [token]);
 
+  // Load pricing form dari localStorage dan cookie saat mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("admin-pricing-form");
+      const fromCookie = getCookie("admin-pricing-form");
+      
+      if (saved) {
+        try {
+          setPricingForm(JSON.parse(saved));
+        } catch (err) {
+          console.error("Error loading pricing form from localStorage:", err);
+        }
+      } else if (fromCookie) {
+        try {
+          setPricingForm(JSON.parse(fromCookie));
+        } catch (err) {
+          console.error("Error loading pricing form from cookie:", err);
+        }
+      }
+    }
+  }, []);
+
+  // Auto-save pricing form ke localStorage dan cookie
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const formJson = JSON.stringify(pricingForm);
+      localStorage.setItem("admin-pricing-form", formJson);
+      setCookie("admin-pricing-form", formJson, 30);
+    }
+  }, [pricingForm]);
+
   const openSuccessModal = (title: string, message: string) => {
     setSuccessModal({ title, message });
+  };
+
+  const openErrorModal = (title: string, message: string) => {
+    setErrorModal({ title, message });
   };
 
   const handleLogin = async (event: FormEvent) => {
@@ -231,7 +316,7 @@ export default function Admin() {
       handleSectionChange(field, data.url);
       openSuccessModal("Upload berhasil", "Gambar telah berhasil diunggah dan dipakai pada section ini.");
     } catch (error: any) {
-      alert(error.message || "Gagal upload gambar");
+      openErrorModal("Gagal Upload", error.message || "Gagal upload gambar");
     } finally {
       setUploadingField(null);
     }
@@ -258,7 +343,7 @@ export default function Admin() {
       }));
       openSuccessModal("Section berhasil disimpan", "Perubahan pada bagian ini sudah diterapkan ke website.");
     } catch (error: any) {
-      alert(error.message || "Gagal menyimpan section");
+      openErrorModal("Gagal Menyimpan", error.message || "Gagal menyimpan section");
     } finally {
       setSaving(false);
     }
@@ -274,9 +359,39 @@ export default function Admin() {
   const resetPricingForm = () => {
     setPricingForm(emptyPricingForm());
     setEditId(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin-pricing-form");
+      deleteCookie("admin-pricing-form");
+    }
   };
 
   const savePricing = async () => {
+    // Validasi client-side
+    if (!pricingForm.category?.trim()) {
+      openErrorModal("Validasi Gagal", "Kategori tidak boleh kosong");
+      return false;
+    }
+    if (!pricingForm.title?.trim()) {
+      openErrorModal("Validasi Gagal", "Judul tidak boleh kosong");
+      return false;
+    }
+    if (!pricingForm.description?.trim()) {
+      openErrorModal("Validasi Gagal", "Deskripsi tidak boleh kosong");
+      return false;
+    }
+    if (!pricingForm.image?.trim()) {
+      openErrorModal("Validasi Gagal", "URL gambar tidak boleh kosong");
+      return false;
+    }
+    if (!pricingForm.duration || Number(pricingForm.duration) <= 0) {
+      openErrorModal("Validasi Gagal", "Durasi harus lebih dari 0");
+      return false;
+    }
+    if (!pricingForm.price || Number(pricingForm.price) <= 0) {
+      openErrorModal("Validasi Gagal", "Harga harus lebih dari 0");
+      return false;
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -302,8 +417,10 @@ export default function Admin() {
       await loadAll();
       resetPricingForm();
       openSuccessModal("Pricing berhasil disimpan", editId ? "Data pricing berhasil diperbarui." : "Data pricing baru berhasil ditambahkan.");
+      return true;
     } catch (error: any) {
-      alert(error.message || "Gagal menyimpan pricing");
+      openErrorModal("Gagal Menyimpan", error.message || "Gagal menyimpan pricing");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -323,18 +440,26 @@ export default function Admin() {
   };
 
   const deletePricing = async (id: number) => {
-    if (!window.confirm("Hapus pricing ini?")) return;
-    try {
-      const response = await request(`/api/pricing/${id}`, { method: "DELETE" });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error || "Gagal menghapus pricing");
-      }
-      await loadAll();
-      if (editId === id) resetPricingForm();
-    } catch (error: any) {
-      alert(error.message || "Gagal menghapus pricing");
-    }
+    setConfirmModal({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus pricing ini?",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          const response = await request(`/api/pricing/${id}`, { method: "DELETE" });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data?.error || "Gagal menghapus pricing");
+          }
+          await loadAll();
+          if (editId === id) resetPricingForm();
+          openSuccessModal("Berhasil", "Pricing telah berhasil dihapus.");
+        } catch (error: any) {
+          openErrorModal("Gagal Menghapus", error.message || "Gagal menghapus pricing");
+        }
+      },
+      onCancel: () => setConfirmModal(null),
+    });
   };
 
   const handleChangePassword = async (e: FormEvent) => {
@@ -409,6 +534,8 @@ export default function Admin() {
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Username</label>
               <input
+                name="username"
+                autoComplete="off"
                 value={loginForm.username}
                 onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none ring-0 transition focus:border-[var(--pine)]"
@@ -418,7 +545,9 @@ export default function Admin() {
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
               <input
+                name="password"
                 type="password"
+                autoComplete="new-password"
                 value={loginForm.password}
                 onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none ring-0 transition focus:border-[var(--pine)]"
@@ -441,9 +570,20 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      {/* Global Styles */}
+      <style>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
       {/* Header */}
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between p-4 md:px-8">
+        <div className="flex items-center justify-between p-4 md:px-8 border-b border-slate-200">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--pine)]">Admin Panel</p>
             <h1 className="text-xl font-semibold text-slate-900">Kelola Landing Page</h1>
@@ -472,12 +612,36 @@ export default function Admin() {
             </button>
           </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="flex items-center border-b border-slate-200 bg-white px-4 md:px-8">
+          <button
+            onClick={() => setAdminTab("sections")}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition ${
+              adminTab === "sections"
+                ? "border-[var(--pine)] text-[var(--pine)]"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Atur Sections
+          </button>
+          <button
+            onClick={() => setAdminTab("pricing")}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition ${
+              adminTab === "pricing"
+                ? "border-[var(--pine)] text-[var(--pine)]"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Kelola Pricing
+          </button>
+        </div>
       </div>
 
       {/* Change Password Modal */}
       {showPasswordForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold text-slate-900">Ubah Password</h2>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
@@ -524,10 +688,10 @@ export default function Admin() {
       )}
 
       {/* Main Content */}
-      <div className="p-4 md:p-8">
+      <div className="flex flex-col min-h-[calc(100vh-65px)] bg-slate-50">
         {successModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">
                 ✓
               </div>
@@ -544,13 +708,269 @@ export default function Admin() {
           </div>
         )}
 
-        <div className="mx-auto max-w-7xl space-y-8">
-          {/* Section Editor & Preview */}
-          <div className="grid gap-6 xl:grid-cols-2">
+        {/* Error Modal */}
+        {errorModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">
+                ✕
+              </div>
+              <h3 className="text-center text-xl font-semibold text-slate-900">{errorModal.title}</h3>
+              <p className="mt-2 text-center text-sm text-slate-600">{errorModal.message}</p>
+              <button
+                type="button"
+                onClick={() => setErrorModal(null)}
+                className="mt-5 w-full rounded-xl bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 transition"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h3 className="text-center text-lg font-semibold text-slate-900">{confirmModal.title}</h3>
+              <p className="mt-3 text-center text-sm text-slate-600">{confirmModal.message}</p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    confirmModal.onCancel?.();
+                    setConfirmModal(null);
+                  }}
+                  className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => confirmModal.onConfirm()}
+                  className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-medium text-white hover:bg-red-700 transition"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add / Edit Pricing Modal */}
+        {showPricingFormModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-xl font-semibold text-slate-900">{editId ? "Edit Pricing" : "Tambah Pricing"}</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPricingFormModal(false);
+                    if (!editId) {
+                      resetPricingForm();
+                    }
+                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <div className="space-y-3" data-pricing-form>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Kategori <span className="text-red-500">*</span></label>
+                  <input
+                    value={pricingForm.category}
+                    onChange={(e) => handlePricingValue("category", e.target.value)}
+                    placeholder="Contoh: Perawatan Kehamilan"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Judul <span className="text-red-500">*</span></label>
+                  <input
+                    value={pricingForm.title}
+                    onChange={(e) => handlePricingValue("title", e.target.value)}
+                    placeholder="Contoh: Paket Pemeriksaan 1 Jam"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Deskripsi <span className="text-red-500">*</span></label>
+                  <textarea
+                    rows={3}
+                    value={pricingForm.description}
+                    onChange={(e) => handlePricingValue("description", e.target.value)}
+                    placeholder="Deskripsikan layanan ini..."
+                    className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Image Produk <span className="text-red-500">*</span></label>
+                  <div className="flex gap-2">
+                    <input
+                      value={pricingForm.image}
+                      onChange={(e) => handlePricingValue("image", e.target.value)}
+                      placeholder="URL gambar"
+                      className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                    />
+                    <ImageUploadButton field="image" />
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Durasi (min)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={pricingForm.duration}
+                      onChange={(e) => handlePricingValue("duration", e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Harga (Rp)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={pricingForm.price}
+                      onChange={(e) => handlePricingValue("price", e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={pricingForm.recommended}
+                    onChange={(e) => handlePricingValue("recommended", e.target.checked)}
+                    className="h-4 w-4 rounded"
+                  />
+                  <span>Recommended</span>
+                </label>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPricingFormModal(false);
+                      if (!editId) {
+                        resetPricingForm();
+                      }
+                    }}
+                    className="flex-1 rounded-lg border border-slate-200 px-4 py-3 font-medium text-slate-700"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const saved = await savePricing();
+                      if (saved) {
+                        setShowPricingFormModal(false);
+                      }
+                    }}
+                    disabled={saving}
+                    className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-3 font-semibold text-white disabled:opacity-60"
+                  >
+                    {saving ? "Menyimpan..." : editId ? "Update" : "Tambah"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Pricing Modal */}
+        {editingPricingModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="mb-4 text-xl font-semibold text-slate-900">Edit Pricing</h2>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setEditId(editingPricingModal.id);
+                  setPricingForm({
+                    category: editingPricingModal.category,
+                    title: editingPricingModal.title,
+                    description: editingPricingModal.description,
+                    image: editingPricingModal.image,
+                    duration: editingPricingModal.duration,
+                    price: editingPricingModal.price,
+                    recommended: Boolean(editingPricingModal.recommended),
+                  });
+                  setEditingPricingModal(null);
+                  setShowPricingFormModal(true);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Kategori</label>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">{editingPricingModal.category}</p>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Judul</label>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">{editingPricingModal.title}</p>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded max-h-20 overflow-y-auto">{editingPricingModal.description}</p>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Durasi (menit)</label>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">{editingPricingModal.duration}</p>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Harga (Rp)</label>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">Rp{Number(editingPricingModal.price).toLocaleString("id-ID")}</p>
+                </div>
+
+                {editingPricingModal.recommended && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                    <p className="text-xs font-semibold text-yellow-700">✓ Recommended</p>
+                  </div>
+                )}
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingPricingModal(null)}
+                    className="flex-1 rounded-lg border border-slate-200 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-2 font-medium text-white hover:brightness-95"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 w-full flex flex-col p-3">
+          {/* Section Editor & Preview - TAB 1 */}
+          {adminTab === "sections" && (
+          <div className="grid gap-3 grid-cols-1 xl:grid-cols-2 auto-rows-max xl:auto-rows-auto">
             {/* Editor Panel */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6">
-                <h2 className="mb-3 text-lg font-semibold text-slate-900">Edit Section</h2>
+            <section className="flex flex-col bg-white border border-slate-200 rounded-lg">
+              <div className="p-4 border-b border-slate-200 flex-shrink-0">
+                <h2 className="text-base font-semibold text-slate-900 mb-3">Edit Section</h2>
                 <select
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
@@ -565,9 +985,10 @@ export default function Admin() {
               </div>
 
               {loading ? (
-                <p className="text-slate-500">Memuat...</p>
+                <p className="text-slate-500 p-4">Memuat...</p>
               ) : (
-                <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+                <div className="hide-scrollbar overflow-y-auto max-h-[70vh] xl:max-h-none">
+                  <div className="space-y-4 p-4">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-slate-700">Judul</label>
                     <input
@@ -583,7 +1004,7 @@ export default function Admin() {
                       value={currentSection.description || ""}
                       onChange={(e) => handleSectionChange("description", e.target.value)}
                       rows={4}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
+                      className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
                     />
                   </div>
 
@@ -783,7 +1204,7 @@ export default function Admin() {
                           value={currentSection.address || ""}
                           onChange={(e) => handleSectionChange("address", e.target.value)}
                           rows={2}
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
+                          className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
                         />
                       </div>
                     </>
@@ -797,14 +1218,15 @@ export default function Admin() {
                   >
                     {saving ? "Menyimpan..." : "Simpan Section"}
                   </button>
+                  </div>
                 </div>
               )}
             </section>
 
             {/* Preview Panel */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">Preview Website</h2>
+            <section className="flex flex-col bg-white border border-slate-200 rounded-lg min-h-[400px] xl:min-h-0">
+              <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                <h2 className="text-base font-semibold text-slate-900">Preview Website</h2>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
                   className="text-sm font-medium text-slate-600 hover:text-slate-900"
@@ -813,18 +1235,18 @@ export default function Admin() {
                 </button>
               </div>
 
-{showPreview && (
-  <div className="border-t border-slate-200 pt-4">
-    <style>{`
-      .admin-preview-static .scroll-fade-up,
-      .admin-preview-static .scroll-stagger {
-        opacity: 1 !important;
-        transform: none !important;
-        animation: none !important;
-        transition: none !important;
-      }
-    `}</style>
-    <div className="admin-preview-static max-h-[calc(100vh-210px)] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-2">
+              {showPreview && (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <style>{`
+                    .admin-preview-static .scroll-fade-up,
+                    .admin-preview-static .scroll-stagger {
+                      opacity: 1 !important;
+                      transform: none !important;
+                      animation: none !important;
+                      transition: none !important;
+                    }
+                  `}</style>
+                  <div className="admin-preview-static w-full flex-1 overflow-y-auto bg-slate-50 border-t border-slate-200 min-h-0" style={{ scrollbarGutter: 'stable' }}>
       {selectedSection === "hero" && (
         <div className="bg-white">
           <Hero content={currentSection as any} />
@@ -848,187 +1270,114 @@ export default function Admin() {
           <Footer content={currentSection as any} />
         </div>
       )}
-    </div>
-  </div>
-)}
+                  </div>
+                </div>
+              )}
             </section>
           </div>
+          )}
 
-          {/* Pricing Management */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-lg font-semibold text-slate-900">Kelola Pricing</h2>
-
-            <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-              {/* Pricing Form */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-slate-800">{editId ? "Edit" : "Tambah"} Pricing</h3>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Kategori</label>
-                  <input
-                    value={pricingForm.category}
-                    onChange={(e) => handlePricingValue("category", e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Judul</label>
-                  <input
-                    value={pricingForm.title}
-                    onChange={(e) => handlePricingValue("title", e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
-                  <textarea
-                    value={pricingForm.description}
-                    onChange={(e) => handlePricingValue("description", e.target.value)}
-                    rows={3}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">Image Produk</label>
-                  <div className="space-y-2">
-                    {pricingForm.image && (
-                      <img
-                        src={pricingForm.image}
-                        alt="Pricing"
-                        className="w-full rounded-lg border border-slate-200 h-24 object-cover"
-                      />
-                    )}
-                    <div className="flex gap-2">
-                      <input
-                        value={pricingForm.image}
-                        onChange={(e) => handlePricingValue("image", e.target.value)}
-                        className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm"
-                        placeholder="URL gambar..."
-                      />
-                      <label className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 cursor-pointer hover:bg-blue-100 transition">
-                        <span>Upload</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              setUploadingField("pricing-image");
-                              const tempField = "pricing-temp-" + Date.now();
-                              handleImageUpload(tempField, e.target.files[0]).then(() => {
-                                const newUrl = sectionData[tempField];
-                                if (typeof newUrl === "string") {
-                                  handlePricingValue("image", newUrl);
-                                }
-                                setUploadingField(null);
-                              });
-                            }
-                          }}
-                          disabled={uploadingField === "pricing-image"}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Durasi (min)</label>
-                    <input
-                      type="number"
-                      value={pricingForm.duration}
-                      onChange={(e) => handlePricingValue("duration", e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Harga (Rp)</label>
-                    <input
-                      type="number"
-                      value={pricingForm.price}
-                      onChange={(e) => handlePricingValue("price", e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                    />
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={pricingForm.recommended}
-                    onChange={(e) => handlePricingValue("recommended", e.target.checked)}
-                    className="h-4 w-4 rounded"
-                  />
-                  <span>Jadikan Recommended</span>
-                </label>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={savePricing}
-                    disabled={saving}
-                    className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-3 font-semibold text-white disabled:opacity-60"
-                  >
-                    {saving ? "Menyimpan..." : editId ? "Update" : "Tambah"}
-                  </button>
-                  {editId && (
-                    <button
-                      type="button"
-                      onClick={resetPricingForm}
-                      className="rounded-lg border border-slate-200 px-4 py-3 font-medium text-slate-700"
-                    >
-                      Batal
-                    </button>
-                  )}
-                </div>
+          {/* Pricing Management - TAB 2 */}
+          {adminTab === "pricing" && (
+          <section className="flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg xl:overflow-hidden xl:flex-1 xl:min-h-0">
+            <div className="p-4 border-b border-slate-200 flex-shrink-0">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-slate-900">Kelola Pricing</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditId(null);
+                    setPricingForm(emptyPricingForm());
+                    setShowPricingFormModal(true);
+                  }}
+                  className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white hover:brightness-95"
+                >
+                  Tambah Pricing
+                </button>
               </div>
+            </div>
 
-              {/* Pricing List */}
-              <div className="space-y-3">
-                <h3 className="font-medium text-slate-800">Pricing List ({pricingItems.length})</h3>
+            <div className="hide-scrollbar overflow-y-auto p-4 xl:max-h-none xl:flex-1">
+              <div className="space-y-3 min-h-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-medium text-slate-800">Pricing List ({pricingItems.length})</h3>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari pricing..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm"
+                  />
+                  <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
                 {pricingItems.length === 0 ? (
                   <p className="text-sm text-slate-500">Belum ada pricing.</p>
                 ) : (
-                  <div className="max-h-96 space-y-2 overflow-y-auto">
-                    {pricingItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`cursor-pointer rounded-lg border-2 p-3 transition ${
-                          editId === item.id
-                            ? "border-[var(--pine)] bg-blue-50"
-                            : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                        }`}
-                        onClick={() => editPricing(item)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
-                            <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                            <p className="text-xs text-slate-600">
-                              Rp{Number(item.price).toLocaleString("id-ID")} • {item.duration}m
-                            </p>
-                            {item.recommended && <span className="inline-block text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-semibold">Recommended</span>}
+                  <div className="max-h-[28rem] min-h-0 space-y-2 overflow-y-auto pr-1 xl:max-h-[40rem]">
+                    {pricingItems
+                      .filter((item) =>
+                        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
+                              <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                              <p className="text-xs text-slate-600">
+                                Rp{Number(item.price).toLocaleString("id-ID")} • {item.duration}m
+                              </p>
+                              {item.recommended && <span className="inline-block text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-semibold">Recommended</span>}
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditId(item.id);
+                                  setPricingForm({
+                                    category: item.category,
+                                    title: item.title,
+                                    description: item.description,
+                                    image: item.image,
+                                    duration: item.duration,
+                                    price: item.price,
+                                    recommended: Boolean(item.recommended),
+                                  });
+                                  setShowPricingFormModal(true);
+                                }}
+                                className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deletePricing(item.id);
+                                }}
+                                className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                              >
+                                Hapus
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deletePricing(item.id);
-                            }}
-                            className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
-                          >
-                            Hapus
-                          </button>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 )}
               </div>
             </div>
           </section>
+          )}
         </div>
       </div>
     </div>

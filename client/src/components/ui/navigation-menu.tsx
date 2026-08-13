@@ -264,7 +264,7 @@ export function AnimatedNavFramer() {
       if (!clickedInsideService) {
         setServiceOpen(false);
       }
-      
+
       // Jika klik di luar navbar desktop, hilangkan kunci agar scroll collapse aktif kembali
       const clickedInsideNav = rootRef.current && rootRef.current.contains(target);
       if (!clickedInsideNav) {
@@ -465,7 +465,7 @@ export function AnimatedNavFramer() {
               onClick={(e) => handleLinkClick(e, "#home")}
               className="flex flex-shrink-0 items-center gap-2 pl-4 pr-3 text-[var(--ink-soft)] transition-colors duration-200 hover:text-[var(--pine)]"
             >
-              <img src="/first-aid-kit-doctor-svgrepo-com.svg" alt="Homecare" className="h-5 w-5" />
+              <img src="/Logo.svg" alt="Homecare" className="h-7 w-7" />
               <span className="text-sm font-semibold">Homecare</span>
             </motion.a>
 
@@ -584,7 +584,7 @@ export function AnimatedNavFramer() {
           onClick={(e) => handleLinkClick(e, "#home")}
           className="flex items-center gap-2 text-[var(--pine-deep)]"
         >
-          <img src="/first-aid-kit-doctor-svgrepo-com.svg" alt="Homecare" className="h-5 w-5" />
+          <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
           <span className="text-sm font-bold tracking-wide">Homecare</span>
         </a>
 
@@ -607,6 +607,10 @@ export function AnimatedNavFramer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 220 }}
+            // FIX: cuma satu layer overflow di sini (overflow-hidden). Layer
+            // scroll sesungguhnya dipindah ke inner content div di bawah,
+            // biar gak ada dua scroll container bertumpuk yang bikin gesture
+            // touch jadi ambigu / kepotong di tengah.
             className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[rgba(119,38,53,0.95)] backdrop-blur-[32px] text-white md:hidden"
           >
             {/* Signature ambient glow */}
@@ -619,14 +623,14 @@ export function AnimatedNavFramer() {
               className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-[var(--pine)]/30 blur-[90px]"
             />
 
-            {/* Header row inside fullscreen overlay */}
-            <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/10">
+            {/* Header row inside fullscreen overlay (tetap fixed, gak ikut scroll) */}
+            <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/10 flex-shrink-0">
               <a
                 href="#home"
                 onClick={(e) => handleLinkClick(e, "#home")}
                 className="flex items-center gap-2 text-white"
               >
-                <img src="/first-aid-kit-doctor-svgrepo-com.svg" alt="Homecare" className="h-5 w-5 brightness-0 invert" />
+                <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
                 <span className="text-sm font-bold tracking-wider uppercase text-white">Homecare</span>
               </a>
 
@@ -641,8 +645,24 @@ export function AnimatedNavFramer() {
               </motion.button>
             </div>
 
-            {/* Main overlay scrollable content container */}
-            <div className="relative flex-1 flex flex-col justify-between overflow-y-auto px-8 py-8" ref={drawerRef}>
+            {/* Main overlay scrollable content container.
+                FIX: data-lenis-prevent nyegah Lenis nge-hijack gesture
+                scroll di dalam elemen fixed ini (Lenis defaultnya kontrol
+                scroll seluruh document, jadi elemen fixed/overlay sering
+                gak bisa discroll native walau udah lenis.stop()).
+                overscrollBehavior: contain nyegah scroll "bocor" ke body
+                pas udah nyampe ujung atas/bawah drawer.
+                WebkitOverflowScrolling: touch buat momentum scroll mulus
+                di iOS Safari. */}
+            <div
+              className="relative flex min-h-0 flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden px-8 py-8"
+              ref={drawerRef}
+              data-lenis-prevent
+              style={{
+                WebkitOverflowScrolling: "touch",
+                overscrollBehavior: "contain",
+              }}
+            >
               {/* Navigation Menu List */}
               <div className="flex flex-col gap-1">
                 {NAV_LINKS.map((item, i) => {

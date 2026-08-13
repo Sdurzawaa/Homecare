@@ -6,9 +6,16 @@ import path from "path";
 import crypto from "crypto";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import jwt from "jsonwebtoken";
 import multer from "multer";
+import bcrypt from "bcryptjs";
 import pool from "./db.js";
-import { normalizeApiKey, resolveSchemaName, withSchema } from "./utils.js";
+import {
+  normalizeApiKey,
+  quoteIdent,
+  resolveSchemaName,
+  withSchema,
+} from "./utils.js";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,9 +30,17 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 const schemaName = resolveSchemaName(process.env.PGSCHEMA);
-const table = (name) => withSchema(name, schemaName);
+const table = (name) => {
+  if (!name || typeof name !== "string") return name;
+
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.includes(".")) return trimmed;
+
+  return withSchema(trimmed, schemaName);
+};
 const adminSessionSecret =
   process.env.ADMIN_SESSION_SECRET || "homecare-admin-secret";
+const adminJwtSecret = process.env.ADMIN_JWT_SECRET || adminSessionSecret;
 
 let adminUsername = (process.env.ADMIN_USERNAME || "admin").trim();
 let adminPassword = (process.env.ADMIN_PASSWORD || "admin123").trim();
@@ -34,11 +49,59 @@ let adminToken = crypto
   .update(`${adminUsername}:${adminPassword}`)
   .digest("hex");
 
+const createAdminJwt = () =>
+  jwt.sign({ username: adminUsername, type: "admin" }, adminJwtSecret, {
+    expiresIn: "12h",
+  });
+
+const verifyAdminJwt = (token) => {
+  if (!token) return null;
+  try {
+    return jwt.verify(token, adminJwtSecret);
+  } catch {
+    return null;
+  }
+};
+
 const updateAdminToken = () => {
   adminToken = crypto
     .createHmac("sha256", adminSessionSecret)
     .update(`${adminUsername}:${adminPassword}`)
     .digest("hex");
+};
+
+const verifyAdminCredentials = async (username, password) => {
+  const normalizedUsername =
+    typeof username === "string" ? username.trim() : "";
+  const normalizedPassword = typeof password === "string" ? password : "";
+
+  if (!normalizedUsername || !normalizedPassword) {
+    return false;
+  }
+
+  if (
+    normalizedUsername === adminUsername &&
+    normalizedPassword === adminPassword
+  ) {
+    return true;
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT username, password_hash FROM ${table("admin_users")} WHERE username = $1 LIMIT 1`,
+      [normalizedUsername],
+    );
+
+    const user = result.rows[0];
+    if (!user || !user.password_hash) {
+      return false;
+    }
+
+    return await bcrypt.compare(normalizedPassword, user.password_hash);
+  } catch (error) {
+    console.error("Admin credential verification failed", error);
+    return false;
+  }
 };
 
 const storage = multer.diskStorage({
@@ -138,6 +201,8 @@ const normalizeSection = (sectionKey, payload = {}) => {
 };
 
 async function ensureAdminUsersTable() {
+  // Ensure the schema exists. Use quoted identifier for mixed-case names.
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${table("admin_users")} (
       id SERIAL PRIMARY KEY,
@@ -147,9 +212,25 @@ async function ensureAdminUsersTable() {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+
+  const existing = await pool.query(
+    `SELECT username FROM ${table("admin_users")} WHERE username = $1 LIMIT 1`,
+    [adminUsername],
+  );
+
+  if (existing.rowCount === 0) {
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
+    await pool.query(
+      `INSERT INTO ${table("admin_users")} (username, password_hash)
+       VALUES ($1, $2)`,
+      [adminUsername, passwordHash],
+    );
+  }
 }
 
 async function ensureSiteSectionsTable() {
+  // Ensure the schema exists. Use quoted identifier for mixed-case names.
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${table("site_sections")} (
       section_key TEXT PRIMARY KEY,
@@ -275,8 +356,9 @@ const resolveBearerToken = (req) => {
 const requireAdminKey = (req, res, next) => {
   const key = normalizeApiKey(req.headers);
   const bearerToken = resolveBearerToken(req);
+  const jwtPayload = verifyAdminJwt(bearerToken);
 
-  if (bearerToken && bearerToken === adminToken) {
+  if (bearerToken && (bearerToken === adminToken || jwtPayload)) {
     return next();
   }
 
@@ -294,12 +376,17 @@ const requireAdminKey = (req, res, next) => {
 
 const requireAdminAuth = (req, res, next) => {
   const token = resolveBearerToken(req);
+  const jwtPayload = verifyAdminJwt(token);
 
-  if (!token || token !== adminToken) {
+  if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  next();
+  if (token === adminToken || jwtPayload) {
+    return next();
+  }
+
+  return res.status(401).json({ error: "Unauthorized" });
 };
 
 const validateNumericIdParam = (req, res, next) => {
@@ -379,18 +466,23 @@ app.get("/health", (req, res) => {
 app.post("/api/admin/login", async (req, res) => {
   const { username, password } = req.body || {};
 
-  if (
-    typeof username !== "string" ||
-    typeof password !== "string" ||
-    username.trim() !== adminUsername ||
-    password !== adminPassword
-  ) {
+  const isValidAdmin = await verifyAdminCredentials(username, password);
+
+  if (!isValidAdmin) {
     return res.status(401).json({ error: "Username atau password salah" });
   }
 
+  const resolvedUsername =
+    typeof username === "string" && username.trim()
+      ? username.trim()
+      : adminUsername;
+
+  const jwtToken = createAdminJwt();
+
   return res.json({
-    token: adminToken,
-    user: adminUsername,
+    token: jwtToken,
+    legacyToken: adminToken,
+    user: resolvedUsername,
     message: "Login berhasil",
   });
 });
@@ -497,7 +589,7 @@ app.get("/api/public/testimoni", async (req, res) => {
        id_testi,
        teks, 
        author, 
-       latarBelakang, 
+       latarbelakang AS "latarBelakang", 
        initial 
       FROM ${table("testimoni")} ORDER BY id_testi ASC`,
     );
@@ -516,7 +608,7 @@ app.get("/api/testimoni", requireAdminKey, async (req, res) => {
        id_testi,
        teks, 
        author, 
-       latarBelakang, 
+       latarbelakang AS "latarBelakang", 
        initial 
       FROM ${table("testimoni")} ORDER BY id_testi ASC`,
     );
@@ -543,7 +635,7 @@ app.get(
         id_testi,
         teks,
         author,
-        latarBelakang,
+        latarbelakang AS "latarBelakang",
         initial 
       FROM ${table("testimoni")} WHERE id_testi = $1`,
         [id_testi],
@@ -573,10 +665,10 @@ app.post(
         `INSERT INTO ${table("testimoni")} (
         teks,
         author,
-        latarBelakang,
+        latarbelakang,
         initial )
        VALUES ($1, $2, $3, $4)
-       RETURNING id_testi, teks, author, latarBelakang, initial`,
+       RETURNING id_testi, teks, author, latarbelakang AS "latarBelakang", initial`,
         [teks, author, latarBelakang, initial],
       );
       res.status(201).json(result.rows[0]);
@@ -601,10 +693,10 @@ app.put(
         `UPDATE ${table("testimoni")}
        SET teks = $1,
            author = $2,
-           latarBelakang = $3,
+           latarbelakang = $3,
            initial = $4
        WHERE id_testi = $5
-       RETURNING id_testi, teks, author, latarBelakang, initial`,
+       RETURNING id_testi, teks, author, latarbelakang AS "latarBelakang", initial`,
         [teks, author, latarBelakang, initial, id_testi],
       );
       if (result.rows.length === 0) {

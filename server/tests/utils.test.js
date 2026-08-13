@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { normalizeApiKey, resolveSchemaName, withSchema } from "../utils.js";
+import {
+  buildSearchPath,
+  normalizeApiKey,
+  resolveSchemaName,
+  withSchema,
+} from "../utils.js";
 
 test("resolveSchemaName prefers configured schema and falls back to public", () => {
   assert.equal(resolveSchemaName("website_co"), "website_co");
@@ -12,6 +17,11 @@ test("resolveSchemaName prefers configured schema and falls back to public", () 
 test("withSchema applies the configured schema without breaking unqualified names", () => {
   assert.equal(withSchema("pricing", "public"), "public.pricing");
   assert.equal(withSchema("pricing", "website_co"), "website_co.pricing");
+});
+
+test("buildSearchPath keeps configured schema while allowing a public fallback", () => {
+  assert.equal(buildSearchPath("public"), "public");
+  assert.equal(buildSearchPath("website_co"), "website_co,public");
 });
 
 test("normalizeApiKey accepts the admin header regardless of casing", () => {

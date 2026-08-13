@@ -3,6 +3,22 @@ export function resolveSchemaName(schemaName) {
   return value || "public";
 }
 
+export function buildSearchPath(schemaName) {
+  const resolved = resolveSchemaName(schemaName);
+
+  if (resolved === "public") {
+    return "public";
+  }
+
+  const needsQuote = (s) => !/^[a-z_][a-z0-9_]*$/.test(String(s));
+  const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
+  return `${needsQuote(resolved) ? quote(resolved) : resolved},public`;
+}
+
+export function quoteIdent(name) {
+  return `"${String(name).replace(/"/g, '""')}"`;
+}
+
 export function withSchema(tableName, schemaName) {
   if (!tableName || typeof tableName !== "string") {
     return tableName;
@@ -12,7 +28,12 @@ export function withSchema(tableName, schemaName) {
   if (!trimmed) return trimmed;
   if (trimmed.includes(".")) return trimmed;
 
-  return `${resolveSchemaName(schemaName)}.${trimmed}`;
+  const resolved = resolveSchemaName(schemaName);
+  const needsQuote = (s) => !/^[a-z_][a-z0-9_]*$/.test(String(s));
+  const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
+  const left = needsQuote(resolved) ? quote(resolved) : resolved;
+  const right = needsQuote(trimmed) ? quote(trimmed) : trimmed;
+  return `${left}.${right}`;
 }
 
 export function normalizeApiKey(headers = {}) {

@@ -6,13 +6,11 @@ function Footer({ content }: { content?: { brand?: string; description?: string;
           {/* Brand */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <span
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg
-                           bg-white/10 text-[0.95rem] font-semibold text-white
-                           font-[family-name:var(--font-display)]"
-              >
-                HC
-              </span>
+              <img
+                src="/Logo.svg"
+                alt={content?.brand || "Homecare"}
+                className="h-10 w-10 flex-shrink-0 rounded-lg object-cover"
+              />
               <span className="font-[family-name:var(--font-display)] text-[1.1rem] font-medium text-white">
                 {content?.brand || "Homecare"}
               </span>
@@ -109,8 +107,8 @@ function Footer({ content }: { content?: { brand?: string; description?: string;
               Kontak
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem] text-white/70">
-              <p className="m-0">{content?.address || "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia"}</p>
-              <p className="m-0">{content?.phone || "+62 857-7378-0406"}</p>
+              <p className="m-0">{content?.address || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama"}</p>
+              <p className="m-0">{content?.phone || "+62 858-9200-6905"}</p>
             </div>
           </div>
         </div>

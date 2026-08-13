@@ -11,10 +11,17 @@ CREATE TABLE IF NOT EXISTS public.pricing (
   recommended BOOLEAN NOT NULL DEFAULT false
 );
 
+CREATE TABLE IF NOT EXISTS public.pricing_categories (
+  id SERIAL PRIMARY KEY,
+  category TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS public.testimoni (
 	id_testi SERIAL PRIMARY KEY,
 	teks TEXT NOT NULL,
 	author TEXT NOT NULL,
-	latarBelakang TEXT NOT NULL,
-	INITIAL TEXT NOT NULL
+	latarbelakang TEXT NOT NULL,
+	initial TEXT NOT NULL
 );
