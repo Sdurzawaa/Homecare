@@ -143,18 +143,36 @@ export default function Admin() {
 
   const currentSection = sectionData[selectedSection] || defaultSections[selectedSection as keyof typeof defaultSections] || {};
 
+  // Lock body scroll (and pause Lenis smooth-scroll, kalau ada) selama modal manapun terbuka.
+  // Fokusnya biar scroll cuma jalan di dalam card modal (yang punya overflow-y-auto sendiri),
+  // bukan "bocor" ke halaman/backdrop di belakangnya.
   useEffect(() => {
     if (typeof document === "undefined") return;
 
-    const isAnyModalOpen = Boolean(successModal || errorModal || confirmModal || showPricingFormModal || editingPricingModal);
+    const isAnyModalOpen = Boolean(
+      successModal ||
+        errorModal ||
+        confirmModal ||
+        showPricingFormModal ||
+        editingPricingModal ||
+        showPasswordForm,
+    );
     const previousOverflow = document.body.style.overflow;
+    const lenis = (window as any).lenis;
 
-    document.body.style.overflow = isAnyModalOpen ? "hidden" : previousOverflow;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = "hidden";
+      if (lenis) lenis.stop();
+    } else {
+      document.body.style.overflow = previousOverflow;
+      if (lenis) lenis.start();
+    }
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      if (lenis) lenis.start();
     };
-  }, [successModal, errorModal, confirmModal, showPricingFormModal, editingPricingModal]);
+  }, [successModal, errorModal, confirmModal, showPricingFormModal, editingPricingModal, showPasswordForm]);
 
   const request = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
@@ -225,7 +243,7 @@ export default function Admin() {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("admin-pricing-form");
       const fromCookie = getCookie("admin-pricing-form");
-      
+
       if (saved) {
         try {
           setPricingForm(JSON.parse(saved));
@@ -641,7 +659,7 @@ export default function Admin() {
       {/* Change Password Modal */}
       {showPasswordForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" data-lenis-prevent>
             <h2 className="mb-4 text-xl font-semibold text-slate-900">Ubah Password</h2>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
@@ -690,8 +708,8 @@ export default function Admin() {
       {/* Main Content */}
       <div className="flex flex-col min-h-[calc(100vh-65px)] bg-slate-50">
         {successModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" data-lenis-prevent>
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">
                 ✓
               </div>
@@ -710,8 +728,8 @@ export default function Admin() {
 
         {/* Error Modal */}
         {errorModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" data-lenis-prevent>
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">
                 ✕
               </div>
@@ -730,8 +748,8 @@ export default function Admin() {
 
         {/* Confirmation Modal */}
         {confirmModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" data-lenis-prevent>
               <h3 className="text-center text-lg font-semibold text-slate-900">{confirmModal.title}</h3>
               <p className="mt-3 text-center text-sm text-slate-600">{confirmModal.message}</p>
               <div className="mt-6 flex gap-3">
@@ -759,8 +777,8 @@ export default function Admin() {
 
         {/* Add / Edit Pricing Modal */}
         {showPricingFormModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl" data-lenis-prevent>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-slate-900">{editId ? "Edit Pricing" : "Tambah Pricing"}</h2>
                 <button
@@ -891,7 +909,7 @@ export default function Admin() {
         {/* Edit Pricing Modal */}
         {editingPricingModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" data-lenis-prevent>
               <h2 className="mb-4 text-xl font-semibold text-slate-900">Edit Pricing</h2>
 
               <form
