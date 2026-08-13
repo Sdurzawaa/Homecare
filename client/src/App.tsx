@@ -1,4 +1,5 @@
 import "./App.css";
+import { useEffect, useState } from "react";
 import { AnimatedNavFramer } from "@/components/ui/navigation-menu";
 import Footer from "@/components/ui/Footer";
 import Hero from "./components/Hero-Panel";
@@ -7,11 +8,77 @@ import Testimonials from "./components/Testimonials";
 import Pricing from "./components/Pricing";
 
 import Contact from "./components/Contact";
+import Admin from "./components/Admin";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
+
+const defaultSections = {
+  hero: {
+    title: "Kenyamanan Perawatan Medis di Rumah Anda",
+    description:
+      "Menghadirkan tenaga profesional medis berpengalaman untuk merawat orang terkasih dengan penuh kasih sayang dan kenyamanan maksimal.",
+    image: "/Person.jpg",
+    badge: "Dipercaya 1000+ keluarga",
+    cta_label: "Konsultasi Gratis",
+    cta_link: "#contact",
+    secondary_cta_label: "Lihat Layanan",
+    secondary_cta_link: "#services",
+  },
+  about: {
+    title: "Homecare modern untuk kebutuhan kesehatan keluarga",
+    description:
+      "Tim kami terlatih dan berpengalaman dalam memberikan perawatan terbaik untuk lansia, ibu hamil, dan pasien pemulihan dengan sentuhan personal.",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDmUjmMxizXF02mWPoncUAQ6uxWYBZb7YMVlJv9kZ8gTN1sghTRr5IemG5-Pih13TPi4Hc3wQsIDresCXKeGY_xkciEp0sWS_CLDUvDomFRDtshdQZKtuvzxo4qBpFMvUWKHajP9npVLYQzd7J40iLA3RtHiUGOD4mBJ1-xrqqwrB-Hjxk0WFzKAAn07n8Oz4fJR1lXc7lAo_zuyggdPQ6qfM5XsNwrh0Uq-yUj1RPsXhcbOGWEIW7P_w",
+    image_2:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDRaWb14VsQvZNL356-cp3yLk_7zMnGCERhSjQk9IdSvAU_1BcJwm8F37KnaWfSDyNn4ZNuGnpbMZTDnWt-xknYOr6sTTlQ2wdhZO-f5iw8mYN2b3gzaWb_pgc_1Sdvy4aPQS1mfETUCzC_JuYwGG5t89toawmmL0gDn6-0N4Hbga8pC5VL_VaiiMZoBjYDZEwnNCzwsMS3wG3qfOQVrC7lRVnZoVXbv_9PpoRDiqBgEeHEnxTT0JUdlg",
+    image_3:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuClz7KaBBUmaxbwURQ07RcddQ0oPFIlB7MzyKhrxk3rkmiK1PSq_8cnwUi2-qH70ICZgpl_AClFJceJVvE8tjILhabxYP61F3c7xfQzYlATCqZEnJEftbz5p4T4NOutPpb9JLiDobUpNBTqdjZvWEChCINfgn_zzeL51AMl2wfRc_ua-BPOasUSSGmorEw7wbvBPxFDULpaSr96MzRES_RRuwmJJ9ow-8vnwX8mypIRL0yKHXVzCDIGZw",
+  },
+  contact: {
+    title: "Siap membantu kebutuhan kesehatan keluarga Anda",
+    description:
+      "Kami siap memberikan dukungan medis profesional di rumah dengan cara yang aman, cepat, dan nyaman.",
+    phone: "+62 858-9200-6905",
+    email: "bidanrismacare@gmail.com",
+    address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
+    button_label: "Chat via WhatsApp",
+    button_link: "https://wa.me/6285892006905",
+  },
+  footer: {
+    brand: "Homecare",
+    description:
+      "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
+    phone: "+62 857-7378-0406",
+    address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
+  },
+};
 
 function App() {
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
-  const isValidPath = pathname === "/" || pathname === "/index.html";
+  const isAdminPath = pathname === "/admin" || pathname === "/admin/";
+  const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath;
+  const [siteSections, setSiteSections] = useState(defaultSections);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isAdminPath) return;
+
+    fetch("/api/public/site-sections")
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!data) return;
+        setSiteSections({
+          hero: { ...defaultSections.hero, ...(data.hero || {}) },
+          about: { ...defaultSections.about, ...(data.about || {}) },
+          contact: { ...defaultSections.contact, ...(data.contact || {}) },
+          footer: { ...defaultSections.footer, ...(data.footer || {}) },
+        });
+      })
+      .catch(() => undefined);
+  }, [isAdminPath]);
+
+  if (isAdminPath) {
+    return <Admin />;
+  }
 
   if (!isValidPath) {
     return (
@@ -49,7 +116,7 @@ function App() {
       {/* Main Content Section */}
       <main>
         {/* Hero Section */}
-        <Hero heroRef={heroRef} />
+        <Hero heroRef={heroRef} content={siteSections.hero} />
         {/* Pricing Section */}
         <Pricing pricingRef={pricingRef} />
         {/* Achievements Section */}
@@ -58,15 +125,16 @@ function App() {
           achievementsCard1={achievementsCard1}
           achievementsCard2={achievementsCard2}
           achievementsCard3={achievementsCard3}
+          content={siteSections.about}
         />
         {/* Testimonials Section */}
         <Testimonials testimonialsRef={testimonialsRef} />
 
         {/* Contact Section */}
-        <Contact contactRef={contactRef} />
+        <Contact contactRef={contactRef} content={siteSections.contact} />
       </main>
 
-      <Footer />
+      <Footer content={siteSections.footer} />
     </div>
   );
 }

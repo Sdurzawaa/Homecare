@@ -2,9 +2,20 @@ import type { RefObject } from "react";
 
 interface HeroProps {
   heroRef?: RefObject<HTMLElement | null>;
+  content?: {
+    title?: string;
+    description?: string;
+    image?: string;
+    badge?: string;
+    cta_label?: string;
+    cta_link?: string;
+    secondary_cta_label?: string;
+    secondary_cta_link?: string;
+  };
 }
 
-function Hero({ heroRef }: HeroProps) {
+function Hero({ heroRef, content }: HeroProps) {
+  const heroContent = content || {};
   return (
     <section
       ref={heroRef}
@@ -37,7 +48,7 @@ function Hero({ heroRef }: HeroProps) {
               </svg>
             </span>
               <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[#6d3a4d]">
-                Dipercaya 1000+ keluarga
+                {heroContent.badge || "Dipercaya 1000+ keluarga"}
               </span>
             </div>
 
@@ -47,15 +58,15 @@ function Hero({ heroRef }: HeroProps) {
                          text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.1]
                          tracking-[-0.02em] text-[var(--pine-deep,#772635)] max-w-xl"
             >
-              Kenyamanan Perawatan Medis di Rumah Anda
+              {heroContent.title || "Kenyamanan Perawatan Medis di Rumah Anda"}
             </h1>
 
             <p
               style={{ animationDelay: "0.35s" }}
               className="animate-fade-in-up text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#634b4f)] max-w-lg"
             >
-              Menghadirkan tenaga profesional medis berpengalaman untuk merawat
-              orang terkasih dengan penuh kasih sayang dan kenyamanan maksimal.
+              {heroContent.description ||
+                "Menghadirkan tenaga profesional medis berpengalaman untuk merawat orang terkasih dengan penuh kasih sayang dan kenyamanan maksimal."}
             </p>
 
             <div
@@ -63,25 +74,25 @@ function Hero({ heroRef }: HeroProps) {
               className="animate-fade-in-up flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4"
             >
               <a
-                href="#contact"
+                href={heroContent.cta_link || "#contact"}
                 style={{ color: "#ffffff" }}
                 className="w-full sm:w-auto whitespace-nowrap rounded-full px-9 py-4 text-[0.92rem]
                            font-semibold !text-white no-underline flex items-center justify-center gap-2
                            bg-[var(--pine,#b24d62)] shadow-[0_16px_30px_-22px_rgba(178,77,98,0.5)]
                            transition-all duration-300 hover:-translate-y-1 hover:brightness-[0.9]"
               >
-                Konsultasi Gratis
+                {heroContent.cta_label || "Konsultasi Gratis"}
                 <span aria-hidden="true" style={{ color: "#ffffff" }}>
                 </span>
               </a>
               <a
-                href="#services"
+                href={heroContent.secondary_cta_link || "#services"}
                 className="w-full sm:w-auto whitespace-nowrap rounded-full px-7 py-4 text-[0.92rem]
                            font-semibold no-underline flex items-center justify-center
                            border-2 border-[var(--pine,#b24d62)] text-[var(--pine,#b24d62)]
                            transition-colors hover:bg-[var(--bg-alt,#f7e4e7)]"
               >
-                Lihat Layanan
+                {heroContent.secondary_cta_label || "Lihat Layanan"}
               </a>
             </div>
             {/* Mini Stats */}
@@ -129,7 +140,7 @@ function Hero({ heroRef }: HeroProps) {
                 <img
                   alt="Bidan Profesional Homecare"
                   className="h-auto w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src="/Person.jpg"
+                  src={heroContent.image || "/Person.jpg"}
                 />
               </div>
 

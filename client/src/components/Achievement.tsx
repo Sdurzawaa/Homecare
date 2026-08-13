@@ -5,6 +5,13 @@ interface AchievementsProps {
   achievementsCard1?: RefObject<HTMLDivElement | null>;
   achievementsCard2?: RefObject<HTMLDivElement | null>;
   achievementsCard3?: RefObject<HTMLDivElement | null>;
+  content?: {
+    title?: string;
+    description?: string;
+    image?: string;
+    image_2?: string;
+    image_3?: string;
+  };
 }
 
 function Achievements({
@@ -12,6 +19,7 @@ function Achievements({
   achievementsCard1,
   achievementsCard2,
   achievementsCard3,
+  content,
 }: AchievementsProps) {
   return (
     <section
@@ -32,7 +40,7 @@ function Achievements({
           className="mx-auto m-0 max-w-2xl font-[family-name:var(--font-display)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium leading-[1.3] text-[var(--ink)] animate-fade-in-up"
           style={{ animationDelay: "0.15s" }}
         >
-          Homecare modern untuk kebutuhan kesehatan keluarga
+          {content?.title || "Homecare modern untuk kebutuhan kesehatan keluarga"}
         </h2>
       </div>
 
@@ -51,7 +59,7 @@ function Achievements({
                 <img
                   alt="Perawatan dengan Hati"
                   className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmUjmMxizXF02mWPoncUAQ6uxWYBZb7YMVlJv9kZ8gTN1sghTRr5IemG5-Pih13TPi4Hc3wQsIDresCXKeGY_xkciEp0sWS_CLDUvDomFRDtshdQZKtuvzxo4qBpFMvUWKHajP9npVLYQzd7J40iLA3RtHiUGOD4mBJ1-xrqqwrB-Hjxk0WFzKAAn07n8Oz4fJR1lXc7lAo_zuyggdPQ6qfM5XsNwrh0Uq-yUj1RPsXhcbOGWEIW7P_w"
+                  src={content?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDmUjmMxizXF02mWPoncUAQ6uxWYBZb7YMVlJv9kZ8gTN1sghTRr5IemG5-Pih13TPi4Hc3wQsIDresCXKeGY_xkciEp0sWS_CLDUvDomFRDtshdQZKtuvzxo4qBpFMvUWKHajP9npVLYQzd7J40iLA3RtHiUGOD4mBJ1-xrqqwrB-Hjxk0WFzKAAn07n8Oz4fJR1lXc7lAo_zuyggdPQ6qfM5XsNwrh0Uq-yUj1RPsXhcbOGWEIW7P_w"}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(119,38,53,0.18),transparent_55%)]"></div>
               </div>
@@ -110,7 +118,7 @@ function Achievements({
                 <img
                   alt="Standar Profesional"
                   className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRaWb14VsQvZNL356-cp3yLk_7zMnGCERhSjQk9IdSvAU_1BcJwm8F37KnaWfSDyNn4ZNuGnpbMZTDnWt-xknYOr6sTTlQ2wdhZO-f5iw8mYN2b3gzaWb_pgc_1Sdvy4aPQS1mfETUCzC_JuYwGG5t89toawmmL0gDn6-0N4Hbga8pC5VL_VaiiMZoBjYDZEwnNCzwsMS3wG3qfOQVrC7lRVnZoVXbv_9PpoRDiqBgEeHEnxTT0JUdlg"
+                  src={content?.image_2 || "https://lh3.googleusercontent.com/aida-public/AB6AXuDRaWb14VsQvZNL356-cp3yLk_7zMnGCERhSjQk9IdSvAU_1BcJwm8F37KnaWfSDyNn4ZNuGnpbMZTDnWt-xknYOr6sTTlQ2wdhZO-f5iw8mYN2b3gzaWb_pgc_1Sdvy4aPQS1mfETUCzC_JuYwGG5t89toawmmL0gDn6-0N4Hbga8pC5VL_VaiiMZoBjYDZEwnNCzwsMS3wG3qfOQVrC7lRVnZoVXbv_9PpoRDiqBgEeHEnxTT0JUdlg"}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(204,168,122,0.18),transparent_55%)]"></div>
               </div>
@@ -185,7 +193,7 @@ function Achievements({
                 <img
                   alt="Kepuasan Pelanggan"
                   className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuClz7KaBBUmaxbwURQ07RcddQ0oPFIlB7MzyKhrxk3rkmiK1PSq_8cnwUi2-qH70ICZgpl_AClFJceJVvE8tjILhabxYP61F3c7xfQzYlATCqZEnJEftbz5p4T4NOutPpb9JLiDobUpNBTqdjZvWEChCINfgn_zzeL51AMl2wfRc_ua-BPOasUSSGmorEw7wbvBPxFDULpaSr96MzRES_RRuwmJJ9ow-8vnwX8mypIRL0yKHXVzCDIGZw"
+                  src={content?.image_3 || "https://lh3.googleusercontent.com/aida-public/AB6AXuClz7KaBBUmaxbwURQ07RcddQ0oPFIlB7MzyKhrxk3rkmiK1PSq_8cnwUi2-qH70ICZgpl_AClFJceJVvE8tjILhabxYP61F3c7xfQzYlATCqZEnJEftbz5p4T4NOutPpb9JLiDobUpNBTqdjZvWEChCINfgn_zzeL51AMl2wfRc_ua-BPOasUSSGmorEw7wbvBPxFDULpaSr96MzRES_RRuwmJJ9ow-8vnwX8mypIRL0yKHXVzCDIGZw"}
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(119,38,53,0.18),transparent_55%)]"></div>
               </div>

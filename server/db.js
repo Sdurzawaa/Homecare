@@ -1,9 +1,10 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import { resolveSchemaName } from "./utils.js";
 
 dotenv.config();
 
-const schemaName = process.env.PGSCHEMA || "website_co";
+const schemaName = resolveSchemaName(process.env.PGSCHEMA);
 
 const pool = new Pool({
   host: process.env.PGHOST || "localhost",

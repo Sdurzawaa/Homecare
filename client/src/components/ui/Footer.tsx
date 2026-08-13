@@ -1,4 +1,4 @@
-function Footer() {
+function Footer({ content }: { content?: { brand?: string; description?: string; phone?: string; address?: string } }) {
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pt-16 pb-8 sm:px-6 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1240px]">
@@ -14,12 +14,12 @@ function Footer() {
                 HC
               </span>
               <span className="font-[family-name:var(--font-display)] text-[1.1rem] font-medium text-white">
-                Homecare
+                {content?.brand || "Homecare"}
               </span>
             </div>
             <p className="m-0 max-w-xs text-[0.88rem] leading-relaxed text-white/55">
-              Solusi perawatan kesehatan profesional di kenyamanan rumah Anda.
-              Berkualitas, tepercaya, dan penuh kasih sayang.
+              {content?.description ||
+                "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang."}
             </p>
             <div className="mt-1 flex items-center gap-3">
               <a
@@ -109,10 +109,8 @@ function Footer() {
               Kontak
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem] text-white/70">
-              <p className="m-0">
-                AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia
-              </p>
-              <p className="m-0">+62 857-7378-0406</p>
+              <p className="m-0">{content?.address || "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia"}</p>
+              <p className="m-0">{content?.phone || "+62 857-7378-0406"}</p>
             </div>
           </div>
         </div>
