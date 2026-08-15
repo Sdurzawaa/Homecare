@@ -134,8 +134,8 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
             text: typeof item.teks === "string" ? item.teks : (item.text as string),
             author,
             role:
-              typeof item.latarBelakang === "string"
-                ? item.latarBelakang
+              typeof item.latarbelakang === "string"
+                ? item.latarbelakang
                 : ((item.role as string) ?? ""),
             initial: initial !== "" ? initial : (author !== "" ? author.charAt(0).toUpperCase() : "?"),
           };

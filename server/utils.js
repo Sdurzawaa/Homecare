@@ -43,3 +43,8 @@ export function normalizeApiKey(headers = {}) {
 
   return header ? header[1] : undefined;
 }
+
+export function normalizeAdminUsername(username) {
+  if (typeof username !== "string") return "";
+  return username.trim().toLowerCase();
+}

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildSearchPath,
+  normalizeAdminUsername,
   normalizeApiKey,
   resolveSchemaName,
   withSchema,
@@ -28,4 +29,11 @@ test("normalizeApiKey accepts the admin header regardless of casing", () => {
   assert.equal(normalizeApiKey({ "x-api-key": "abc123" }), "abc123");
   assert.equal(normalizeApiKey({ "X-API-Key": "xyz789" }), "xyz789");
   assert.equal(normalizeApiKey({}), undefined);
+});
+
+test("normalizeAdminUsername lowercases and trims mixed-case usernames consistently", () => {
+  assert.equal(normalizeAdminUsername("Sadam"), "sadam");
+  assert.equal(normalizeAdminUsername("  Sadam  "), "sadam");
+  assert.equal(normalizeAdminUsername(""), "");
+  assert.equal(normalizeAdminUsername(null), "");
 });

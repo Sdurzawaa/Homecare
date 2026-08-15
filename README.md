@@ -1,12 +1,54 @@
-# My PERN App
+# Homecare Website App
 
-Aplikasi website sederhana dengan frontend React/Vite dan backend Express/PostgreSQL.
+Aplikasi landing page dan admin dashboard untuk brand Homecare dengan stack React + Vite + Express + PostgreSQL.
+
+## Fitur utama
+
+- Public landing page dengan section hero, about, contact, footer
+- Pricing management
+- Testimoni management
+- Admin dashboard untuk edit section, pricing, dan testimoni
+- Upload gambar ke server
+- Secure admin login dengan JWT + database session tracking
+- IP address dan device fingerprint validation untuk mencegah login dari device/IP berbeda
+- Logout yang menghapus session dari database
+- CRUD user admin di database dengan password hash bcrypt
+
+## Tech stack
+
+- Frontend: React + TypeScript + Vite
+- Backend: Node.js + Express
+- Database: PostgreSQL
+- Auth: JWT + bcryptjs
+- Session tracking: IP + user-agent + hash fingerprint
+
+## Struktur project
+
+```bash
+my-pern-app/
+├── client/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.js
+├── server/
+│   ├── index.js
+│   ├── db.js
+│   ├── init.sql
+│   ├── utils.js
+│   ├── .env
+│   └── package.json
+├── package.json
+├── README.md
+└── LICENSE
+```
 
 ## Prasyarat
 
 - Node.js 18+
 - npm
-- PostgreSQL yang berjalan lokal
+- PostgreSQL running lokal
+- (opsional) ngrok untuk testing public URL
 
 ## 1. Install dependency
 
@@ -20,7 +62,7 @@ cd ../client && npm install
 
 ## 2. Konfigurasi environment
 
-Backend menggunakan file `server/.env`. Buat atau perbarui file ini dengan nilai yang sesuai untuk PostgreSQL Anda dan tambahkan `ADMIN_API_KEY` untuk mengamankan endpoint tulis:
+Buat file `server/.env` lalu isi seperti berikut:
 
 ```env
 PGHOST=localhost
@@ -28,48 +70,54 @@ PGPORT=5432
 PGDATABASE=sadam
 PGUSER=sadam
 PGPASSWORD=your_password
+PGSCHEMA=public
+PGSSLMODE=disable
 PORT=5000
 CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
-ADMIN_API_KEY=your_admin_api_key_here
+ADMIN_API_KEY=codotGilak
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_SESSION_SECRET=homecare-admin-secret
+ADMIN_JWT_SECRET=homecare-admin-secret
 ```
 
-> Catatan: semua endpoint write (`POST`, `PUT`, `DELETE`) sekarang memerlukan `ADMIN_API_KEY`. Simpan key ini di `server/.env` dan jangan commit file `.env`.
+Catatan penting:
 
-Jika ingin mengatur URL API frontend secara eksplisit, buat file `client/.env.local`:
+- `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dipakai untuk default admin bootstrap
+- `ADMIN_SESSION_SECRET` dan `ADMIN_JWT_SECRET` dipakai untuk session JWT
+- `CORS_ORIGIN` harus berisi URL frontend yang valid, termasuk jika pakai ngrok/public URL
+- `ADMIN_API_KEY` masih dipertahankan untuk kompatibilitas legacy, tetapi admin dashboard modern memakai JWT + database session
+
+Untuk frontend, jika ingin pakai custom API URL dari Vite, bisa isi `client/.env.local`:
 
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-Untuk memudahkan, salin file contoh:
-
-```bash
-cp server/.env.example server/.env
-cp client/.env.local.example client/.env.local
-```
-
 ## 3. Inisialisasi database
 
-1. Pastikan database PostgreSQL Anda sudah berjalan.
-2. Buat database sesuai `PGDATABASE` di `.env`.
-3. Jalankan file `server/init.sql` untuk membuat schema dan tabel:
+Pastikan PostgreSQL sudah aktif dan database sesuai `PGDATABASE` ada.
+
+Lalu jalankan:
 
 ```bash
 cd server
 psql -h localhost -U sadam -d sadam -f init.sql
 ```
 
-Ganti `localhost`, `sadam`, dan nama database bila perlu.
+Atau kalau database user/host berbeda, sesuaikan perintah sesuai setup kalian.
 
 ## 4. Jalankan aplikasi
 
-### Opsi 1: Jalankan semua sekaligus dari root
+### Opsi 1: semua sekaligus
+
+Dari root project:
 
 ```bash
 npm run dev
 ```
 
-### Opsi 2: Jalankan backend dan frontend terpisah
+### Opsi 2: run terpisah
 
 Backend:
 
@@ -85,29 +133,110 @@ cd client
 npm run dev
 ```
 
-Setelah itu, buka:
+Akses lokal:
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:5000
 
-## 4. Tes endpoint lokal
+## 5. Admin login
 
-Endpoint API dilindungi dengan header API key.
+Buka halaman admin frontend lalu login dengan username/password default:
 
-### Cek pricing
-
-```bash
-curl -H "x-api-key: dev-local-key" http://localhost:5000/api/pricing
+```text
+username: admin
+password: admin123
 ```
 
-### Cek testimoni
+Kalau ingin login dengan user lain, buat dulu dari database atau lewat endpoint yang tersedia:
 
 ```bash
-curl -H "x-api-key: dev-local-key" http://localhost:5000/api/testimoni
+curl -X POST http://localhost:5000/api/admin/create-user \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"userbaru","password":"password123"}'
 ```
 
-## 5. Troubleshooting
+## 6. Endpoint utama
 
-- Jika mendapat `401 Unauthorized`, pastikan header `x-api-key` benar.
-- Jika mendapat error CORS, pastikan `CORS_ORIGIN` berisi URL frontend Anda.
-- Jika mendapat error database, cek koneksi PostgreSQL dan nilai `.env` di server.
+### Public
+
+- `GET /api/public/site-sections`
+- `GET /api/public/pricing`
+- `GET /api/public/pricing-categories`
+- `GET /api/public/testimoni`
+
+### Admin
+
+- `POST /api/admin/login`
+- `POST /api/admin/logout`
+- `POST /api/admin/create-user`
+- `GET /api/admin/site-sections`
+- `PUT /api/admin/site-sections/:sectionKey`
+- `GET /api/pricing`
+- `POST /api/pricing`
+- `PUT /api/pricing/:id`
+- `DELETE /api/pricing/:id`
+- `GET /api/testimoni`
+- `POST /api/testimoni`
+- `PUT /api/testimoni/:id_testi`
+- `DELETE /api/testimoni/:id_testi`
+
+## 7. Session security
+
+Admin login sekarang memakai database session dengan validasi:
+
+- token JWT valid
+- session ada di tabel `admin_sessions`
+- session belum expired
+- IP address match dengan saat login
+- device fingerprint match dengan saat login
+
+Kalau IP/device berubah, session akan invalid dan user harus login ulang.
+
+## 8. CORS dan public URL
+
+Kalau frontend dipakai dari domain publik, tambahkan origin tersebut ke `CORS_ORIGIN` di `.env` backend.
+
+Contoh:
+
+```env
+CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173,https://your-public-domain.com
+```
+
+Untuk Vite dev server lokal, tetap gunakan proxy ke backend lokal:
+
+```js
+server: {
+  proxy: {
+    "/api": {
+      target: "http://localhost:5000",
+      changeOrigin: true,
+    },
+  },
+},
+```
+
+Kalau backend juga dipublic, ganti proxy target ke URL backend publik yang valid.
+
+## 9. Troubleshooting
+
+- `401 Unauthorized`: cek token JWT, username/password, atau session expired
+- `CORS policy denied`: check `CORS_ORIGIN` dan origin yang dipakai frontend
+- `Database connection error`: cek `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`
+- `Login gagal`: pastikan password hash di `admin_users` valid, atau gunakan username/password default
+- `Session invalid`: IP/device berubah atau token expired
+
+## 10. Catatan penting
+
+- Jangan commit `.env` ke repository publik
+- Hindari menyimpan password plain text di database; gunakan hash bcrypt seperti yang dipakai project ini
+- Jika ada perubahan field database atau schema, selalu update `server/init.sql` sesuai kebutuhan
+
+## 11. Run check cepat
+
+```bash
+cd server
+npm test
+```
+
+Pastikan server dan client mengecek runtime sesuai environment yang dipakai.

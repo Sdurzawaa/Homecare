@@ -9,8 +9,10 @@ import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import bcrypt from "bcryptjs";
+import cookieParser from "cookie-parser";
 import pool from "./db.js";
 import {
+  normalizeAdminUsername,
   normalizeApiKey,
   quoteIdent,
   resolveSchemaName,
@@ -42,17 +44,27 @@ const adminSessionSecret =
   process.env.ADMIN_SESSION_SECRET || "homecare-admin-secret";
 const adminJwtSecret = process.env.ADMIN_JWT_SECRET || adminSessionSecret;
 
-let adminUsername = (process.env.ADMIN_USERNAME || "admin").trim();
+let adminUsername = normalizeAdminUsername(
+  process.env.ADMIN_USERNAME || "admin",
+);
 let adminPassword = (process.env.ADMIN_PASSWORD || "admin123").trim();
 let adminToken = crypto
   .createHmac("sha256", adminSessionSecret)
   .update(`${adminUsername}:${adminPassword}`)
   .digest("hex");
 
-const createAdminJwt = () =>
-  jwt.sign({ username: adminUsername, type: "admin" }, adminJwtSecret, {
-    expiresIn: "12h",
-  });
+const createAdminJwt = (username = adminUsername) =>
+  jwt.sign(
+    {
+      username,
+      type: "admin",
+      jti: `${Date.now()}-${crypto.randomUUID()}`,
+    },
+    adminJwtSecret,
+    {
+      expiresIn: "12h",
+    },
+  );
 
 const verifyAdminJwt = (token) => {
   if (!token) return null;
@@ -71,36 +83,39 @@ const updateAdminToken = () => {
 };
 
 const verifyAdminCredentials = async (username, password) => {
-  const normalizedUsername =
-    typeof username === "string" ? username.trim() : "";
+  const normalizedUsername = normalizeAdminUsername(username);
   const normalizedPassword = typeof password === "string" ? password : "";
 
   if (!normalizedUsername || !normalizedPassword) {
-    return false;
+    return { valid: false, username: null };
   }
 
   if (
     normalizedUsername === adminUsername &&
     normalizedPassword === adminPassword
   ) {
-    return true;
+    return { valid: true, username: adminUsername };
   }
 
   try {
     const result = await pool.query(
-      `SELECT username, password_hash FROM ${table("admin_users")} WHERE username = $1 LIMIT 1`,
+      `SELECT username, password_hash FROM ${table("admin_users")} WHERE LOWER(username) = $1 LIMIT 1`,
       [normalizedUsername],
     );
 
     const user = result.rows[0];
     if (!user || !user.password_hash) {
-      return false;
+      return { valid: false, username: null };
     }
 
-    return await bcrypt.compare(normalizedPassword, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      normalizedPassword,
+      user.password_hash,
+    );
+    return { valid: isPasswordValid, username: user.username };
   } catch (error) {
     console.error("Admin credential verification failed", error);
-    return false;
+    return { valid: false, username: null };
   }
 };
 
@@ -228,6 +243,43 @@ async function ensureAdminUsersTable() {
   }
 }
 
+async function ensureAdminSessionsTable() {
+  // Ensure the schema exists. Use quoted identifier for mixed-case names.
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${table("admin_sessions")} (
+      id SERIAL PRIMARY KEY,
+      session_id TEXT UNIQUE NOT NULL,
+      username TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      ip_address TEXT NOT NULL,
+      user_agent TEXT,
+      device_fingerprint TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL,
+      FOREIGN KEY (username) REFERENCES ${table("admin_users")}(username) ON DELETE CASCADE
+    );
+  `);
+
+  // Create index untuk faster lookups
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON ${table("admin_sessions")}(token);
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_session_id ON ${table("admin_sessions")}(session_id);
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_username ON ${table("admin_sessions")}(username);
+  `);
+
+  // Clean up expired sessions setiap hari
+  await pool.query(`
+    DELETE FROM ${table("admin_sessions")} WHERE expires_at < NOW();
+  `);
+}
+
 async function ensureSiteSectionsTable() {
   // Ensure the schema exists. Use quoted identifier for mixed-case names.
   await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
@@ -308,6 +360,9 @@ await Promise.all([
   ensureAdminUsersTable().catch((error) => {
     console.error("Failed preparing admin users table", error);
   }),
+  ensureAdminSessionsTable().catch((error) => {
+    console.error("Failed preparing admin sessions table", error);
+  }),
   ensureSiteSectionsTable().catch((error) => {
     console.error("Failed preparing site sections table", error);
   }),
@@ -327,7 +382,7 @@ const corsOptions = {
       callback(null, true);
       return;
     }
-    callback(new Error("Not allowed by CORS"));
+    callback(new Error("Invalid CORS origin"));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
@@ -341,6 +396,148 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many requests. Please try again later." },
 });
+
+// Helper: Get client IP address
+const getClientIp = (req) => {
+  return (
+    req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+    req.headers["x-real-ip"] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    "unknown"
+  );
+};
+
+// Helper: Create device fingerprint dari user-agent
+const getDeviceFingerprint = (req) => {
+  const userAgent = req.headers["user-agent"] || "";
+  return crypto.createHash("sha256").update(userAgent).digest("hex");
+};
+
+// Helper: Create admin session di database
+const createAdminSession = async (username, token, req, res) => {
+  const sessionId = crypto.randomUUID(); // Generate unique session ID
+  const ipAddress = getClientIp(req);
+  const userAgent = req.headers["user-agent"] || "unknown";
+  const deviceFingerprint = getDeviceFingerprint(req);
+  const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000); // 12 hours
+
+  try {
+    // Delete old sessions untuk enforce 1 session per account
+    // Use LOWER() untuk case-insensitive username matching
+    await pool.query(
+      `DELETE FROM ${table("admin_sessions")} WHERE LOWER(username) = LOWER($1)`,
+      [username],
+    );
+
+    // Insert session baru dengan session_id
+    await pool.query(
+      `INSERT INTO ${table("admin_sessions")} (session_id, username, token, ip_address, user_agent, device_fingerprint, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        sessionId,
+        username,
+        token,
+        ipAddress,
+        userAgent,
+        deviceFingerprint,
+        expiresAt,
+      ],
+    );
+
+    // Set httpOnly cookie dengan session_id
+    // httpOnly = tidak bisa diakses dari JavaScript, hanya browser yang kirim otomatis
+    // secure = hanya dikirim via HTTPS (dalam production)
+    // sameSite = prevent CSRF attacks
+    res.cookie("admin_session_id", sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: "strict",
+      maxAge: 12 * 60 * 60 * 1000, // 12 hours
+      path: "/",
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating admin session:", error);
+    return false;
+  }
+};
+
+// Helper: Validate admin session dari database
+const validateAdminSession = async (token, req) => {
+  if (!token) return null;
+
+  try {
+    // Verify JWT first
+    const jwtPayload = verifyAdminJwt(token);
+    if (!jwtPayload) return null;
+
+    // Get session_id dari httpOnly cookie
+    const sessionId = req.cookies?.admin_session_id;
+    if (!sessionId) {
+      console.warn("Session validation failed: no session_id cookie found");
+      return null;
+    }
+
+    // Check if session exists di database dengan BOTH token dan session_id
+    const result = await pool.query(
+      `SELECT id, username, ip_address, device_fingerprint, user_agent, expires_at 
+       FROM ${table("admin_sessions")} 
+       WHERE token = $1 AND session_id = $2 AND expires_at > NOW() 
+       LIMIT 1`,
+      [token, sessionId],
+    );
+
+    if (result.rows.length === 0) {
+      return null; // Session tidak ada atau sudah expired
+    }
+
+    const session = result.rows[0];
+    const currentIp = getClientIp(req);
+    const currentFingerprint = getDeviceFingerprint(req);
+
+    // Validation: Check IP dan device fingerprint match
+    if (session.ip_address !== currentIp) {
+      console.warn(
+        `Session security: IP mismatch for user ${session.username}. Stored: ${session.ip_address}, Current: ${currentIp}`,
+      );
+      // Delete session karena IP berbeda (mungkin attacker)
+      await pool.query(`DELETE FROM ${table("admin_sessions")} WHERE id = $1`, [
+        session.id,
+      ]);
+      return null;
+    }
+
+    if (session.device_fingerprint !== currentFingerprint) {
+      console.warn(
+        `Session security: Device fingerprint mismatch for user ${session.username}. Stored: ${session.device_fingerprint}, Current: ${currentFingerprint}`,
+      );
+      // Delete session karena device berbeda
+      await pool.query(`DELETE FROM ${table("admin_sessions")} WHERE id = $1`, [
+        session.id,
+      ]);
+      return null;
+    }
+
+    return jwtPayload; // Session valid
+  } catch (error) {
+    console.error("Error validating admin session:", error);
+    return null;
+  }
+};
+
+// Helper: Delete admin session
+const deleteAdminSession = async (token) => {
+  try {
+    await pool.query(
+      `DELETE FROM ${table("admin_sessions")} WHERE token = $1`,
+      [token],
+    );
+  } catch (error) {
+    console.error("Error deleting admin session:", error);
+  }
+};
 
 const isObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value);
@@ -374,19 +571,29 @@ const requireAdminKey = (req, res, next) => {
   next();
 };
 
-const requireAdminAuth = (req, res, next) => {
+const requireAdminAuth = async (req, res, next) => {
   const token = resolveBearerToken(req);
-  const jwtPayload = verifyAdminJwt(token);
 
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  if (token === adminToken || jwtPayload) {
+  // Check legacy adminToken atau validated session
+  if (token === adminToken) {
+    req.adminUser = { username: adminUsername, type: "admin" };
     return next();
   }
 
-  return res.status(401).json({ error: "Unauthorized" });
+  // Validate session dari database
+  const jwtPayload = await validateAdminSession(token, req);
+  if (jwtPayload) {
+    req.adminUser = jwtPayload;
+    return next();
+  }
+
+  return res
+    .status(401)
+    .json({ error: "Unauthorized - Session tidak valid atau sudah berakhir" });
 };
 
 const validateNumericIdParam = (req, res, next) => {
@@ -398,7 +605,13 @@ const validateNumericIdParam = (req, res, next) => {
 };
 
 const validateTestimoniPayload = (req, res, next) => {
-  const { teks, author, latarBelakang, initial } = req.body || {};
+  const { teks, author, latarBelakang, latarbelakang, initial } =
+    req.body || {};
+  const resolvedLatarBelakang = (
+    latarBelakang ??
+    latarbelakang ??
+    ""
+  ).toString();
 
   if (
     !isObject(req.body) ||
@@ -406,13 +619,16 @@ const validateTestimoniPayload = (req, res, next) => {
     teks.trim() === "" ||
     typeof author !== "string" ||
     author.trim() === "" ||
-    typeof latarBelakang !== "string" ||
-    latarBelakang.trim() === "" ||
+    typeof resolvedLatarBelakang !== "string" ||
+    resolvedLatarBelakang.trim() === "" ||
     typeof initial !== "string" ||
     initial.trim() === ""
   ) {
     return res.status(400).json({ error: "Payload testimoni tidak valid" });
   }
+
+  req.body.latarBelakang = resolvedLatarBelakang.trim();
+  req.body.latarbelakang = resolvedLatarBelakang.trim();
 
   next();
 };
@@ -457,6 +673,7 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.use(limiter);
 app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser()); // Parse cookies from requests
 app.use("/uploads", express.static(uploadsDir));
 
 app.get("/health", (req, res) => {
@@ -466,18 +683,29 @@ app.get("/health", (req, res) => {
 app.post("/api/admin/login", async (req, res) => {
   const { username, password } = req.body || {};
 
-  const isValidAdmin = await verifyAdminCredentials(username, password);
+  const credentialResult = await verifyAdminCredentials(username, password);
 
-  if (!isValidAdmin) {
+  if (!credentialResult.valid) {
     return res.status(401).json({ error: "Username atau password salah" });
   }
 
-  const resolvedUsername =
-    typeof username === "string" && username.trim()
-      ? username.trim()
-      : adminUsername;
+  const resolvedUsername = credentialResult.username || adminUsername;
 
-  const jwtToken = createAdminJwt();
+  const jwtToken = createAdminJwt(resolvedUsername);
+
+  // Create session di database dengan IP dan device tracking
+  const sessionCreated = await createAdminSession(
+    resolvedUsername,
+    jwtToken,
+    req,
+    res,
+  );
+
+  if (!sessionCreated) {
+    return res.status(500).json({
+      error: "Gagal membuat session admin. Silakan coba lagi.",
+    });
+  }
 
   return res.json({
     token: jwtToken,
@@ -485,6 +713,82 @@ app.post("/api/admin/login", async (req, res) => {
     user: resolvedUsername,
     message: "Login berhasil",
   });
+});
+
+// Logout endpoint
+app.post("/api/admin/logout", requireAdminAuth, async (req, res) => {
+  const token = resolveBearerToken(req);
+
+  try {
+    await pool.query(
+      `DELETE FROM ${table("admin_sessions")}
+       WHERE token = $1`,
+      [token],
+    );
+  } catch (error) {
+    console.error("Error while logging out admin:", error);
+  }
+
+  // Clear httpOnly cookie
+  res.clearCookie("admin_session_id", {
+    path: "/",
+  });
+
+  return res.json({
+    message: "Logout berhasil",
+  });
+});
+
+// Create new admin user endpoint
+app.post("/api/admin/create-user", requireAdminAuth, async (req, res) => {
+  const { username, password } = req.body || {};
+
+  // Validation
+  if (!username || typeof username !== "string" || !username.trim()) {
+    return res.status(400).json({ error: "Username tidak boleh kosong" });
+  }
+
+  if (!password || typeof password !== "string" || password.length < 6) {
+    return res.status(400).json({ error: "Password minimal 6 karakter" });
+  }
+
+  const trimmedUsername = normalizeAdminUsername(username);
+
+  try {
+    // Check if user already exists
+    const existing = await pool.query(
+      `SELECT username FROM ${table("admin_users")} WHERE LOWER(username) = $1 LIMIT 1`,
+      [trimmedUsername],
+    );
+
+    if (existing.rowCount > 0) {
+      return res.status(409).json({ error: "Username sudah terdaftar" });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Insert new user
+    const result = await pool.query(
+      `INSERT INTO ${table("admin_users")} (username, password_hash)
+       VALUES ($1, $2)
+       RETURNING username, created_at`,
+      [trimmedUsername, passwordHash],
+    );
+
+    const newUser = result.rows[0];
+
+    return res.status(201).json({
+      message: "User berhasil ditambahkan",
+      user: {
+        username: newUser.username,
+        created_at: newUser.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    return res.status(500).json({ error: "Gagal membuat user" });
+  }
 });
 
 app.get("/api/public/site-sections", async (req, res) => {
@@ -589,7 +893,7 @@ app.get("/api/public/testimoni", async (req, res) => {
        id_testi,
        teks, 
        author, 
-       latarbelakang AS "latarBelakang", 
+       latarbelakang, 
        initial 
       FROM ${table("testimoni")} ORDER BY id_testi ASC`,
     );
@@ -608,7 +912,7 @@ app.get("/api/testimoni", requireAdminKey, async (req, res) => {
        id_testi,
        teks, 
        author, 
-       latarbelakang AS "latarBelakang", 
+       latarbelakang, 
        initial 
       FROM ${table("testimoni")} ORDER BY id_testi ASC`,
     );
@@ -635,7 +939,7 @@ app.get(
         id_testi,
         teks,
         author,
-        latarbelakang AS "latarBelakang",
+        latarbelakang,
         initial 
       FROM ${table("testimoni")} WHERE id_testi = $1`,
         [id_testi],
@@ -659,7 +963,9 @@ app.post(
   requireAdminKey,
   validateTestimoniPayload,
   async (req, res) => {
-    const { teks, author, latarBelakang, initial } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
+    const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+
     try {
       const result = await pool.query(
         `INSERT INTO ${table("testimoni")} (
@@ -668,8 +974,8 @@ app.post(
         latarbelakang,
         initial )
        VALUES ($1, $2, $3, $4)
-       RETURNING id_testi, teks, author, latarbelakang AS "latarBelakang", initial`,
-        [teks, author, latarBelakang, initial],
+       RETURNING id_testi, teks, author, latarbelakang, initial`,
+        [teks, author, resolvedLatarBelakang, initial],
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -687,7 +993,9 @@ app.put(
   validateTestimoniPayload,
   async (req, res) => {
     const { id_testi } = req.params;
-    const { teks, author, latarBelakang, initial } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
+    const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+
     try {
       const result = await pool.query(
         `UPDATE ${table("testimoni")}
@@ -696,8 +1004,8 @@ app.put(
            latarbelakang = $3,
            initial = $4
        WHERE id_testi = $5
-       RETURNING id_testi, teks, author, latarbelakang AS "latarBelakang", initial`,
-        [teks, author, latarBelakang, initial, id_testi],
+       RETURNING id_testi, teks, author, latarbelakang, initial`,
+        [teks, author, resolvedLatarBelakang, initial, id_testi],
       );
       if (result.rows.length === 0) {
         return res

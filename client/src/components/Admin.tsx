@@ -41,6 +41,13 @@ interface PricingFormState {
   recommended: boolean;
 }
 
+interface TestimoniFormState {
+  teks: string;
+  author: string;
+  latarbelakang: string;
+  initial: string;
+}
+
 const emptyPricingForm = (): PricingFormState => ({
   category: "Perawatan Kehamilan",
   title: "",
@@ -49,6 +56,13 @@ const emptyPricingForm = (): PricingFormState => ({
   duration: 60,
   price: 100000,
   recommended: false,
+});
+
+const emptyTestimoniForm = (): TestimoniFormState => ({
+  teks: "",
+  author: "",
+  latarbelakang: "",
+  initial: "",
 });
 
 const defaultSections = {
@@ -105,6 +119,9 @@ export default function Admin() {
   const [pricingItems, setPricingItems] = useState<any[]>([]);
   const [pricingForm, setPricingForm] = useState<PricingFormState>(emptyPricingForm());
   const [editId, setEditId] = useState<number | null>(null);
+  const [testimoniItems, setTestimoniItems] = useState<any[]>([]);
+  const [testimoniForm, setTestimoniForm] = useState<TestimoniFormState>(emptyTestimoniForm());
+  const [editTestimoniId, setEditTestimoniId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
@@ -120,10 +137,11 @@ export default function Admin() {
     onConfirm: () => void;
     onCancel?: () => void;
   } | null>(null);
-  const [adminTab, setAdminTab] = useState<"sections" | "pricing">("sections");
+  const [adminTab, setAdminTab] = useState<"sections" | "pricing" | "testimoni">("sections");
   const [searchQuery, setSearchQuery] = useState("");
   const [showPricingFormModal, setShowPricingFormModal] = useState(false);
   const [editingPricingModal, setEditingPricingModal] = useState<any | null>(null);
+  const [showTestimoniFormModal, setShowTestimoniFormModal] = useState(false);
 
   const sectionOptions = useMemo(
     () =>
@@ -155,6 +173,7 @@ export default function Admin() {
         confirmModal ||
         showPricingFormModal ||
         editingPricingModal ||
+        showTestimoniFormModal ||
         showPasswordForm,
     );
     const previousOverflow = document.body.style.overflow;
@@ -172,7 +191,7 @@ export default function Admin() {
       document.body.style.overflow = previousOverflow;
       if (lenis) lenis.start();
     };
-  }, [successModal, errorModal, confirmModal, showPricingFormModal, editingPricingModal, showPasswordForm]);
+  }, [successModal, errorModal, confirmModal, showPricingFormModal, editingPricingModal, showTestimoniFormModal, showPasswordForm]);
 
   const request = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
@@ -186,14 +205,28 @@ export default function Admin() {
     });
 
     if (response.status === 401) {
-      logout();
+      logout(true);
       throw new Error("Sesi admin berakhir");
     }
 
     return response;
   };
 
-  const logout = () => {
+  const logout = async (skipServerLogout = false) => {
+    if (!skipServerLogout && token) {
+      try {
+        await fetch("/api/admin/logout", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+    }
+
     setToken(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem(ADMIN_TOKEN_KEY);
@@ -206,12 +239,14 @@ export default function Admin() {
     if (!token) return;
     setLoading(true);
     try {
-      const [pricingRes, sectionsRes] = await Promise.all([
+      const [pricingRes, sectionsRes, testimoniRes] = await Promise.all([
         fetch("/api/public/pricing").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/site-sections").then((res) => (res.ok ? res.json() : {})),
+        fetch("/api/public/testimoni").then((res) => (res.ok ? res.json() : [])),
       ]);
 
       const pricingData = Array.isArray(pricingRes) ? pricingRes : [];
+      const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
 
       const merged = {
@@ -223,6 +258,7 @@ export default function Admin() {
       };
 
       setPricingItems(pricingData);
+      setTestimoniItems(testimoniData);
       setSectionData(merged);
     } catch (error: any) {
       console.error(error);
@@ -480,6 +516,103 @@ export default function Admin() {
     });
   };
 
+  const handleTestimoniValue = (field: keyof TestimoniFormState, value: string) => {
+    setTestimoniForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const resetTestimoniForm = () => {
+    setTestimoniForm(emptyTestimoniForm());
+    setEditTestimoniId(null);
+  };
+
+  const saveTestimoni = async () => {
+    // Validasi client-side
+    if (!testimoniForm.teks?.trim()) {
+      openErrorModal("Validasi Gagal", "Teks testimoni tidak boleh kosong");
+      return false;
+    }
+    if (!testimoniForm.author?.trim()) {
+      openErrorModal("Validasi Gagal", "Nama author tidak boleh kosong");
+      return false;
+    }
+    if (!testimoniForm.latarbelakang?.trim()) {
+      openErrorModal("Validasi Gagal", "Latar belakang tidak boleh kosong");
+      return false;
+    }
+    if (!testimoniForm.initial?.trim()) {
+      openErrorModal("Validasi Gagal", "Initial tidak boleh kosong");
+      return false;
+    }
+
+    setSaving(true);
+    try {
+      const url = editTestimoniId ? `/api/testimoni/${editTestimoniId}` : "/api/testimoni";
+      const method = editTestimoniId ? "PUT" : "POST";
+      const payload = {
+        ...testimoniForm,
+        latarBelakang: testimoniForm.latarbelakang.trim(),
+        latarbelakang: testimoniForm.latarbelakang.trim(),
+      };
+
+      const response = await request(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Gagal menyimpan testimoni");
+      }
+
+      await loadAll();
+      resetTestimoniForm();
+      openSuccessModal("Testimoni berhasil disimpan", editTestimoniId ? "Data testimoni berhasil diperbarui." : "Data testimoni baru berhasil ditambahkan.");
+      return true;
+    } catch (error: any) {
+      openErrorModal("Gagal Menyimpan", error.message || "Gagal menyimpan testimoni");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const editTestimoni = (item: any) => {
+    setEditTestimoniId(item.id_testi);
+    setTestimoniForm({
+      teks: item.teks,
+      author: item.author,
+      latarbelakang: item.latarbelakang,
+      initial: item.initial,
+    });
+  };
+
+  const deleteTestimoni = async (id: number) => {
+    setConfirmModal({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus testimoni ini?",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          const response = await request(`/api/testimoni/${id}`, { method: "DELETE" });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data?.error || "Gagal menghapus testimoni");
+          }
+          await loadAll();
+          if (editTestimoniId === id) resetTestimoniForm();
+          openSuccessModal("Berhasil", "Testimoni telah berhasil dihapus.");
+        } catch (error: any) {
+          openErrorModal("Gagal Menghapus", error.message || "Gagal menghapus testimoni");
+        }
+      },
+      onCancel: () => setConfirmModal(null),
+    });
+  };
+
   const handleChangePassword = async (e: FormEvent) => {
     e.preventDefault();
     setPasswordError("");
@@ -544,7 +677,6 @@ export default function Admin() {
       <div className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
         <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
           <div className="mb-6 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--pine)]">Admin Panel</p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">Masuk</h1>
           </div>
 
@@ -603,7 +735,6 @@ export default function Admin() {
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between p-4 md:px-8 border-b border-slate-200">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--pine)]">Admin Panel</p>
             <h1 className="text-xl font-semibold text-slate-900">Kelola Landing Page</h1>
           </div>
 
@@ -623,7 +754,7 @@ export default function Admin() {
               Ubah Password
             </button>
             <button
-              onClick={logout}
+              onClick={() => logout()}
               className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
             >
               Logout
@@ -652,6 +783,16 @@ export default function Admin() {
             }`}
           >
             Kelola Pricing
+          </button>
+          <button
+            onClick={() => setAdminTab("testimoni")}
+            className={`px-6 py-3 font-medium text-sm border-b-2 transition ${
+              adminTab === "testimoni"
+                ? "border-[var(--pine)] text-[var(--pine)]"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Kelola Testimoni
           </button>
         </div>
       </div>
@@ -977,6 +1118,101 @@ export default function Admin() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add / Edit Testimoni Modal */}
+        {showTestimoniFormModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl" data-lenis-prevent>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-xl font-semibold text-slate-900">{editTestimoniId ? "Edit Testimoni" : "Tambah Testimoni"}</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTestimoniFormModal(false);
+                    if (!editTestimoniId) {
+                      resetTestimoniForm();
+                    }
+                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <div className="space-y-3" data-testimoni-form>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Teks Testimoni <span className="text-red-500">*</span></label>
+                  <textarea
+                    rows={4}
+                    value={testimoniForm.teks}
+                    onChange={(e) => handleTestimoniValue("teks", e.target.value)}
+                    placeholder="Tulis testimoni pelanggan..."
+                    className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Nama Author <span className="text-red-500">*</span></label>
+                  <input
+                    value={testimoniForm.author}
+                    onChange={(e) => handleTestimoniValue("author", e.target.value)}
+                    placeholder="Contoh: Budi Santoso"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Latar Belakang <span className="text-red-500">*</span></label>
+                  <input
+                    value={testimoniForm.latarbelakang}
+                    onChange={(e) => handleTestimoniValue("latarbelakang", e.target.value)}
+                    placeholder="Contoh: Pemilik Café"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Initial <span className="text-red-500">*</span></label>
+                  <input
+                    maxLength={1}
+                    value={testimoniForm.initial}
+                    onChange={(e) => handleTestimoniValue("initial", e.target.value.toUpperCase())}
+                    placeholder="B"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTestimoniFormModal(false);
+                      if (!editTestimoniId) {
+                        resetTestimoniForm();
+                      }
+                    }}
+                    className="flex-1 rounded-lg border border-slate-200 px-4 py-3 font-medium text-slate-700"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const saved = await saveTestimoni();
+                      if (saved) {
+                        setShowTestimoniFormModal(false);
+                      }
+                    }}
+                    disabled={saving}
+                    className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-3 font-semibold text-white disabled:opacity-60"
+                  >
+                    {saving ? "Menyimpan..." : editTestimoniId ? "Update" : "Tambah"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1381,6 +1617,103 @@ export default function Admin() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   deletePricing(item.id);
+                                }}
+                                className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+          )}
+
+          {/* Testimoni Management - TAB 3 */}
+          {adminTab === "testimoni" && (
+          <section className="flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg xl:overflow-hidden xl:flex-1 xl:min-h-0">
+            <div className="p-4 border-b border-slate-200 flex-shrink-0">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-slate-900">Kelola Testimoni</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditTestimoniId(null);
+                    setTestimoniForm(emptyTestimoniForm());
+                    setShowTestimoniFormModal(true);
+                  }}
+                  className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white hover:brightness-95"
+                >
+                  Tambah Testimoni
+                </button>
+              </div>
+            </div>
+
+            <div className="hide-scrollbar overflow-y-auto p-4 xl:max-h-none xl:flex-1">
+              <div className="space-y-3 min-h-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-medium text-slate-800">Testimoni List ({testimoniItems.length})</h3>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari testimoni..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm"
+                  />
+                  <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
+                {testimoniItems.length === 0 ? (
+                  <p className="text-sm text-slate-500">Belum ada testimoni.</p>
+                ) : (
+                  <div className="max-h-[28rem] min-h-0 space-y-2 overflow-y-auto pr-1 xl:max-h-[40rem]">
+                    {testimoniItems
+                      .filter((item) =>
+                        item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((item) => (
+                        <div
+                          key={item.id_testi}
+                          className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
+                                  {item.initial}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">{item.author}</p>
+                                  <p className="text-xs text-slate-600">{item.latarbelakang}</p>
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
+                            </div>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => {
+                                  editTestimoni(item);
+                                  setShowTestimoniFormModal(true);
+                                }}
+                                className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTestimoni(item.id_testi);
                                 }}
                                 className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
                               >
