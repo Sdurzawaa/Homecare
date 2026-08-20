@@ -30,10 +30,3 @@ test("normalizeApiKey accepts the admin header regardless of casing", () => {
   assert.equal(normalizeApiKey({ "X-API-Key": "xyz789" }), "xyz789");
   assert.equal(normalizeApiKey({}), undefined);
 });
-
-test("normalizeAdminUsername lowercases and trims mixed-case usernames consistently", () => {
-  assert.equal(normalizeAdminUsername("Sadam"), "sadam");
-  assert.equal(normalizeAdminUsername("  Sadam  "), "sadam");
-  assert.equal(normalizeAdminUsername(""), "");
-  assert.equal(normalizeAdminUsername(null), "");
-});

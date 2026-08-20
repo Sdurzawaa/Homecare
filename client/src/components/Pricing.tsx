@@ -372,7 +372,7 @@ function Pricing({ pricingRef }: PricingProps) {
     };
   }, [tabsEl]);
 
-  const fetchPricing = async () => {
+  const fetchPricing = async (signal: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
@@ -389,13 +389,17 @@ function Pricing({ pricingRef }: PricingProps) {
         url = `${API_URL}/api/public/pricing/search?${params.toString()}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        cache: "no-store",
+        signal,
+      });
       if (!response.ok) {
         throw new Error("Gagal memuat data pricing");
       }
       const data = await response.json();
       setTreatments(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       console.error("Fetch pricing error, using fallback data:", err);
       // Filter local default data based on category and search query so search works offline
       let localData = [...DEFAULT_TREATMENTS];
@@ -413,12 +417,15 @@ function Pricing({ pricingRef }: PricingProps) {
       setTreatments(localData);
       setError(null); // Clear error because we loaded fallback data
     } finally {
-      setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPricing();
+    const controller = new AbortController();
+    fetchPricing(controller.signal);
+
+    return () => controller.abort();
   }, [selectedCategory, searchQuery]);
 
   useEffect(() => {

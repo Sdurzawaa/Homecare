@@ -119,10 +119,13 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchTestimonials() {
       try {
         const response = await fetch(
           `${import.meta.env.VITE_API_URL || ""}/api/public/testimoni`,
+          { cache: "no-store", signal: controller.signal },
         );
         if (!response.ok) throw new Error("Gagal memuat testimoni");
         const data = (await response.json()) as Array<Record<string, unknown>>;
@@ -142,6 +145,9 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
         }) as Testimonial[];
         if (normalized.length > 0) setTestimonials(normalized);
       } catch (fetchError: unknown) {
+        if (fetchError instanceof DOMException && fetchError.name === "AbortError") {
+          return;
+        }
         console.error(fetchError);
         const message = fetchError instanceof Error ? fetchError.message : String(fetchError);
         setError(message || "Terjadi kesalahan saat memuat testimoni");
@@ -149,6 +155,7 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
     }
 
     fetchTestimonials();
+    return () => controller.abort();
   }, []);
 
   // Marquee cuma masuk akal kalau kontennya cukup banyak buat 3 kolom.

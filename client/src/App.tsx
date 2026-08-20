@@ -62,7 +62,12 @@ function App() {
   useEffect(() => {
     if (typeof window === "undefined" || isAdminPath) return;
 
-    fetch("/api/public/site-sections")
+    const controller = new AbortController();
+
+    fetch("/api/public/site-sections", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (!data) return;
@@ -73,7 +78,12 @@ function App() {
           footer: { ...defaultSections.footer, ...(data.footer || {}) },
         });
       })
-      .catch(() => undefined);
+      .catch((error) => {
+        if (error.name !== "AbortError") return undefined;
+        return undefined;
+      });
+
+    return () => controller.abort();
   }, [isAdminPath]);
 
   if (isAdminPath) {

@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import helmet from "helmet";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
 import multer from "multer";
@@ -31,6 +32,26 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+app.set("trust proxy", process.env.TRUST_PROXY === "true");
+const isProduction = process.env.NODE_ENV === "production";
+const requiredProductionSecrets = [
+  "ADMIN_SESSION_SECRET",
+  "ADMIN_JWT_SECRET",
+  "ADMIN_API_KEY",
+  "ADMIN_PASSWORD",
+];
+
+if (
+  isProduction &&
+  requiredProductionSecrets.some(
+    (name) => !process.env[name] || process.env[name].length < 16,
+  )
+) {
+  throw new Error(
+    "Production requires explicit ADMIN secrets with at least 16 characters",
+  );
+}
+
 const schemaName = resolveSchemaName(process.env.PGSCHEMA);
 const table = (name) => {
   if (!name || typeof name !== "string") return name;
@@ -40,14 +61,19 @@ const table = (name) => {
 
   return withSchema(trimmed, schemaName);
 };
-const adminSessionSecret =
-  process.env.ADMIN_SESSION_SECRET || "homecare-admin-secret";
-const adminJwtSecret = process.env.ADMIN_JWT_SECRET || adminSessionSecret;
+const adminSessionSecret = process.env.ADMIN_SESSION_SECRET;
+const adminJwtSecret = process.env.ADMIN_JWT_SECRET;
 
 let adminUsername = normalizeAdminUsername(
   process.env.ADMIN_USERNAME || "admin",
 );
-let adminPassword = (process.env.ADMIN_PASSWORD || "admin123").trim();
+let adminPassword = process.env.ADMIN_PASSWORD?.trim();
+
+if (!adminSessionSecret || !adminJwtSecret || !adminPassword) {
+  throw new Error(
+    "ADMIN_SESSION_SECRET, ADMIN_JWT_SECRET, and ADMIN_PASSWORD are required",
+  );
+}
 let adminToken = crypto
   .createHmac("sha256", adminSessionSecret)
   .update(`${adminUsername}:${adminPassword}`)
@@ -125,7 +151,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+    const name = `${Date.now()}-${crypto.randomUUID()}${ext.toLowerCase()}`;
     cb(null, name);
   },
 });
@@ -134,8 +160,16 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|gif|webp)$/i;
-    if (allowed.test(file.originalname)) {
+    const allowedTypes = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ]);
+    const allowedExtension = /\.(jpg|jpeg|png|gif|webp)$/i.test(
+      file.originalname,
+    );
+    if (allowedExtension && allowedTypes.has(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error("Format gambar tidak didukung"));
@@ -313,25 +347,7 @@ async function ensureSiteSectionsTable() {
       `INSERT INTO ${table("site_sections")}
        (section_key, section_name, title, description, image, image_2, image_3, badge, cta_label, cta_link, secondary_cta_label, secondary_cta_link, phone, email, address, button_label, button_link, brand, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
-       ON CONFLICT (section_key) DO UPDATE SET
-         section_name = EXCLUDED.section_name,
-         title = EXCLUDED.title,
-         description = EXCLUDED.description,
-         image = EXCLUDED.image,
-         image_2 = EXCLUDED.image_2,
-         image_3 = EXCLUDED.image_3,
-         badge = EXCLUDED.badge,
-         cta_label = EXCLUDED.cta_label,
-         cta_link = EXCLUDED.cta_link,
-         secondary_cta_label = EXCLUDED.secondary_cta_label,
-         secondary_cta_link = EXCLUDED.secondary_cta_link,
-         phone = EXCLUDED.phone,
-         email = EXCLUDED.email,
-         address = EXCLUDED.address,
-         button_label = EXCLUDED.button_label,
-         button_link = EXCLUDED.button_link,
-         brand = EXCLUDED.brand,
-         updated_at = NOW()`,
+       ON CONFLICT (section_key) DO NOTHING`,
       [
         row.section_key,
         row.section_name,
@@ -356,16 +372,50 @@ async function ensureSiteSectionsTable() {
   }
 }
 
+async function ensureCatalogTables() {
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${table("pricing")} (
+      id SERIAL PRIMARY KEY,
+      category TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      image TEXT NOT NULL,
+      duration INTEGER NOT NULL,
+      price INTEGER NOT NULL,
+      recommended BOOLEAN NOT NULL DEFAULT false
+    );
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${table("pricing_categories")} (
+      id SERIAL PRIMARY KEY,
+      category TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL
+    );
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${table("testimoni")} (
+      id_testi SERIAL PRIMARY KEY,
+      teks TEXT NOT NULL,
+      author TEXT NOT NULL,
+      latarbelakang TEXT NOT NULL,
+      initial TEXT NOT NULL
+    );
+  `);
+  await pool.query(
+    `CREATE INDEX IF NOT EXISTS idx_pricing_category ON ${table("pricing")}(category);`,
+  );
+  await pool.query(
+    `CREATE INDEX IF NOT EXISTS idx_pricing_recommended ON ${table("pricing")}(recommended DESC, id);`,
+  );
+}
+
+await ensureAdminUsersTable();
 await Promise.all([
-  ensureAdminUsersTable().catch((error) => {
-    console.error("Failed preparing admin users table", error);
-  }),
-  ensureAdminSessionsTable().catch((error) => {
-    console.error("Failed preparing admin sessions table", error);
-  }),
-  ensureSiteSectionsTable().catch((error) => {
-    console.error("Failed preparing site sections table", error);
-  }),
+  ensureAdminSessionsTable(),
+  ensureSiteSectionsTable(),
+  ensureCatalogTables(),
 ]);
 
 const allowedOrigins = (
@@ -392,20 +442,24 @@ const corsOptions = {
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  skip: (req) => req.path === "/health",
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many requests. Please try again later." },
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Terlalu banyak percobaan login. Coba lagi nanti." },
+});
+
 // Helper: Get client IP address
 const getClientIp = (req) => {
-  return (
-    req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
-    req.headers["x-real-ip"] ||
-    req.connection.remoteAddress ||
-    req.socket.remoteAddress ||
-    "unknown"
-  );
+  return req.ip || req.socket.remoteAddress || "unknown";
 };
 
 // Helper: Create device fingerprint dari user-agent
@@ -454,6 +508,13 @@ const createAdminSession = async (username, token, req, res) => {
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
       sameSite: "strict",
       maxAge: 12 * 60 * 60 * 1000, // 12 hours
+      path: "/",
+    });
+    res.cookie("admin_auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 12 * 60 * 60 * 1000,
       path: "/",
     });
 
@@ -552,10 +613,14 @@ const resolveBearerToken = (req) => {
 
 const requireAdminKey = (req, res, next) => {
   const key = normalizeApiKey(req.headers);
-  const bearerToken = resolveBearerToken(req);
+  const bearerToken =
+    resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
   const jwtPayload = verifyAdminJwt(bearerToken);
 
-  if (bearerToken && (bearerToken === adminToken || jwtPayload)) {
+  if (
+    bearerToken &&
+    (bearerToken === adminToken || jwtPayload?.type === "admin")
+  ) {
     return next();
   }
 
@@ -572,7 +637,7 @@ const requireAdminKey = (req, res, next) => {
 };
 
 const requireAdminAuth = async (req, res, next) => {
-  const token = resolveBearerToken(req);
+  const token = resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
 
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -670,17 +735,22 @@ const validatePricingPayload = (req, res, next) => {
 
 app.disable("x-powered-by");
 app.use(helmet());
+app.use(compression());
 app.use(cors(corsOptions));
 app.use(limiter);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser()); // Parse cookies from requests
+app.use("/api/public", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 app.use("/uploads", express.static(uploadsDir));
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.post("/api/admin/login", async (req, res) => {
+app.post("/api/admin/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
 
   const credentialResult = await verifyAdminCredentials(username, password);
@@ -708,8 +778,6 @@ app.post("/api/admin/login", async (req, res) => {
   }
 
   return res.json({
-    token: jwtToken,
-    legacyToken: adminToken,
     user: resolvedUsername,
     message: "Login berhasil",
   });
@@ -717,7 +785,7 @@ app.post("/api/admin/login", async (req, res) => {
 
 // Logout endpoint
 app.post("/api/admin/logout", requireAdminAuth, async (req, res) => {
-  const token = resolveBearerToken(req);
+  const token = resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
 
   try {
     await pool.query(
@@ -731,6 +799,9 @@ app.post("/api/admin/logout", requireAdminAuth, async (req, res) => {
 
   // Clear httpOnly cookie
   res.clearCookie("admin_session_id", {
+    path: "/",
+  });
+  res.clearCookie("admin_auth_token", {
     path: "/",
   });
 
@@ -828,9 +899,18 @@ app.put(
   requireAdminAuth,
   async (req, res) => {
     const { sectionKey } = req.params;
-    const payload = normalizeSection(sectionKey, req.body || {});
 
     try {
+      const existingResult = await pool.query(
+        `SELECT * FROM ${table("site_sections")} WHERE section_key = $1 LIMIT 1`,
+        [sectionKey],
+      );
+      const existingSection = existingResult.rows[0] || {};
+      const payload = normalizeSection(sectionKey, {
+        ...existingSection,
+        ...(req.body || {}),
+      });
+
       const result = await pool.query(
         `INSERT INTO ${table("site_sections")}
        (section_key, section_name, title, description, image, image_2, image_3, badge, cta_label, cta_link, secondary_cta_label, secondary_cta_link, phone, email, address, button_label, button_link, brand, updated_at)
@@ -919,10 +999,6 @@ app.get("/api/testimoni", requireAdminKey, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("GET /api/testimoni error", error);
-    fs.appendFileSync(
-      "server-error.log",
-      `GET /api/testimoni error: ${error.stack || error}\n`,
-    );
     res.status(500).json({ error: "Gagal mengambil data testimoni" });
   }
 });
@@ -1113,10 +1189,6 @@ app.get("/api/pricing", requireAdminKey, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("GET /api/pricing error", error);
-    fs.appendFileSync(
-      "server-error.log",
-      `GET /api/pricing error: ${error.stack || error}\n`,
-    );
     res.status(500).json({ error: "Gagal mengambil data pricing" });
   }
 });
@@ -1130,10 +1202,6 @@ app.get("/api/pricing-categories", requireAdminKey, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("GET /api/pricing-categories error", error);
-    fs.appendFileSync(
-      "server-error.log",
-      `GET /api/pricing-categories error: ${error.stack || error}\n`,
-    );
     res.status(500).json({ error: "Gagal mengambil data kategori pricing" });
   }
 });
@@ -1167,10 +1235,6 @@ app.get("/api/pricing/search", requireAdminKey, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("GET /api/pricing/search error", error);
-    fs.appendFileSync(
-      "server-error.log",
-      `GET /api/pricing/search error: ${error.stack || error}\n`,
-    );
     res.status(500).json({ error: "Gagal mencari data pricing" });
   }
 });
@@ -1344,7 +1408,6 @@ app.post("/api/admin/change-password", requireAdminAuth, async (req, res) => {
 
     return res.json({
       message: "Password berhasil diubah",
-      token: adminToken,
     });
   } catch (error) {
     console.error("POST /api/admin/change-password error", error);

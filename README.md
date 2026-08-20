@@ -218,6 +218,25 @@ server: {
 
 Kalau backend juga dipublic, ganti proxy target ke URL backend publik yang valid.
 
+## 9. Testing
+
+Jalankan unit test tanpa service eksternal:
+
+```bash
+npm run test:unit
+```
+
+Untuk SIT dan E2E, nyalakan backend serta frontend terlebih dahulu, lalu jalankan:
+
+```bash
+npm run test:sit
+npm run test:e2e
+npm run test:load
+```
+
+Default target adalah `API_URL=http://localhost:5000` dan `CLIENT_URL=http://localhost:5173`.
+Jumlah request load test dapat diubah dengan `LOAD_REQUESTS` dan `LOAD_CONCURRENCY`.
+
 ## 9. Troubleshooting
 
 - `401 Unauthorized`: cek token JWT, username/password, atau session expired

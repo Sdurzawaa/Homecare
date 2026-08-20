@@ -3,7 +3,12 @@
   "scripts": {
     "server": "npm run dev --prefix server",
     "client": "npm run dev --prefix client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "test:unit": "npm test --prefix server",
+    "test:sit": "npm run test:sit --prefix server",
+    "test:e2e": "npm run test:e2e --prefix server",
+    "test:load": "npm run test:load --prefix server",
+    "test:all": "npm run test:unit && npm run test:sit && npm run test:e2e && npm run test:load"
   },
   "devDependencies": {
     "concurrently": "^8.0.0"

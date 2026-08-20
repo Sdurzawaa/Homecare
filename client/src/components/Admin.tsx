@@ -4,32 +4,7 @@ import Achievements from "./Achievement";
 import Contact from "./Contact";
 import Footer from "./ui/Footer";
 
-const ADMIN_TOKEN_KEY = "homecare-admin-token";
 const SECTION_KEYS = ["hero", "about", "contact", "footer"];
-
-// Cookie utility functions
-const setCookie = (name: string, value: string, days: number = 30) => {
-  if (typeof document === "undefined") return;
-  const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
-};
-
-const getCookie = (name: string): string | null => {
-  if (typeof document === "undefined") return null;
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(";");
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i].trim();
-    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length));
-  }
-  return null;
-};
-
-const deleteCookie = (name: string) => {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
-};
 
 interface PricingFormState {
   category: string;
@@ -108,10 +83,7 @@ const defaultSections = {
 } as const;
 
 export default function Admin() {
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(ADMIN_TOKEN_KEY);
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
@@ -195,13 +167,11 @@ export default function Admin() {
 
   const request = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
 
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: "include",
     });
 
     if (response.status === 401) {
@@ -213,30 +183,23 @@ export default function Admin() {
   };
 
   const logout = async (skipServerLogout = false) => {
-    if (!skipServerLogout && token) {
+    if (!skipServerLogout && isAuthenticated) {
       try {
         await fetch("/api/admin/logout", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
         });
       } catch (error) {
         console.error("Logout error:", error);
       }
     }
 
-    setToken(null);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(ADMIN_TOKEN_KEY);
-      deleteCookie(ADMIN_TOKEN_KEY);
-      deleteCookie("admin-pricing-form");
-    }
+    setIsAuthenticated(false);
   };
 
   const loadAll = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
     try {
       const [pricingRes, sectionsRes, testimoniRes] = await Promise.all([
@@ -269,41 +232,16 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    if (token) {
-      loadAll();
-    }
-  }, [token]);
-
-  // Load pricing form dari localStorage dan cookie saat mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("admin-pricing-form");
-      const fromCookie = getCookie("admin-pricing-form");
-
-      if (saved) {
-        try {
-          setPricingForm(JSON.parse(saved));
-        } catch (err) {
-          console.error("Error loading pricing form from localStorage:", err);
-        }
-      } else if (fromCookie) {
-        try {
-          setPricingForm(JSON.parse(fromCookie));
-        } catch (err) {
-          console.error("Error loading pricing form from cookie:", err);
-        }
-      }
-    }
+    fetch("/api/admin/info", { credentials: "include" })
+      .then((response) => {
+        if (response.ok) setIsAuthenticated(true);
+      })
+      .catch(() => undefined);
   }, []);
 
-  // Auto-save pricing form ke localStorage dan cookie
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const formJson = JSON.stringify(pricingForm);
-      localStorage.setItem("admin-pricing-form", formJson);
-      setCookie("admin-pricing-form", formJson, 30);
-    }
-  }, [pricingForm]);
+    if (isAuthenticated) loadAll();
+  }, [isAuthenticated]);
 
   const openSuccessModal = (title: string, message: string) => {
     setSuccessModal({ title, message });
@@ -322,6 +260,7 @@ export default function Admin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginForm),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -329,10 +268,7 @@ export default function Admin() {
         throw new Error(data?.error || "Login gagal");
       }
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
-      }
-      setToken(data.token);
+      setIsAuthenticated(true);
       openSuccessModal("Login berhasil", "Selamat datang di panel admin.");
     } catch (error: any) {
       setLoginError(error.message || "Login gagal");
@@ -414,8 +350,6 @@ export default function Admin() {
     setPricingForm(emptyPricingForm());
     setEditId(null);
     if (typeof window !== "undefined") {
-      localStorage.removeItem("admin-pricing-form");
-      deleteCookie("admin-pricing-form");
     }
   };
 
@@ -639,14 +573,9 @@ export default function Admin() {
         throw new Error(data?.error || "Gagal mengubah password");
       }
 
-      if (typeof window !== "undefined" && data.token) {
-        localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
-        setToken(data.token);
-      }
-
       setShowPasswordForm(false);
       setPasswordForm({ newPassword: "", confirmPassword: "" });
-      openSuccessModal("Password berhasil diubah", "Password admin telah diperbarui dan token aktif diperbaharui.");
+      openSuccessModal("Password berhasil diubah", "Password admin telah diperbarui.");
     } catch (error: any) {
       setPasswordError(error.message || "Gagal mengubah password");
     }
@@ -672,7 +601,7 @@ export default function Admin() {
     </div>
   );
 
-  if (!token) {
+  if (!isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
         <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">

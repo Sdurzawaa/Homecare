@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
-import { resolveSchemaName } from "./utils.js";
+import { buildSearchPath, resolveSchemaName } from "./utils.js";
 
 dotenv.config();
 
@@ -12,9 +12,16 @@ const pool = new Pool({
   database: process.env.PGDATABASE || "sadam",
   user: process.env.PGUSER || "sadam",
   password: process.env.PGPASSWORD,
+  max: Number(process.env.PGPOOL_MAX || 10),
+  idleTimeoutMillis: Number(process.env.PGPOOL_IDLE_TIMEOUT || 30000),
+  connectionTimeoutMillis: Number(
+    process.env.PGPOOL_CONNECTION_TIMEOUT || 5000,
+  ),
   ssl:
     process.env.PGSSLMODE === "require" ? { rejectUnauthorized: false } : false,
-  options: `-c search_path=${schemaName}`,
+  ...(schemaName === "public"
+    ? {}
+    : { options: `-c search_path=${buildSearchPath(schemaName)}` }),
 });
 
 export default pool;

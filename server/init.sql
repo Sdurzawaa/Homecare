@@ -25,3 +25,6 @@ CREATE TABLE IF NOT EXISTS public.testimoni (
 	latarbelakang TEXT NOT NULL,
 	initial TEXT NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_pricing_category ON public.pricing(category);
+CREATE INDEX IF NOT EXISTS idx_pricing_recommended ON public.pricing(recommended DESC, id);

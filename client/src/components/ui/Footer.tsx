@@ -21,7 +21,7 @@ function Footer({ content }: { content?: { brand?: string; description?: string;
             </p>
             <div className="mt-1 flex items-center gap-3">
               <a
-                href="https://wa.me/6285773780406"
+                href="https://wa.me/6285892006905"
                 target="_blank"
                 rel="noreferrer noopener"
                 aria-label="WhatsApp"
