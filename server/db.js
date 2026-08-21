@@ -1,3 +1,4 @@
+import { neon } from "@neondatabase/serverless";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import { buildSearchPath, resolveSchemaName } from "./utils.js";
@@ -11,6 +12,7 @@ const isNeon = Boolean(
   process.env.PGHOST?.includes("neon.tech"),
 );
 const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const sql = connectionString ? neon(connectionString) : null;
 
 const searchPathOption =
   schemaName === "public"
@@ -18,16 +20,12 @@ const searchPathOption =
     : { options: `-c search_path=${buildSearchPath(schemaName)}` };
 
 const pool = connectionString
-  ? new Pool({
-      connectionString,
-      max: Number(process.env.PGPOOL_MAX || 1),
-      idleTimeoutMillis: Number(process.env.PGPOOL_IDLE_TIMEOUT || 30000),
-      connectionTimeoutMillis: Number(
-        process.env.PGPOOL_CONNECTION_TIMEOUT || 5000,
-      ),
-      ssl: { rejectUnauthorized: false },
-      ...searchPathOption,
-    })
+  ? {
+      query: async (text, values = []) => {
+        const rows = await sql.query(text, values);
+        return { rows, rowCount: rows.length };
+      },
+    }
   : new Pool({
       host: process.env.PGHOST || "localhost",
       port: process.env.PGPORT ? Number(process.env.PGPORT) : 5432,
