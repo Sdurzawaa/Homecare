@@ -21,11 +21,6 @@ import {
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.join(__dirname, "../client/public/uploads");
-
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 dotenv.config();
 
@@ -131,14 +126,20 @@ const verifyAdminCredentials = async (username, password) => {
   }
 };
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${crypto.randomUUID()}${ext.toLowerCase()}`;
-    cb(null, name);
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "homecare-uploads",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
   },
 });
 
@@ -491,7 +492,8 @@ const createAdminSession = async (username, token, req, res) => {
     // sameSite = prevent CSRF attacks
     res.cookie("admin_session_id", sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      secure: true,
+      sameSite: "none",
       maxAge: 12 * 60 * 60 * 1000, // 12 hours
       path: "/",
     });
@@ -695,7 +697,6 @@ app.use("/api/public", (req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
-app.use("/uploads", express.static(uploadsDir));
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
@@ -1327,7 +1328,7 @@ app.post(
       return res.status(400).json({ error: "File tidak ditemukan" });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = req.file.path;
     return res.json({ url: fileUrl, message: "File berhasil diupload" });
   },
 );
@@ -1410,6 +1411,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(port, () => {
-  console.log(`Server berjalan di http://localhost:${port}`);
-});
+if (process.env.VERCEL !== "1") {
+  app.listen(port, () => {
+    console.log(`Server berjalan di http://localhost:${port}`);
+  });
+}
+
+export default app;
