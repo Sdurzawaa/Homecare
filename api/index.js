@@ -1,3 +1,5 @@
-import app from "../server/index.js";
+import handler from "../server/index.js";
+
+const app = handler();
 
 export default app;
