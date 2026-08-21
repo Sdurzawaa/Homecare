@@ -495,6 +495,10 @@ function Pricing({ pricingRef }: PricingProps) {
       setImageError((prev) => ({ ...prev, [id]: true })),
     [],
   );
+  const handleRetry = useCallback(() => {
+    const controller = new AbortController();
+    fetchPricing(controller.signal);
+  }, [searchQuery, selectedCategory]);
 
   const activeInfo =
     selectedCategory === "Semua"
@@ -530,7 +534,7 @@ function Pricing({ pricingRef }: PricingProps) {
           </p>
           <button
             type="button"
-            onClick={fetchPricing}
+            onClick={handleRetry}
             className="rounded-full bg-[var(--pine)] px-4 py-2 text-[0.8rem] font-semibold text-white transition-transform duration-300 hover:scale-105"
           >
             Muat Ulang
