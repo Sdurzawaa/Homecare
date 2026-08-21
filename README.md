@@ -74,7 +74,6 @@ PGSCHEMA=public
 PGSSLMODE=disable
 PORT=5000
 CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
-ADMIN_API_KEY=codotGilak
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
 ADMIN_SESSION_SECRET=homecare-admin-secret
@@ -86,7 +85,7 @@ Catatan penting:
 - `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dipakai untuk default admin bootstrap
 - `ADMIN_SESSION_SECRET` dan `ADMIN_JWT_SECRET` dipakai untuk session JWT
 - `CORS_ORIGIN` harus berisi URL frontend yang valid, termasuk jika pakai ngrok/public URL
-- `ADMIN_API_KEY` masih dipertahankan untuk kompatibilitas legacy, tetapi admin dashboard modern memakai JWT + database session
+- Endpoint admin hanya menerima session JWT yang tersimpan di database dan dikirim melalui cookie httpOnly setelah login
 
 Untuk frontend, jika ingin pakai custom API URL dari Vite, bisa isi `client/.env.local`:
 

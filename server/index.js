@@ -14,7 +14,6 @@ import cookieParser from "cookie-parser";
 import pool from "./db.js";
 import {
   normalizeAdminUsername,
-  normalizeApiKey,
   quoteIdent,
   resolveSchemaName,
   withSchema,
@@ -37,7 +36,6 @@ const isProduction = process.env.NODE_ENV === "production";
 const requiredProductionSecrets = [
   "ADMIN_SESSION_SECRET",
   "ADMIN_JWT_SECRET",
-  "ADMIN_API_KEY",
   "ADMIN_PASSWORD",
 ];
 
@@ -74,11 +72,6 @@ if (!adminSessionSecret || !adminJwtSecret || !adminPassword) {
     "ADMIN_SESSION_SECRET, ADMIN_JWT_SECRET, and ADMIN_PASSWORD are required",
   );
 }
-let adminToken = crypto
-  .createHmac("sha256", adminSessionSecret)
-  .update(`${adminUsername}:${adminPassword}`)
-  .digest("hex");
-
 const createAdminJwt = (username = adminUsername) =>
   jwt.sign(
     {
@@ -99,13 +92,6 @@ const verifyAdminJwt = (token) => {
   } catch {
     return null;
   }
-};
-
-const updateAdminToken = () => {
-  adminToken = crypto
-    .createHmac("sha256", adminSessionSecret)
-    .update(`${adminUsername}:${adminPassword}`)
-    .digest("hex");
 };
 
 const verifyAdminCredentials = async (username, password) => {
@@ -506,7 +492,6 @@ const createAdminSession = async (username, token, req, res) => {
     res.cookie("admin_session_id", sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "strict",
       maxAge: 12 * 60 * 60 * 1000, // 12 hours
       path: "/",
     });
@@ -603,37 +588,9 @@ const deleteAdminSession = async (token) => {
 const isObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value);
 
-// Admin-only guard. Every non-public /api/pricing and /api/testimoni
-// endpoint requires this header:
-//   x-api-key: <ADMIN_API_KEY value from .env>
 const resolveBearerToken = (req) => {
   const auth = req.headers.authorization || "";
   return auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-};
-
-const requireAdminKey = (req, res, next) => {
-  const key = normalizeApiKey(req.headers);
-  const bearerToken =
-    resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
-  const jwtPayload = verifyAdminJwt(bearerToken);
-
-  if (
-    bearerToken &&
-    (bearerToken === adminToken || jwtPayload?.type === "admin")
-  ) {
-    return next();
-  }
-
-  if (!process.env.ADMIN_API_KEY) {
-    console.error("ADMIN_API_KEY belum di-set di .env");
-    return res.status(500).json({ error: "Server misconfigured" });
-  }
-
-  if (!key || key !== process.env.ADMIN_API_KEY) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  next();
 };
 
 const requireAdminAuth = async (req, res, next) => {
@@ -641,12 +598,6 @@ const requireAdminAuth = async (req, res, next) => {
 
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  // Check legacy adminToken atau validated session
-  if (token === adminToken) {
-    req.adminUser = { username: adminUsername, type: "admin" };
-    return next();
   }
 
   // Validate session dari database
@@ -985,7 +936,7 @@ app.get("/api/public/testimoni", async (req, res) => {
 });
 
 // Read all testimoni (admin only)
-app.get("/api/testimoni", requireAdminKey, async (req, res) => {
+app.get("/api/testimoni", requireAdminAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT 
@@ -1036,7 +987,7 @@ app.get(
 // Create testimoni card (admin only)
 app.post(
   "/api/testimoni",
-  requireAdminKey,
+  requireAdminAuth,
   validateTestimoniPayload,
   async (req, res) => {
     const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
@@ -1064,7 +1015,7 @@ app.post(
 // Update testimoni card (admin only)
 app.put(
   "/api/testimoni/:id_testi",
-  requireAdminKey,
+  requireAdminAuth,
   validateNumericIdParam,
   validateTestimoniPayload,
   async (req, res) => {
@@ -1099,7 +1050,7 @@ app.put(
 // Delete testimoni card (admin only)
 app.delete(
   "/api/testimoni/:id_testi",
-  requireAdminKey,
+  requireAdminAuth,
   validateNumericIdParam,
   async (req, res) => {
     const { id_testi } = req.params;
@@ -1181,7 +1132,7 @@ app.get("/api/public/pricing/search", async (req, res) => {
 });
 
 // Read all pricing (admin only)
-app.get("/api/pricing", requireAdminKey, async (req, res) => {
+app.get("/api/pricing", requireAdminAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, category, title, description, image, duration, price, recommended FROM ${table("pricing")} ORDER BY id ASC`,
@@ -1194,7 +1145,7 @@ app.get("/api/pricing", requireAdminKey, async (req, res) => {
 });
 
 // Read all pricing categories (admin only)
-app.get("/api/pricing-categories", requireAdminKey, async (req, res) => {
+app.get("/api/pricing-categories", requireAdminAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, category, title, description FROM ${table("pricing_categories")} ORDER BY id ASC`,
@@ -1207,7 +1158,7 @@ app.get("/api/pricing-categories", requireAdminKey, async (req, res) => {
 });
 
 // Search pricing cards by category and query (admin only)
-app.get("/api/pricing/search", requireAdminKey, async (req, res) => {
+app.get("/api/pricing/search", requireAdminAuth, async (req, res) => {
   try {
     const { category, q } = req.query;
     const conditions = [];
@@ -1242,7 +1193,7 @@ app.get("/api/pricing/search", requireAdminKey, async (req, res) => {
 // Read single pricing (admin only)
 app.get(
   "/api/pricing/:id",
-  requireAdminKey,
+  requireAdminAuth,
   validateNumericIdParam,
   async (req, res) => {
     const { id } = req.params;
@@ -1274,7 +1225,7 @@ app.get(
 // Create pricing card (admin only)
 app.post(
   "/api/pricing",
-  requireAdminKey,
+  requireAdminAuth,
   validatePricingPayload,
   async (req, res) => {
     const {
@@ -1304,7 +1255,7 @@ app.post(
 // Update pricing card (admin only)
 app.put(
   "/api/pricing/:id",
-  requireAdminKey,
+  requireAdminAuth,
   validateNumericIdParam,
   validatePricingPayload,
   async (req, res) => {
@@ -1346,7 +1297,7 @@ app.put(
 // Delete pricing card (admin only)
 app.delete(
   "/api/pricing/:id",
-  requireAdminKey,
+  requireAdminAuth,
   validateNumericIdParam,
   async (req, res) => {
     const { id } = req.params;
@@ -1403,8 +1354,27 @@ app.post("/api/admin/change-password", requireAdminAuth, async (req, res) => {
   }
 
   try {
-    adminPassword = newPassword.trim();
-    updateAdminToken();
+    const password = newPassword.trim();
+    const passwordHash = await bcrypt.hash(password, 10);
+    const username = req.adminUser.username;
+
+    await pool.query(
+      `UPDATE ${table("admin_users")} SET password_hash = $1, updated_at = NOW()
+       WHERE LOWER(username) = LOWER($2)`,
+      [passwordHash, username],
+    );
+
+    if (normalizeAdminUsername(username) === adminUsername) {
+      adminPassword = password;
+    }
+
+    const currentToken =
+      resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
+    await pool.query(
+      `DELETE FROM ${table("admin_sessions")}
+       WHERE LOWER(username) = LOWER($1) AND token <> $2`,
+      [username, currentToken],
+    );
 
     return res.json({
       message: "Password berhasil diubah",
