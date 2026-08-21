@@ -74,8 +74,8 @@ PGSCHEMA=public
 PGSSLMODE=disable
 PORT=5000
 CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
+ADMIN_USERNAME=admin-homecare
+ADMIN_PASSWORD=replace-with-16-char-password
 ADMIN_SESSION_SECRET=homecare-admin-secret
 ADMIN_JWT_SECRET=homecare-admin-secret
 ```
@@ -83,6 +83,7 @@ ADMIN_JWT_SECRET=homecare-admin-secret
 Catatan penting:
 
 - `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dipakai untuk default admin bootstrap
+- Saat `NODE_ENV=production`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, dan `ADMIN_API_KEY` wajib minimal 16 karakter
 - `ADMIN_SESSION_SECRET` dan `ADMIN_JWT_SECRET` dipakai untuk session JWT
 - `CORS_ORIGIN` harus berisi URL frontend yang valid, termasuk jika pakai ngrok/public URL
 - Endpoint admin hanya menerima session JWT yang tersimpan di database dan dikirim melalui cookie httpOnly setelah login

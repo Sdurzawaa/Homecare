@@ -31,6 +31,8 @@ const isProduction = process.env.NODE_ENV === "production";
 const requiredProductionSecrets = [
   "ADMIN_SESSION_SECRET",
   "ADMIN_JWT_SECRET",
+  "ADMIN_API_KEY",
+  "ADMIN_USERNAME",
   "ADMIN_PASSWORD",
 ];
 

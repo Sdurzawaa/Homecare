@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://nurserisma.vercel.app/",
+        target: "http://localhost:5000",
         changeOrigin: true,
       },
     },
