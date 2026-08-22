@@ -503,17 +503,20 @@ const createAdminSession = async (username, token, req, res) => {
     // httpOnly = tidak bisa diakses dari JavaScript, hanya browser yang kirim otomatis
     // secure = hanya dikirim via HTTPS (dalam production)
     // sameSite = prevent CSRF attacks
+
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("admin_session_id", sessionId, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 12 * 60 * 60 * 1000, // 12 hours
       path: "/",
     });
     res.cookie("admin_auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 12 * 60 * 60 * 1000,
       path: "/",
     });
@@ -1416,7 +1419,10 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: "Invalid JSON payload" });
   }
 
-  if (err.message === "Not allowed by CORS" || err.message === "Invalid CORS origin") {
+  if (
+    err.message === "Not allowed by CORS" ||
+    err.message === "Invalid CORS origin"
+  ) {
     return res.status(403).json({ error: "CORS policy denied" });
   }
 
