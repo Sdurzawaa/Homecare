@@ -425,6 +425,7 @@ const allowedOrigins = (
   })
   .filter(Boolean);
 const isAllowedOrigin = (origin) =>
+  origin === "https://nurserisma.vercel.app" ||
   allowedOrigins.includes(origin) ||
   /^https:\/\/nurserisma-[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
