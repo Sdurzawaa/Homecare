@@ -413,6 +413,14 @@ const allowedOrigins = (
 )
   .split(",")
   .map((origin) => origin.trim())
+  .map((origin) => {
+    try {
+      const url = new URL(origin);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      return "";
+    }
+  })
   .filter(Boolean);
 
 const corsOptions = {
@@ -1405,7 +1413,7 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: "Invalid JSON payload" });
   }
 
-  if (err.message === "Not allowed by CORS") {
+  if (err.message === "Not allowed by CORS" || err.message === "Invalid CORS origin") {
     return res.status(403).json({ error: "CORS policy denied" });
   }
 
