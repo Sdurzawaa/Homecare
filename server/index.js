@@ -27,7 +27,9 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 app.set("trust proxy", process.env.TRUST_PROXY === "true");
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  ["preview", "production"].includes(process.env.VERCEL_ENV);
 const requiredProductionSecrets = [
   "ADMIN_SESSION_SECRET",
   "ADMIN_JWT_SECRET",
@@ -504,19 +506,17 @@ const createAdminSession = async (username, token, req, res) => {
     // secure = hanya dikirim via HTTPS (dalam production)
     // sameSite = prevent CSRF attacks
 
-    const isProd = process.env.NODE_ENV === "production";
-
     res.cookie("admin_session_id", sessionId, {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "none" : "lax",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 12 * 60 * 60 * 1000, // 12 hours
       path: "/",
     });
     res.cookie("admin_auth_token", token, {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "none" : "lax",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 12 * 60 * 60 * 1000,
       path: "/",
     });
