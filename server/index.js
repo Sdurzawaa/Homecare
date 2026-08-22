@@ -411,7 +411,7 @@ await Promise.all([
 
 const allowedOrigins = (
   process.env.CORS_ORIGIN ||
-  "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+  "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,https://nurserisma.vercel.app"
 )
   .split(",")
   .map((origin) => origin.trim())
@@ -425,7 +425,6 @@ const allowedOrigins = (
   })
   .filter(Boolean);
 const isAllowedOrigin = (origin) =>
-  origin === "https://nurserisma.vercel.app" ||
   allowedOrigins.includes(origin) ||
   /^https:\/\/nurserisma-[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
