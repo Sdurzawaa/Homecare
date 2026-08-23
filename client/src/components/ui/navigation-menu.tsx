@@ -611,27 +611,27 @@ export function AnimatedNavFramer() {
             // scroll sesungguhnya dipindah ke inner content div di bawah,
             // biar gak ada dua scroll container bertumpuk yang bikin gesture
             // touch jadi ambigu / kepotong di tengah.
-            className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[rgba(29,43,45,0.98)] backdrop-blur-[24px] text-white md:hidden"
+            className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[var(--bg)]/95 backdrop-blur-[24px] text-[var(--ink)] md:hidden"
           >
             {/* Subtle depth keeps the navigation as the visual focus. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[var(--honey)]/[0.06]"
+              className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-white/30"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-black/[0.12]"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-[var(--bg-alt)]/30"
             />
 
             {/* Header row inside fullscreen overlay (tetap fixed, gak ikut scroll) */}
-            <div className="relative flex items-center justify-between border-b border-white/10 px-6 py-5 flex-shrink-0">
+            <div className="relative flex items-center justify-between border-b border-[var(--line)]/70 px-6 py-5 flex-shrink-0">
               <a
                 href="#home"
                 onClick={(e) => handleLinkClick(e, "#home")}
-                className="flex items-center gap-2 text-white"
+                className="flex items-center gap-2 text-[var(--pine-deep)]"
               >
                 <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
-                <span className="text-sm font-bold tracking-wider uppercase text-white">Homecare</span>
+                <span className="text-sm font-bold tracking-wider uppercase text-[var(--pine-deep)]">Homecare</span>
               </a>
 
               <motion.button
@@ -639,7 +639,7 @@ export function AnimatedNavFramer() {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Tutup menu"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-white/60 text-[var(--ink-soft)] transition-colors hover:bg-white hover:text-[var(--pine-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
               >
                 <X className="h-4.5 w-4.5" />
               </motion.button>
@@ -675,25 +675,25 @@ export function AnimatedNavFramer() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05, type: "spring", stiffness: 260, damping: 22 }}
                       className={cn(
-                        "border-b border-white/5",
+                        "border-b border-[var(--line)]/70",
                         i === 0 && "border-t"
                       )}
                     >
                       <a
                         href={item.href}
                         onClick={(e) => handleLinkClick(e, item.href)}
-                        className="group relative flex items-center justify-between rounded-xl px-3 py-4.5 font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
+                        className="group relative flex items-center justify-between rounded-xl px-3 py-4.5 font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight transition-colors duration-200 hover:bg-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
                       >
                         <span className={cn(
                           "transition-all duration-300",
-                          isActive ? "text-[var(--honey)] font-bold pl-2" : "text-white/80 group-hover:text-white group-hover:pl-2"
+                          isActive ? "text-[var(--pine-deep)] font-bold pl-2" : "text-[var(--ink-soft)] group-hover:text-[var(--ink)] group-hover:pl-2"
                         )}>
                           {item.name}
                         </span>
                         <ItemIcon
                           className={cn(
                             "h-4.5 w-4.5 transition-transform duration-300",
-                            isActive ? "text-[var(--honey)] scale-110" : "text-white/30 group-hover:text-white/60"
+                            isActive ? "text-[var(--pine)] scale-110" : "text-[var(--ink-soft)]/60 group-hover:text-[var(--pine)]"
                           )}
                         />
                       </a>
@@ -706,16 +706,16 @@ export function AnimatedNavFramer() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: NAV_LINKS.length * 0.05, type: "spring", stiffness: 260, damping: 22 }}
-                  className="border-b border-white/5"
+                  className="border-b border-[var(--line)]/70"
                 >
                   <button
                     type="button"
                     onClick={() => setMobileServiceOpen((open) => !open)}
-                    className="group flex w-full items-center justify-between rounded-xl px-3 py-4.5 text-left font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight text-white/80 transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
+                    className="group flex w-full items-center justify-between rounded-xl px-3 py-4.5 text-left font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight text-[var(--ink-soft)] transition-colors duration-200 hover:bg-white/45 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
                   >
                     <span className={cn(
                       "transition-all duration-300",
-                      isMobileServiceOpen || activeHash === "#services" ? "text-[var(--honey)] font-bold pl-2" : "text-white/80 group-hover:pl-2"
+                      isMobileServiceOpen || activeHash === "#services" ? "text-[var(--pine-deep)] font-bold pl-2" : "text-[var(--ink-soft)] group-hover:pl-2"
                     )}>
                       Layanan
                     </span>
@@ -728,13 +728,13 @@ export function AnimatedNavFramer() {
                       isMobileServiceOpen ? "max-h-[32rem] pb-4 opacity-100" : "max-h-0 opacity-0"
                     )}
                   >
-                    <div className="mt-2 flex flex-col divide-y divide-white/10 rounded-2xl border border-white/10 bg-black/10 p-2.5 gap-0.5">
+                    <div className="mt-2 flex flex-col divide-y divide-[var(--line)]/70 rounded-2xl border border-[var(--line)] bg-white/45 p-2.5 gap-0.5">
                       {SERVICE_ITEMS.map((item) => (
                         <a
                           key={item.name}
                           href={item.href}
                           onClick={(e) => handleServiceItemClick(e, item)}
-                          className="rounded-xl px-4 py-3 text-[0.88rem] font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-[var(--honey)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
+                          className="rounded-xl px-4 py-3 text-[0.88rem] font-medium text-[var(--ink-soft)] transition-all duration-200 hover:bg-white/70 hover:text-[var(--pine-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
                         >
                           {item.name}
                         </a>
@@ -755,7 +755,7 @@ export function AnimatedNavFramer() {
                   href="https://wa.me/6285773780406"
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="flex items-center justify-center gap-3 w-full rounded-full bg-[var(--honey)] hover:bg-[var(--honey-deep)] text-[var(--pine-deep)] py-4 font-bold text-sm shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex items-center justify-center gap-3 w-full rounded-full bg-[var(--honey)] hover:bg-[var(--honey-deep)] text-[var(--pine-deep)] py-4 font-bold text-sm shadow-[0_10px_24px_-14px_rgba(113,74,102,0.45)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a8.06 8.06 0 00-8.052 8.05 8.056 8.056 0 002.064 5.476l-.323 1.179 1.213-.323a8.035 8.035 0 003.86.962h.005a8.074 8.074 0 008.064-8.053 8.047 8.047 0 00-2.357-5.671 8.047 8.047 0 00-5.707-2.36zM12.071 0C5.717 0 .429 5.287.429 11.643c0 2.259.584 4.43 1.697 6.29L0 24l6.514-1.708C9.03 23.41 10.82 24 12.071 24c6.355 0 11.643-5.288 11.643-11.643 0-3.128-1.286-6.082-3.623-8.418C18.154 1.286 15.199 0 12.071 0z" />
@@ -763,16 +763,16 @@ export function AnimatedNavFramer() {
                   Hubungi via WhatsApp
                 </a>
 
-                <div className="flex items-center justify-center gap-6 mt-3 border-t border-white/10 pt-4">
+                <div className="flex items-center justify-center gap-6 mt-3 border-t border-[var(--line)] pt-4">
                   <a
                     href="tel:+6285773780406"
-                    className="flex items-center gap-2 text-xs font-semibold text-white/60 transition-colors hover:text-white"
+                    className="flex items-center gap-2 text-xs font-semibold text-[var(--ink-soft)] transition-colors hover:text-[var(--pine-deep)]"
                   >
                     <Phone className="h-3.5 w-3.5 text-[var(--honey)]" />
                     +62 857-7378-0406
                   </a>
-                  <span className="text-white/20">|</span>
-                  <span className="text-xs text-white/50">Siaga 24 Jam</span>
+                  <span className="text-[var(--line)]">|</span>
+                  <span className="text-xs text-[var(--ink-soft)]/70">Siaga 24 Jam</span>
                 </div>
               </motion.div>
             </div>
