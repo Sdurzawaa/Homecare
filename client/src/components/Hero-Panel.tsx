@@ -17,6 +17,8 @@ interface HeroProps {
 
 function Hero({ heroRef, content }: HeroProps) {
   const heroContent = content || {};
+  const heroImage = heroContent.image || "/Person.jpg";
+  const isCloudinaryImage = heroImage.includes("res.cloudinary.com");
   return (
     <section
       ref={heroRef}
@@ -145,8 +147,14 @@ function Hero({ heroRef, content }: HeroProps) {
                   fetchPriority="high"
                   loading="eager"
                   decoding="async"
+                  sizes="(max-width: 1023px) 100vw, 520px"
+                  srcSet={
+                    isCloudinaryImage
+                      ? `${optimizeCloudinaryUrl(heroImage, 480)} 480w, ${optimizeCloudinaryUrl(heroImage, 800)} 800w`
+                      : undefined
+                  }
                   className="aspect-[911/1024] h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={optimizeCloudinaryUrl(heroContent.image || "/Person.jpg", 800)}
+                  src={optimizeCloudinaryUrl(heroImage, 800)}
                 />
               </div>
 
