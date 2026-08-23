@@ -124,6 +124,7 @@ const defaultSections = {
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
   const [selectedSection, setSelectedSection] = useState("hero");
@@ -696,13 +697,12 @@ export default function Admin() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
-              <input
+              <PasswordInput
                 name="password"
-                type="password"
-                autoComplete="new-password"
                 value={loginForm.password}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none ring-0 transition focus:border-[var(--pine)]"
+                onChange={(value) => setLoginForm((prev) => ({ ...prev, password: value }))}
+                isVisible={showLoginPassword}
+                onToggleVisibility={() => setShowLoginPassword((visible) => !visible)}
               />
             </div>
 
