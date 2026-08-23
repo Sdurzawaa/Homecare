@@ -391,6 +391,15 @@ async function ensureCatalogTables() {
     );
   `);
   await pool.query(
+    `SELECT setval(
+       pg_get_serial_sequence($1, $2),
+       COALESCE(MAX(id_testi), 0) + 1,
+       false
+     )
+     FROM ${table("testimoni")}`,
+    [`${schemaName}.testimoni`, "id_testi"],
+  );
+  await pool.query(
     `CREATE INDEX IF NOT EXISTS idx_pricing_category ON ${table("pricing")}(category);`,
   );
   await pool.query(
