@@ -1,4 +1,5 @@
 import type { ReactNode, RefObject } from "react";
+import { optimizeCloudinaryUrl } from "../lib/image";
 
 interface AchievementContent {
   title?: string;
@@ -100,7 +101,7 @@ function AchievementImage({ src, alt, rotate, accent, badge, eager }: Achievemen
       >
         <img
           alt={alt}
-          src={src}
+          src={optimizeCloudinaryUrl(src, 600)}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           className="h-[360px] w-full object-cover transition-transform duration-1000 group-hover:scale-105 sm:h-[440px]"

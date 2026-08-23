@@ -715,7 +715,9 @@ app.use(limiter);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser()); // Parse cookies from requests
 app.use("/api/public", (req, res, next) => {
-  res.set("Cache-Control", "no-store");
+  if (req.path === "/site-sections") {
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+  }
   next();
 });
 

@@ -22,7 +22,10 @@ test("SIT: public site sections returns expected sections", async () => {
   assert.ok(body.hero);
   assert.ok(body.contact);
   assert.ok(body.footer);
-  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(
+    response.headers.get("cache-control"),
+    "public, max-age=60, stale-while-revalidate=300",
+  );
 });
 
 test("SIT: public collections return arrays", async () => {

@@ -5,6 +5,7 @@ import Contact from "../Contact";
 import Footer from "../ui/Footer";
 import AdminLoginForm from "./AdminLoginForm";
 import PasswordInput from "./PasswordInput";
+import { optimizeCloudinaryUrl } from "../../lib/image";
 
 const SECTION_KEYS = ["hero", "about", "contact", "footer"];
 
@@ -1268,7 +1269,7 @@ export default function Admin() {
                         <div className="space-y-2">
                           {currentSection.image && (
                             <img
-                              src={currentSection.image}
+                              src={optimizeCloudinaryUrl(currentSection.image, 600)}
                               alt="Hero"
                               className="w-full rounded-lg border border-slate-200 h-32 object-cover"
                             />
@@ -1318,7 +1319,7 @@ export default function Admin() {
                         <div className="space-y-2">
                           {currentSection.image && (
                             <img
-                              src={currentSection.image}
+                              src={optimizeCloudinaryUrl(currentSection.image, 600)}
                               alt="Img1"
                               className="w-full rounded-lg border border-slate-200 h-32 object-cover"
                             />
@@ -1339,7 +1340,7 @@ export default function Admin() {
                         <div className="space-y-2">
                           {currentSection.image_2 && (
                             <img
-                              src={currentSection.image_2}
+                              src={optimizeCloudinaryUrl(currentSection.image_2, 400)}
                               alt="Img2"
                               className="w-full rounded-lg border border-slate-200 h-32 object-cover"
                             />
@@ -1360,7 +1361,7 @@ export default function Admin() {
                         <div className="space-y-2">
                           {currentSection.image_3 && (
                             <img
-                              src={currentSection.image_3}
+                              src={optimizeCloudinaryUrl(currentSection.image_3, 400)}
                               alt="Img3"
                               className="w-full rounded-lg border border-slate-200 h-32 object-cover"
                             />

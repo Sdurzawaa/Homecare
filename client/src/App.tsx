@@ -64,19 +64,21 @@ function App() {
 
     const controller = new AbortController();
 
-    fetch("/api/public/site-sections", {
-      cache: "no-store",
-      signal: controller.signal,
-    })
+    fetch("/api/public/site-sections", { signal: controller.signal })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (!data) return;
-        setSiteSections({
+        const nextSections = {
           hero: { ...defaultSections.hero, ...(data.hero || {}) },
           about: { ...defaultSections.about, ...(data.about || {}) },
           contact: { ...defaultSections.contact, ...(data.contact || {}) },
           footer: { ...defaultSections.footer, ...(data.footer || {}) },
-        });
+        };
+        setSiteSections((currentSections) =>
+          JSON.stringify(currentSections) === JSON.stringify(nextSections)
+            ? currentSections
+            : nextSections,
+        );
       })
       .catch((error) => {
         if (error.name !== "AbortError") return undefined;

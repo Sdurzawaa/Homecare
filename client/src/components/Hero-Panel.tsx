@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { optimizeCloudinaryUrl } from "../lib/image";
 
 interface HeroProps {
   heroRef?: RefObject<HTMLElement | null>;
@@ -145,7 +146,7 @@ function Hero({ heroRef, content }: HeroProps) {
                   loading="eager"
                   decoding="async"
                   className="aspect-[911/1024] h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={heroContent.image || "/Person.jpg"}
+                  src={optimizeCloudinaryUrl(heroContent.image || "/Person.jpg", 800)}
                 />
               </div>
 

@@ -9,6 +9,7 @@ import {
 } from "react";
 import { motion } from "framer-motion";
 import Modal from "./Modal";
+import { optimizeCloudinaryUrl } from "../lib/image";
 
 const WHATSAPP_NUMBER = "6285773780406";
 const API_URL = import.meta.env.VITE_API_URL || "";
@@ -231,7 +232,7 @@ const TreatmentCard = memo(function TreatmentCard({
         )}
         {!hasError ? (
           <img
-            src={treatment.image}
+            src={optimizeCloudinaryUrl(treatment.image, 400)}
             alt={treatment.title}
             className={`h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-110 ${
               loaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
@@ -673,7 +674,7 @@ function Pricing({ pricingRef }: PricingProps) {
               <div className="relative min-h-[260px] flex-shrink-0 overflow-hidden bg-[var(--bg-alt)] md:min-h-full md:w-5/12">
                 {!imageError[`modal-${selectedTreatment.id}`] ? (
                   <img
-                    src={selectedTreatment.image}
+                    src={optimizeCloudinaryUrl(selectedTreatment.image, 800)}
                     alt={selectedTreatment.title}
                     className="absolute inset-0 h-full w-full object-cover"
                     onError={() =>
