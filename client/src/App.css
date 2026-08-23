@@ -213,7 +213,13 @@ section[id] {
   .site-nav a { padding: 0.75rem 0.9rem; }
 }
 
-/* ===== SCROLL ANIMATIONS ===== */
+/* ===== SCROLL ANIMATIONS =====
+   FIXED: previously .scroll-stagger defaulted to opacity:0 and stayed
+   invisible forever unless JS (IntersectionObserver) added the
+   .scroll-animated class. A mobile-only media query forced opacity:1,
+   which is why it worked on mobile but not on desktop whenever the
+   observer failed to fire. Content visibility should never depend on
+   JS succeeding — JS is now purely an optional enhancement. */
 
 /* Main scroll fade up animation */
 @keyframes scrollFadeUp {
@@ -239,37 +245,28 @@ section[id] {
   }
 }
 
-/* Apply animations to sections */
+/* Base state: ALWAYS visible. No longer waits for JS. */
 .scroll-fade-up,
 .scroll-stagger {
+  opacity: 1;
   transform: none;
   animation: none;
   transition: none;
-}
-
-.scroll-fade-up.scroll-animated {
-  opacity: 1;
-  transform: none;
-  animation: scrollFadeUp 0.6s ease-out forwards;
-}
-
-/* Stagger animations untuk cards */
-.scroll-stagger {
-  opacity: 0;
-  transform: translateY(30px);
   will-change: opacity, transform;
   backface-visibility: hidden;
 }
 
-/* Individual card scroll animation support when using individual refs */
-.scroll-stagger.scroll-animated {
-  animation: scrollStaggerFadeUp 0.75s ease-out forwards;
-  opacity: 1;
+/* Enhancement only: if JS successfully adds .scroll-animated (via
+   IntersectionObserver or similar), replay a subtle entrance animation.
+   Because the base state above is already opacity:1, this only adds a
+   little motion polish — it is never required for the content to show. */
+.scroll-fade-up.scroll-animated {
+  animation: scrollFadeUp 0.6s ease-out forwards;
 }
 
+.scroll-stagger.scroll-animated,
 .scroll-fade-up.scroll-animated .scroll-stagger {
   animation: scrollStaggerFadeUp 0.75s ease-out forwards;
-  opacity: 1;
 }
 
 .scroll-fade-up.scroll-animated .scroll-stagger:nth-child(1) {
@@ -286,15 +283,6 @@ section[id] {
 
 .scroll-fade-up.scroll-animated .scroll-stagger:nth-child(4) {
   animation-delay: 0.4s;
-}
-
-@media (max-width: 720px) {
-  .scroll-fade-up,
-  .scroll-stagger {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
 }
 
 /* Optional: Disable animations untuk reduced motion preference */
