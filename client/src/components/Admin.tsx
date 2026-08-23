@@ -3,7 +3,8 @@ import Hero from "./Hero-Panel";
 import Achievements from "./Achievement";
 import Contact from "./Contact";
 import Footer from "./ui/Footer";
-import { Eye, EyeOff } from "lucide-react";
+import AdminLoginForm from "./AdminLoginForm";
+import PasswordInput from "./PasswordInput";
 
 const SECTION_KEYS = ["hero", "about", "contact", "footer"];
 
@@ -22,44 +23,6 @@ interface TestimoniFormState {
   author: string;
   latarbelakang: string;
   initial: string;
-}
-
-interface PasswordInputProps {
-  name: string;
-  value: string;
-  onChange: (value: string) => void;
-  isVisible: boolean;
-  onToggleVisibility: () => void;
-}
-
-function PasswordInput({
-  name,
-  value,
-  onChange,
-  isVisible,
-  onToggleVisibility,
-}: PasswordInputProps) {
-  return (
-    <div className="relative">
-      <input
-        type={isVisible ? "text" : "password"}
-        name={name}
-        autoComplete="new-password"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-10 text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20"
-      />
-      <button
-        type="button"
-        tabIndex={-1}
-        onClick={onToggleVisibility}
-        aria-label={isVisible ? "Sembunyikan password" : "Tampilkan password"}
-        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors duration-150 hover:scale-110 hover:text-slate-600 transition-transform"
-      >
-        {isVisible ? <EyeOff size={17} /> : <Eye size={17} />}
-      </button>
-    </div>
-  );
 }
 
 const emptyPricingForm = (): PricingFormState => ({
@@ -124,7 +87,6 @@ const defaultSections = {
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
   const [selectedSection, setSelectedSection] = useState("hero");
@@ -677,46 +639,12 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
-        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <div className="mb-6 text-center">
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Masuk</h1>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Username</label>
-              <input
-                name="username"
-                autoComplete="off"
-                value={loginForm.username}
-                onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none ring-0 transition focus:border-[var(--pine)]"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
-              <PasswordInput
-                name="password"
-                value={loginForm.password}
-                onChange={(value) => setLoginForm((prev) => ({ ...prev, password: value }))}
-                isVisible={showLoginPassword}
-                onToggleVisibility={() => setShowLoginPassword((visible) => !visible)}
-              />
-            </div>
-
-            {loginError && <p className="text-sm text-red-600">{loginError}</p>}
-
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-[var(--pine)] px-4 py-3 font-semibold text-white transition hover:brightness-95"
-            >
-              Login
-            </button>
-          </form>
-        </div>
-      </div>
+      <AdminLoginForm
+        loginForm={loginForm}
+        loginError={loginError}
+        onChange={(field, value) => setLoginForm((previous) => ({ ...previous, [field]: value }))}
+        onSubmit={handleLogin}
+      />
     );
   }
 
