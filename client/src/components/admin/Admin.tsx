@@ -86,6 +86,7 @@ const defaultSections = {
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [adminUsername, setAdminUsername] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -270,7 +271,8 @@ export default function Admin() {
           setIsAuthenticated(true);
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setAuthChecked(true));
   }, []);
 
   useEffect(() => {
@@ -647,6 +649,18 @@ export default function Admin() {
       {uploadingField === field && <span className="text-xs text-slate-500">Uploading...</span>}
     </div>
   );
+
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100">
+        <div
+          className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-[var(--pine)]"
+          role="status"
+          aria-label="Memeriksa sesi"
+        />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
