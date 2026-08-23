@@ -87,6 +87,7 @@ const defaultSections = {
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const [adminUsername, setAdminUsername] = useState("");
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
   const [selectedSection, setSelectedSection] = useState("hero");
@@ -224,6 +225,7 @@ export default function Admin() {
     }
 
     setIsAuthenticated(false);
+    setAdminUsername("");
   };
 
   const loadAll = async () => {
@@ -261,8 +263,12 @@ export default function Admin() {
 
   useEffect(() => {
     fetch("/api/admin/info", { credentials: "include" })
-      .then((response) => {
-        if (response.ok) setIsAuthenticated(true);
+      .then(async (response) => {
+        if (response.ok) {
+          const data = await response.json();
+          setAdminUsername(data?.username || "");
+          setIsAuthenticated(true);
+        }
       })
       .catch(() => undefined);
   }, []);
@@ -296,6 +302,7 @@ export default function Admin() {
         throw new Error(data?.error || "Login gagal");
       }
 
+      setAdminUsername(data?.user || loginForm.username);
       setIsAuthenticated(true);
       openSuccessModal("Login berhasil", "Selamat datang di panel admin.");
     } catch (error: any) {
@@ -666,6 +673,11 @@ export default function Admin() {
         <div className="flex items-center justify-between p-4 md:px-8 border-b border-slate-200">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Kelola Landing Page</h1>
+            {adminUsername && (
+              <p className="mt-1 text-sm text-slate-500">
+                Admin: <span className="font-medium text-slate-700">{adminUsername}</span>
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
