@@ -205,7 +205,7 @@ const TreatmentCard = memo(function TreatmentCard({
   return (
     <article
       onClick={onClick}
-      className="scroll-stagger group relative flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-[var(--line)] bg-white [content-visibility:auto] [contain-intrinsic-size:340px] transition-transform duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(119,38,53,0.15)] focus-within:ring-2 focus-within:ring-[var(--pine)] focus-within:ring-offset-2"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-[16px] border border-[var(--line)] bg-white [content-visibility:auto] [contain-intrinsic-size:340px] transition-transform duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(119,38,53,0.15)] focus-within:ring-2 focus-within:ring-[var(--pine)] focus-within:ring-offset-2"
       style={{ animationDelay: `${index * 140}ms` }}
       role="button"
       tabIndex={0}
@@ -508,7 +508,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
   return (
     <section
-      className="scroll-fade-up mx-auto max-w-[1240px] px-[clamp(1.5rem,5vw,4rem)] py-[4.5rem]"
+      className="mx-auto max-w-[1240px] px-[clamp(1.5rem,5vw,4rem)] py-[4.5rem]"
       id="services"
       ref={pricingRef}
     >

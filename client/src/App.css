@@ -240,10 +240,11 @@ section[id] {
 }
 
 /* Apply animations to sections */
-.scroll-fade-up {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+.scroll-fade-up,
+.scroll-stagger {
+  transform: none;
+  animation: none;
+  transition: none;
 }
 
 .scroll-fade-up.scroll-animated {
