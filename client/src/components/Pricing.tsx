@@ -153,6 +153,12 @@ interface PricingProps {
 
 const CATEGORY_ORDER = Object.keys(categoryInfo) as ServiceCategory[];
 
+function getCardsPerPage(width: number) {
+  if (width <= 600) return 5;
+  if (width <= 1024) return 10;
+  return 15;
+}
+
 function formatDuration(minutes: number) {
   if (minutes >= 1440) {
     const days = Math.floor(minutes / 1440);
@@ -314,7 +320,19 @@ function Pricing({ pricingRef }: PricingProps) {
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const cardsPerPage = 10;
+  const [cardsPerPage, setCardsPerPage] = useState(() =>
+    typeof window === "undefined" ? 15 : getCardsPerPage(window.innerWidth),
+  );
+
+  useEffect(() => {
+    const updateCardsPerPage = () => {
+      setCardsPerPage(getCardsPerPage(window.innerWidth));
+    };
+
+    updateCardsPerPage();
+    window.addEventListener("resize", updateCardsPerPage);
+    return () => window.removeEventListener("resize", updateCardsPerPage);
+  }, []);
 
   useEffect(() => {
     if (!tabsEl) return;
@@ -500,7 +518,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery]);
+  }, [cardsPerPage, selectedCategory, searchQuery]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
