@@ -540,18 +540,9 @@ function Pricing({ pricingRef }: PricingProps) {
   const handlePageChange = useCallback(
     (page: number) => {
       if (page === currentPage || page < 1 || page > totalPages) return;
-
       setCurrentPage(page);
-      requestAnimationFrame(() => {
-        const section = pricingRef?.current;
-        if (!section) return;
-
-        const headerHeight = 76;
-        const top = section.getBoundingClientRect().top + window.scrollY - headerHeight;
-        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-      });
     },
-    [currentPage, pricingRef, totalPages],
+    [currentPage, totalPages],
   );
 
   const activeInfo =
