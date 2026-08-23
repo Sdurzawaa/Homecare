@@ -253,15 +253,6 @@ section[id] {
   animation: scrollFadeUp 0.6s ease-out forwards;
 }
 
-@media (max-width: 720px) {
-  .scroll-fade-up,
-  .scroll-stagger {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-}
-
 /* Stagger animations untuk cards */
 .scroll-stagger {
   opacity: 0;
@@ -295,6 +286,15 @@ section[id] {
 
 .scroll-fade-up.scroll-animated .scroll-stagger:nth-child(4) {
   animation-delay: 0.4s;
+}
+
+@media (max-width: 720px) {
+  .scroll-fade-up,
+  .scroll-stagger {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
 /* Optional: Disable animations untuk reduced motion preference */

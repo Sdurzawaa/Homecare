@@ -171,7 +171,7 @@ function Achievements({
       <div className="relative z-10 mx-auto max-w-[1200px] space-y-[100px] max-[768px]:space-y-[70px]">
         {/* Achievement 1: Perawatan dengan Hati — Image Left */}
         <div
-          className="scroll-stagger flex flex-col items-center gap-10 opacity-0 lg:flex-row lg:gap-16"
+          className="scroll-stagger flex flex-col items-center gap-10 lg:flex-row lg:gap-16"
           style={{ animationDelay: "0.15s" }}
           ref={achievementsCard1}
         >
@@ -211,7 +211,7 @@ function Achievements({
 
         {/* Achievement 2: Tenaga Terlatih & Bersertifikat — Image Right */}
         <div
-          className="scroll-stagger flex flex-col items-center gap-10 opacity-0 lg:flex-row-reverse lg:gap-16"
+          className="scroll-stagger flex flex-col items-center gap-10 lg:flex-row-reverse lg:gap-16"
           style={{ animationDelay: "0.35s" }}
           ref={achievementsCard2}
         >
@@ -254,7 +254,7 @@ function Achievements({
 
         {/* Achievement 3: Dipercaya Ribuan Keluarga — Image Left */}
         <div
-          className="scroll-stagger flex flex-col items-center gap-10 opacity-0 lg:flex-row lg:gap-16"
+          className="scroll-stagger flex flex-col items-center gap-10 lg:flex-row lg:gap-16"
           style={{ animationDelay: "0.55s" }}
           ref={achievementsCard3}
         >
