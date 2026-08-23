@@ -253,7 +253,8 @@ section[id] {
 }
 
 @media (max-width: 720px) {
-  .scroll-fade-up {
+  .scroll-fade-up,
+  .scroll-stagger {
     opacity: 1;
     transform: none;
     animation: none;

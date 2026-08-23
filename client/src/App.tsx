@@ -59,6 +59,14 @@ function App() {
   const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath;
   const [siteSections, setSiteSections] = useState(defaultSections);
   const [siteSectionsReady, setSiteSectionsReady] = useState(false);
+  const heroRef = useScrollAnimation({ threshold: 0.3 });
+  const achievementsRef = useScrollAnimation({ threshold: 0.1 });
+  const testimonialsRef = useScrollAnimation({ threshold: 0.1 });
+  const contactRef = useScrollAnimation({ threshold: 0.3 });
+  const pricingRef = useScrollAnimation({ threshold: 0, rootMargin: "0px 0px 10% 0px" });
+  const achievementsCard1 = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
+  const achievementsCard2 = useScrollAnimation<HTMLDivElement>({ threshold: 0.6 });
+  const achievementsCard3 = useScrollAnimation<HTMLDivElement>({ threshold: 1 });
 
   useEffect(() => {
     if (typeof window === "undefined" || isAdminPath) return;
@@ -114,16 +122,6 @@ function App() {
       </div>
     );
   }
-
-  // Scroll animation refs untuk setiap section
-  const heroRef = useScrollAnimation({ threshold: 0.3 });
-  const achievementsRef = useScrollAnimation({ threshold: 0.1 });
-  const testimonialsRef = useScrollAnimation({ threshold: 0.1 });
-  const contactRef = useScrollAnimation({ threshold: 0.3 });
-  const pricingRef = useScrollAnimation({ threshold: 0, rootMargin: "0px 0px 10% 0px" });
-  const achievementsCard1 = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
-  const achievementsCard2 = useScrollAnimation<HTMLDivElement>({ threshold: 0.6 });
-  const achievementsCard3 = useScrollAnimation<HTMLDivElement>({ threshold: 1 });
 
   if (!siteSectionsReady) {
     return (
