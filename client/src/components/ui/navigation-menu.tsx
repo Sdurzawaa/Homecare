@@ -613,16 +613,6 @@ export function AnimatedNavFramer() {
             // touch jadi ambigu / kepotong di tengah.
             className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[var(--bg)]/95 backdrop-blur-[24px] text-[var(--ink)] md:hidden"
           >
-            {/* Subtle depth keeps the navigation as the visual focus. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-white/30"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-[var(--bg-alt)]/30"
-            />
-
             {/* Header row inside fullscreen overlay (tetap fixed, gak ikut scroll) */}
             <div className="relative flex items-center justify-between border-b border-[var(--line)]/70 px-6 py-5 flex-shrink-0">
               <a
