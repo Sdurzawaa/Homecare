@@ -34,7 +34,7 @@ function Hero({ heroRef, content }: HeroProps) {
             {/* Trust Badge */}
             <div
               style={{ animationDelay: "0.15s" }}
-              className="inline-flex animate-fade-in-up items-center gap-2 rounded-full px-4 py-2 shadow-sm
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 shadow-sm
                          bg-[#f7edf1] border border-[#d9c7d2] text-[#6d3a4d]"
             >
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#6d3a4d] text-white" aria-hidden="true">
@@ -56,8 +56,7 @@ function Hero({ heroRef, content }: HeroProps) {
             </div>
 
             <h1
-              style={{ animationDelay: "0.25s" }}
-              className="animate-fade-in-up font-[family-name:var(--font-display,'Source_Serif_4',serif)]
+              className="font-[family-name:var(--font-display,'Source_Serif_4',serif)]
                          text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.1]
                          tracking-[-0.02em] text-[var(--pine-deep,#772635)] max-w-xl"
             >
@@ -65,16 +64,14 @@ function Hero({ heroRef, content }: HeroProps) {
             </h1>
 
             <p
-              style={{ animationDelay: "0.35s" }}
-              className="animate-fade-in-up text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#634b4f)] max-w-lg"
+              className="text-[1.05rem] leading-[1.7] text-[var(--ink-soft,#634b4f)] max-w-lg"
             >
               {heroContent.description ||
                 "Menghadirkan tenaga profesional medis berpengalaman untuk merawat orang terkasih dengan penuh kasih sayang dan kenyamanan maksimal."}
             </p>
 
             <div
-              style={{ animationDelay: "0.45s" }}
-              className="animate-fade-in-up flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4"
+              className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4"
             >
               <a
                 href={heroContent.cta_link || "#contact"}
@@ -100,8 +97,7 @@ function Hero({ heroRef, content }: HeroProps) {
             </div>
             {/* Mini Stats */}
             <div
-              style={{ animationDelay: "0.55s" }}
-              className="animate-fade-in-up grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#ecd0d4)] pt-8 w-full"
+              className="grid grid-cols-2 sm:grid-cols-3 gap-8 mt-8 border-t border-[var(--line,#ecd0d4)] pt-8 w-full"
             >
               <div>
                 <div className="font-bold text-[1.5rem] text-[var(--pine-deep,#772635)]">
@@ -195,22 +191,11 @@ function Hero({ heroRef, content }: HeroProps) {
         </div>
       </div>
 
-      {/* Keyframes untuk animate-fade-in-up dan animate-bounce-subtle
-         (animate-bounce-subtle dipakai di Floating Info Card supaya melayang halus) */}
+      {/* Floating info card keeps its subtle motion; hero content remains visible immediately. */}
       <style>{`
-        @keyframes fadeInUp {
-          0% { opacity: 0; transform: translateY(30px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
         @keyframes bounceSubtle {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.8s ease-out both;
-          will-change: opacity, transform;
-          backface-visibility: hidden;
-          transform: translateZ(0);
         }
         .animate-bounce-subtle {
           animation: bounceSubtle 3s ease-in-out infinite;
