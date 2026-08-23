@@ -611,20 +611,20 @@ export function AnimatedNavFramer() {
             // scroll sesungguhnya dipindah ke inner content div di bawah,
             // biar gak ada dua scroll container bertumpuk yang bikin gesture
             // touch jadi ambigu / kepotong di tengah.
-            className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[rgba(119,38,53,0.95)] backdrop-blur-[32px] text-white md:hidden"
+            className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[rgba(29,43,45,0.98)] backdrop-blur-[24px] text-white md:hidden"
           >
-            {/* Signature ambient glow */}
+            {/* Subtle depth keeps the navigation as the visual focus. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -right-24 -top-24 h-[22rem] w-[22rem] rounded-full bg-[var(--honey)]/20 blur-[100px]"
+              className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[var(--honey)]/[0.06]"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-[var(--pine)]/30 blur-[90px]"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-black/[0.12]"
             />
 
             {/* Header row inside fullscreen overlay (tetap fixed, gak ikut scroll) */}
-            <div className="relative flex items-center justify-between px-6 py-5 border-b border-white/10 flex-shrink-0">
+            <div className="relative flex items-center justify-between border-b border-white/10 px-6 py-5 flex-shrink-0">
               <a
                 href="#home"
                 onClick={(e) => handleLinkClick(e, "#home")}
@@ -639,7 +639,7 @@ export function AnimatedNavFramer() {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Tutup menu"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
               >
                 <X className="h-4.5 w-4.5" />
               </motion.button>
@@ -655,7 +655,7 @@ export function AnimatedNavFramer() {
                 WebkitOverflowScrolling: touch buat momentum scroll mulus
                 di iOS Safari. */}
             <div
-              className="relative flex min-h-0 flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden px-8 py-8"
+              className="relative flex min-h-0 flex-1 flex-col justify-between overflow-y-auto overflow-x-hidden px-6 py-7 sm:px-8 sm:py-8"
               ref={drawerRef}
               data-lenis-prevent
               style={{
@@ -682,7 +682,7 @@ export function AnimatedNavFramer() {
                       <a
                         href={item.href}
                         onClick={(e) => handleLinkClick(e, item.href)}
-                        className="relative flex items-center justify-between py-4.5 font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight group"
+                        className="group relative flex items-center justify-between rounded-xl px-3 py-4.5 font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
                       >
                         <span className={cn(
                           "transition-all duration-300",
@@ -711,7 +711,7 @@ export function AnimatedNavFramer() {
                   <button
                     type="button"
                     onClick={() => setMobileServiceOpen((open) => !open)}
-                    className="flex w-full items-center justify-between py-4.5 text-left font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight text-white/80 hover:text-white group"
+                    className="group flex w-full items-center justify-between rounded-xl px-3 py-4.5 text-left font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight text-white/80 transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
                   >
                     <span className={cn(
                       "transition-all duration-300",
@@ -728,13 +728,13 @@ export function AnimatedNavFramer() {
                       isMobileServiceOpen ? "max-h-[32rem] pb-4 opacity-100" : "max-h-0 opacity-0"
                     )}
                   >
-                    <div className="flex flex-col divide-y divide-white/5 border-t border-white/5 bg-white/5 rounded-2xl p-2.5 mt-2 gap-0.5">
+                    <div className="mt-2 flex flex-col divide-y divide-white/10 rounded-2xl border border-white/10 bg-black/10 p-2.5 gap-0.5">
                       {SERVICE_ITEMS.map((item) => (
                         <a
                           key={item.name}
                           href={item.href}
                           onClick={(e) => handleServiceItemClick(e, item)}
-                          className="py-3 px-4 text-[0.88rem] font-medium text-white/70 rounded-xl transition-all duration-200 hover:bg-white/10 hover:text-[var(--honey)]"
+                          className="rounded-xl px-4 py-3 text-[0.88rem] font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-[var(--honey)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--honey)]"
                         >
                           {item.name}
                         </a>
