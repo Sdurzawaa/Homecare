@@ -313,6 +313,8 @@ function Pricing({ pricingRef }: PricingProps) {
   const [selectedCategory, setSelectedCategory] = useState<PricingCategory>("Semua");
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const cardsPerPage = 10;
 
   useEffect(() => {
     if (!tabsEl) return;
@@ -487,6 +489,23 @@ function Pricing({ pricingRef }: PricingProps) {
     );
   }, [treatments]);
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTreatments.length / cardsPerPage),
+  );
+  const visibleTreatments = filteredTreatments.slice(
+    (currentPage - 1) * cardsPerPage,
+    currentPage * cardsPerPage,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
   const handleCardClick = useCallback((treatment: Treatment) => {
     setSelectedTreatment(treatment);
   }, []);
@@ -649,18 +668,65 @@ function Pricing({ pricingRef }: PricingProps) {
       )}
 
       {!loading && !error && filteredTreatments.length > 0 && (
-        <div className="grid grid-cols-1 gap-[1.6rem] sm:grid-cols-2 lg:grid-cols-4">
-          {filteredTreatments.map((treatment, index) => (
+        <>
+          <div className="grid grid-cols-1 gap-[1.6rem] sm:grid-cols-2 lg:grid-cols-4">
+          {visibleTreatments.map((treatment, index) => (
             <TreatmentCard
               key={treatment.id}
               treatment={treatment}
-              index={index}
+              index={(currentPage - 1) * cardsPerPage + index}
               hasError={!!imageError[treatment.id]}
               onClick={() => handleCardClick(treatment)}
               onImageError={() => handleImageError(treatment.id)}
             />
           ))}
-        </div>
+          </div>
+
+          {totalPages > 1 && (
+            <nav
+              className="mt-10 flex flex-wrap items-center justify-center gap-2"
+              aria-label="Navigasi halaman layanan"
+            >
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Sebelumnya
+              </button>
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    aria-current={currentPage === page ? "page" : undefined}
+                    className={`h-9 min-w-9 rounded-full px-3 text-sm font-semibold transition-colors ${
+                      currentPage === page
+                        ? "bg-[var(--pine)] text-white shadow-sm"
+                        : "text-[var(--ink-soft)] hover:bg-[var(--bg-alt)] hover:text-[var(--pine)]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Berikutnya
+              </button>
+            </nav>
+          )}
+        </>
       )}
 
       <Modal
