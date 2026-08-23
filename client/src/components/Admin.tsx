@@ -3,6 +3,7 @@ import Hero from "./Hero-Panel";
 import Achievements from "./Achievement";
 import Contact from "./Contact";
 import Footer from "./ui/Footer";
+import { Eye, EyeOff } from "lucide-react";
 
 const SECTION_KEYS = ["hero", "about", "contact", "footer"];
 
@@ -21,6 +22,44 @@ interface TestimoniFormState {
   author: string;
   latarbelakang: string;
   initial: string;
+}
+
+interface PasswordInputProps {
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  isVisible: boolean;
+  onToggleVisibility: () => void;
+}
+
+function PasswordInput({
+  name,
+  value,
+  onChange,
+  isVisible,
+  onToggleVisibility,
+}: PasswordInputProps) {
+  return (
+    <div className="relative">
+      <input
+        type={isVisible ? "text" : "password"}
+        name={name}
+        autoComplete="new-password"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-10 text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20"
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={onToggleVisibility}
+        aria-label={isVisible ? "Sembunyikan password" : "Tampilkan password"}
+        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 transition-colors duration-150 hover:scale-110 hover:text-slate-600 transition-transform"
+      >
+        {isVisible ? <EyeOff size={17} /> : <Eye size={17} />}
+      </button>
+    </div>
+  );
 }
 
 const emptyPricingForm = (): PricingFormState => ({
@@ -99,6 +138,8 @@ export default function Admin() {
   const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const passwordRequirements = [
     {
@@ -116,6 +157,12 @@ export default function Admin() {
     {
       label: "Mengandung angka (0-9)",
       valid: /[0-9]/.test(passwordForm.newPassword),
+    },
+    {
+      label: "Konfirmasi password cocok",
+      valid:
+        passwordForm.confirmPassword !== "" &&
+        passwordForm.newPassword === passwordForm.confirmPassword,
     },
   ];
   const [showPreview, setShowPreview] = useState(true);
@@ -761,13 +808,12 @@ export default function Admin() {
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Password Baru</label>
-                <input
-                  type="password"
+                <PasswordInput
                   name="newPassword"
-                  autoComplete="new-password"
                   value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2"
+                  onChange={(value) => setPasswordForm((p) => ({ ...p, newPassword: value }))}
+                  isVisible={showNewPassword}
+                  onToggleVisibility={() => setShowNewPassword((visible) => !visible)}
                 />
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -792,13 +838,12 @@ export default function Admin() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Konfirmasi Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   name="confirmPassword"
-                  autoComplete="new-password"
                   value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2"
+                  onChange={(value) => setPasswordForm((p) => ({ ...p, confirmPassword: value }))}
+                  isVisible={showConfirmPassword}
+                  onToggleVisibility={() => setShowConfirmPassword((visible) => !visible)}
                 />
                 {passwordForm.confirmPassword && (
                   <p
@@ -823,7 +868,8 @@ export default function Admin() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-2 font-medium text-white"
+                  disabled={!passwordRequirements.every((requirement) => requirement.valid)}
+                  className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-2 font-medium text-white transition enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Simpan
                 </button>
