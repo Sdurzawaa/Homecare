@@ -5,7 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
-  type Ref,
+  type RefObject,
 } from "react";
 import { motion } from "framer-motion";
 import Modal from "./Modal";
@@ -148,7 +148,7 @@ const DEFAULT_TREATMENTS: Treatment[] = [
 ];
 
 interface PricingProps {
-  pricingRef?: Ref<HTMLElement | null>;
+  pricingRef?: RefObject<HTMLElement | null>;
 }
 
 const CATEGORY_ORDER = Object.keys(categoryInfo) as ServiceCategory[];
@@ -519,6 +519,22 @@ function Pricing({ pricingRef }: PricingProps) {
     const controller = new AbortController();
     fetchPricing(controller.signal);
   }, [searchQuery, selectedCategory]);
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (page === currentPage || page < 1 || page > totalPages) return;
+
+      setCurrentPage(page);
+      requestAnimationFrame(() => {
+        const section = pricingRef?.current;
+        if (!section) return;
+
+        const headerHeight = 76;
+        const top = section.getBoundingClientRect().top + window.scrollY - headerHeight;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      });
+    },
+    [currentPage, pricingRef, totalPages],
+  );
 
   const activeInfo =
     selectedCategory === "Semua"
@@ -689,7 +705,7 @@ function Pricing({ pricingRef }: PricingProps) {
             >
               <button
                 type="button"
-                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -701,7 +717,7 @@ function Pricing({ pricingRef }: PricingProps) {
                   <button
                     key={page}
                     type="button"
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => handlePageChange(page)}
                     aria-current={currentPage === page ? "page" : undefined}
                     className={`h-9 min-w-9 rounded-full px-3 text-sm font-semibold transition-colors ${
                       currentPage === page
@@ -716,9 +732,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
               <button
                 type="button"
-                onClick={() =>
-                  setCurrentPage((page) => Math.min(totalPages, page + 1))
-                }
+                onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
               >
