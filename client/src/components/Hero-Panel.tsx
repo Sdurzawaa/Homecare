@@ -128,7 +128,7 @@ function Hero({ heroRef, content }: HeroProps) {
           </div>
 
           {/* Right Column: Image */}
-          <div className="order-1 lg:order-2 relative animate-fade-in-scale" style={{ animationDelay: "0.5s" }}>
+          <div className="order-1 lg:order-2 relative">
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-[var(--pine-deep,#772635)]/10 rounded-full blur-3xl -z-10"></div>
             <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[var(--pine-deep,#772635)]/10 rounded-full blur-3xl -z-10"></div>
 
@@ -181,16 +181,12 @@ function Hero({ heroRef, content }: HeroProps) {
         </div>
       </div>
 
-      {/* Keyframes untuk animate-fade-in-up, animate-fade-in-scale, dan animate-bounce-subtle
+      {/* Keyframes untuk animate-fade-in-up dan animate-bounce-subtle
          (animate-bounce-subtle dipakai di Floating Info Card supaya melayang halus) */}
       <style>{`
         @keyframes fadeInUp {
           0% { opacity: 0; transform: translateY(30px); }
           100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInScale {
-          0% { opacity: 0; transform: scale(0.95); }
-          100% { opacity: 1; transform: scale(1); }
         }
         @keyframes bounceSubtle {
           0%, 100% { transform: translateY(0); }
@@ -198,12 +194,6 @@ function Hero({ heroRef, content }: HeroProps) {
         }
         .animate-fade-in-up {
           animation: fadeInUp 0.8s ease-out both;
-          will-change: opacity, transform;
-          backface-visibility: hidden;
-          transform: translateZ(0);
-        }
-        .animate-fade-in-scale {
-          animation: fadeInScale 0.8s ease-out both;
           will-change: opacity, transform;
           backface-visibility: hidden;
           transform: translateZ(0);
