@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import Hero from "./Hero-Panel";
-import Achievements from "./Achievement";
-import Contact from "./Contact";
-import Footer from "./ui/Footer";
+import Hero from "../Hero-Panel";
+import Achievements from "../Achievement";
+import Contact from "../Contact";
+import Footer from "../ui/Footer";
 import AdminLoginForm from "./AdminLoginForm";
 import PasswordInput from "./PasswordInput";
 

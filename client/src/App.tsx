@@ -8,7 +8,7 @@ import Testimonials from "./components/Testimonials";
 import Pricing from "./components/Pricing";
 
 import Contact from "./components/Contact";
-import Admin from "./components/Admin";
+import Admin from "./components/admin/Admin";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
 
 const defaultSections = {
