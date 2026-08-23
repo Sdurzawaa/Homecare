@@ -15,18 +15,32 @@ export const useScrollAnimation = <T extends HTMLElement = HTMLElement>(options:
   };
 
   useEffect(() => {
+    const element = elementRef.current;
+    if (!element) return;
+
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+    const showElement = () => {
+      element.classList.add('scroll-animated');
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
+
+    if (typeof IntersectionObserver === 'undefined') {
+      showElement();
+      return;
+    }
+
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('scroll-animated');
+        showElement();
         observer.unobserve(entry.target);
       }
     }, observerOptions);
 
-    if (elementRef.current) {
-      observer.observe(elementRef.current);
-    }
+    observer.observe(element);
+    fallbackTimer = setTimeout(showElement, 2500);
 
     return () => {
+      if (fallbackTimer) clearTimeout(fallbackTimer);
       observer.disconnect();
     };
   }, [observerOptions.threshold, observerOptions.rootMargin, observerOptions.root]);
