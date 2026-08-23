@@ -100,6 +100,24 @@ export default function Admin() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
   const [passwordError, setPasswordError] = useState("");
+  const passwordRequirements = [
+    {
+      label: "Minimal 12 karakter",
+      valid: passwordForm.newPassword.length >= 12,
+    },
+    {
+      label: "Mengandung huruf besar (A-Z)",
+      valid: /[A-Z]/.test(passwordForm.newPassword),
+    },
+    {
+      label: "Mengandung huruf kecil (a-z)",
+      valid: /[a-z]/.test(passwordForm.newPassword),
+    },
+    {
+      label: "Mengandung angka (0-9)",
+      valid: /[0-9]/.test(passwordForm.newPassword),
+    },
+  ];
   const [showPreview, setShowPreview] = useState(true);
   const [successModal, setSuccessModal] = useState<{ title: string; message: string } | null>(null);
   const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null);
@@ -556,8 +574,13 @@ export default function Admin() {
       return;
     }
 
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError("Password minimal 6 karakter");
+    if (
+      passwordForm.newPassword.length < 12 ||
+      !/[A-Z]/.test(passwordForm.newPassword) ||
+      !/[a-z]/.test(passwordForm.newPassword) ||
+      !/[0-9]/.test(passwordForm.newPassword)
+    ) {
+      setPasswordError("Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka");
       return;
     }
 
@@ -565,7 +588,10 @@ export default function Admin() {
       const response = await request("/api/admin/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(passwordForm),
+        body: JSON.stringify({
+          newPassword: passwordForm.newPassword,
+          confirmPassword: passwordForm.confirmPassword,
+        }),
       });
 
       const data = await response.json();
@@ -737,20 +763,52 @@ export default function Admin() {
                 <label className="mb-1 block text-sm font-medium text-slate-700">Password Baru</label>
                 <input
                   type="password"
+                  name="newPassword"
+                  autoComplete="new-password"
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2"
                 />
+                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Syarat password
+                  </p>
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    {passwordRequirements.map((requirement) => (
+                      <p
+                        key={requirement.label}
+                        className={`text-xs ${requirement.valid ? "text-emerald-600" : "text-rose-500"}`}
+                      >
+                        <span className="mr-1 font-bold">{requirement.valid ? "✓" : "•"}</span>
+                        {requirement.label}
+                      </p>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-sky-700">
+                    Simbol diperbolehkan, misalnya: ! @ # $
+                  </p>
+                </div>
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Konfirmasi Password</label>
                 <input
                   type="password"
+                  name="confirmPassword"
+                  autoComplete="new-password"
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2"
                 />
+                {passwordForm.confirmPassword && (
+                  <p
+                    className={`mt-1 text-xs ${passwordForm.newPassword === passwordForm.confirmPassword ? "text-emerald-600" : "text-rose-500"}`}
+                  >
+                    {passwordForm.newPassword === passwordForm.confirmPassword
+                      ? "Konfirmasi password cocok"
+                      : "Konfirmasi password belum cocok"}
+                  </p>
+                )}
               </div>
 
               {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}

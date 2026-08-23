@@ -3,6 +3,11 @@ export function resolveSchemaName(schemaName) {
   return value || "public";
 }
 
+const needsQuote = (value) => !/^[a-z_][a-z0-9_]*$/.test(String(value));
+const quote = (value) => `"${String(value).replace(/"/g, '""')}"`;
+const quoteIfNeeded = (value) =>
+  needsQuote(value) ? quote(value) : String(value);
+
 export function buildSearchPath(schemaName) {
   const resolved = resolveSchemaName(schemaName);
 
@@ -10,13 +15,11 @@ export function buildSearchPath(schemaName) {
     return "public";
   }
 
-  const needsQuote = (s) => !/^[a-z_][a-z0-9_]*$/.test(String(s));
-  const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
-  return `${needsQuote(resolved) ? quote(resolved) : resolved},public`;
+  return `${quoteIfNeeded(resolved)},public`;
 }
 
 export function quoteIdent(name) {
-  return `"${String(name).replace(/"/g, '""')}"`;
+  return quote(name);
 }
 
 export function withSchema(tableName, schemaName) {
@@ -29,10 +32,8 @@ export function withSchema(tableName, schemaName) {
   if (trimmed.includes(".")) return trimmed;
 
   const resolved = resolveSchemaName(schemaName);
-  const needsQuote = (s) => !/^[a-z_][a-z0-9_]*$/.test(String(s));
-  const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
-  const left = needsQuote(resolved) ? quote(resolved) : resolved;
-  const right = needsQuote(trimmed) ? quote(trimmed) : trimmed;
+  const left = quoteIfNeeded(resolved);
+  const right = quoteIfNeeded(trimmed);
   return `${left}.${right}`;
 }
 
@@ -47,4 +48,22 @@ export function normalizeApiKey(headers = {}) {
 export function normalizeAdminUsername(username) {
   if (typeof username !== "string") return "";
   return username.trim().toLowerCase();
+}
+
+export function isValidAdminUsername(username) {
+  return (
+    typeof username === "string" &&
+    username.trim() !== "" &&
+    /^[A-Za-z0-9_-]+$/.test(username.trim())
+  );
+}
+
+export function isValidAdminPassword(password) {
+  return (
+    typeof password === "string" &&
+    password.length >= 12 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password)
+  );
 }

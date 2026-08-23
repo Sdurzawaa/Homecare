@@ -13,6 +13,8 @@ import bcrypt from "bcryptjs";
 import cookieParser from "cookie-parser";
 import pool from "./db.js";
 import {
+  isValidAdminPassword,
+  isValidAdminUsername,
   normalizeAdminUsername,
   quoteIdent,
   resolveSchemaName,
@@ -34,8 +36,6 @@ const requiredProductionSecrets = [
   "ADMIN_SESSION_SECRET",
   "ADMIN_JWT_SECRET",
   "ADMIN_API_KEY",
-  "ADMIN_USERNAME",
-  "ADMIN_PASSWORD",
 ];
 
 if (
@@ -61,14 +61,17 @@ const table = (name) => {
 const adminSessionSecret = process.env.ADMIN_SESSION_SECRET;
 const adminJwtSecret = process.env.ADMIN_JWT_SECRET;
 
-let adminUsername = normalizeAdminUsername(
-  process.env.ADMIN_USERNAME || "admin",
-);
-let adminPassword = process.env.ADMIN_PASSWORD?.trim();
+const adminUsername = normalizeAdminUsername(process.env.ADMIN_USERNAME);
+const adminPassword = process.env.ADMIN_PASSWORD;
 
-if (!adminSessionSecret || !adminJwtSecret || !adminPassword) {
+if (
+  !adminSessionSecret ||
+  !adminJwtSecret ||
+  !isValidAdminUsername(adminUsername) ||
+  !isValidAdminPassword(adminPassword)
+) {
   throw new Error(
-    "ADMIN_SESSION_SECRET, ADMIN_JWT_SECRET, and ADMIN_PASSWORD are required",
+    "ADMIN_USERNAME must contain only letters, numbers, underscores, or dashes; ADMIN_PASSWORD must be at least 12 characters with uppercase, lowercase, and a number; ADMIN_SESSION_SECRET and ADMIN_JWT_SECRET are also required",
   );
 }
 const createAdminJwt = (username = adminUsername) =>
@@ -99,13 +102,6 @@ const verifyAdminCredentials = async (username, password) => {
 
   if (!normalizedUsername || !normalizedPassword) {
     return { valid: false, username: null };
-  }
-
-  if (
-    normalizedUsername === adminUsername &&
-    normalizedPassword === adminPassword
-  ) {
-    return { valid: true, username: adminUsername };
   }
 
   try {
@@ -787,8 +783,11 @@ app.post("/api/admin/create-user", requireAdminAuth, async (req, res) => {
     return res.status(400).json({ error: "Username tidak boleh kosong" });
   }
 
-  if (!password || typeof password !== "string" || password.length < 6) {
-    return res.status(400).json({ error: "Password minimal 6 karakter" });
+  if (!isValidAdminPassword(password)) {
+    return res.status(400).json({
+      error:
+        "Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka",
+    });
   }
 
   const trimmedUsername = normalizeAdminUsername(username);
@@ -1366,12 +1365,15 @@ app.post("/api/admin/change-password", requireAdminAuth, async (req, res) => {
     return res.status(400).json({ error: "Password tidak cocok" });
   }
 
-  if (newPassword.length < 6) {
-    return res.status(400).json({ error: "Password minimal 6 karakter" });
+  if (!isValidAdminPassword(newPassword)) {
+    return res.status(400).json({
+      error:
+        "Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka",
+    });
   }
 
   try {
-    const password = newPassword.trim();
+    const password = newPassword;
     const passwordHash = await bcrypt.hash(password, 10);
     const username = req.adminUser.username;
 
@@ -1380,10 +1382,6 @@ app.post("/api/admin/change-password", requireAdminAuth, async (req, res) => {
        WHERE LOWER(username) = LOWER($2)`,
       [passwordHash, username],
     );
-
-    if (normalizeAdminUsername(username) === adminUsername) {
-      adminPassword = password;
-    }
 
     const currentToken =
       resolveBearerToken(req) || req.cookies?.admin_auth_token || "";

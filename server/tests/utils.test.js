@@ -3,11 +3,30 @@ import assert from "node:assert/strict";
 
 import {
   buildSearchPath,
+  isValidAdminPassword,
+  isValidAdminUsername,
   normalizeAdminUsername,
   normalizeApiKey,
   resolveSchemaName,
   withSchema,
 } from "../utils.js";
+
+test("admin usernames accept practical identifier characters", () => {
+  assert.equal(isValidAdminUsername("Admin_123"), true);
+  assert.equal(isValidAdminUsername("Admin-123"), true);
+  assert.equal(isValidAdminUsername("   "), false);
+  assert.equal(isValidAdminUsername("Admin 123"), false);
+  assert.equal(isValidAdminUsername(123), false);
+});
+
+test("admin passwords require complexity and allow symbols", () => {
+  assert.equal(isValidAdminPassword("AdminPassword1!"), true);
+  assert.equal(isValidAdminPassword("Secure Pass1#"), true);
+  assert.equal(isValidAdminPassword("adminpassword1!"), false);
+  assert.equal(isValidAdminPassword("ADMINPASSWORD1!"), false);
+  assert.equal(isValidAdminPassword("AdminPass!!"), false);
+  assert.equal(isValidAdminPassword(12345678), false);
+});
 
 test("resolveSchemaName prefers configured schema and falls back to public", () => {
   assert.equal(resolveSchemaName("website_co"), "website_co");
