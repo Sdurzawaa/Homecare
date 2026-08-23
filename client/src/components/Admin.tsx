@@ -618,7 +618,11 @@ export default function Admin() {
 
       setShowPasswordForm(false);
       setPasswordForm({ newPassword: "", confirmPassword: "" });
-      openSuccessModal("Password berhasil diubah", "Password admin telah diperbarui.");
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      setAdminUsername("");
+      setIsAuthenticated(false);
+      setLoginError("Password berhasil diubah. Silakan login kembali dengan password baru.");
     } catch (error: any) {
       setPasswordError(error.message || "Gagal mengubah password");
     }

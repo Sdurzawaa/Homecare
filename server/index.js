@@ -1383,16 +1383,17 @@ app.post("/api/admin/change-password", requireAdminAuth, async (req, res) => {
       [passwordHash, username],
     );
 
-    const currentToken =
-      resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
     await pool.query(
       `DELETE FROM ${table("admin_sessions")}
-       WHERE LOWER(username) = LOWER($1) AND token <> $2`,
-      [username, currentToken],
+       WHERE LOWER(username) = LOWER($1)`,
+      [username],
     );
 
+    res.clearCookie("admin_session_id", { path: "/" });
+    res.clearCookie("admin_auth_token", { path: "/" });
+
     return res.json({
-      message: "Password berhasil diubah",
+      message: "Password berhasil diubah. Silakan login kembali.",
     });
   } catch (error) {
     console.error("POST /api/admin/change-password error", error);
