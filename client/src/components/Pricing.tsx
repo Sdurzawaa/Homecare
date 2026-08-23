@@ -541,6 +541,49 @@ function Pricing({ pricingRef }: PricingProps) {
       ? undefined
       : categoryInfo[selectedCategory as ServiceCategory];
 
+  const paginationControls = totalPages > 1 && (
+    <nav
+      className="mt-6 flex flex-wrap items-center justify-center gap-2"
+      aria-label="Navigasi halaman layanan"
+    >
+      <button
+        type="button"
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Sebelumnya
+      </button>
+
+      {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+        (page) => (
+          <button
+            key={page}
+            type="button"
+            onClick={() => handlePageChange(page)}
+            aria-current={currentPage === page ? "page" : undefined}
+            className={`h-9 min-w-9 rounded-full px-3 text-sm font-semibold transition-colors ${
+              currentPage === page
+                ? "bg-[var(--pine)] text-white shadow-sm"
+                : "text-[var(--ink-soft)] hover:bg-[var(--bg-alt)] hover:text-[var(--pine)]"
+            }`}
+          >
+            {page}
+          </button>
+        ),
+      )}
+
+      <button
+        type="button"
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Berikutnya
+      </button>
+    </nav>
+  );
+
   return (
     <section
       className="mx-auto max-w-[1240px] px-[clamp(1.5rem,5vw,4rem)] py-[4.5rem]"
@@ -664,6 +707,7 @@ function Pricing({ pricingRef }: PricingProps) {
               {searchQuery ? ` untuk "${searchQuery}"` : ""}.
             </p>
           )}
+          {paginationControls}
         </div>
       )}
 
@@ -697,49 +741,6 @@ function Pricing({ pricingRef }: PricingProps) {
             />
           ))}
           </div>
-
-          {totalPages > 1 && (
-            <nav
-              className="mt-10 flex flex-wrap items-center justify-center gap-2"
-              aria-label="Navigasi halaman layanan"
-            >
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Sebelumnya
-              </button>
-
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    onClick={() => handlePageChange(page)}
-                    aria-current={currentPage === page ? "page" : undefined}
-                    className={`h-9 min-w-9 rounded-full px-3 text-sm font-semibold transition-colors ${
-                      currentPage === page
-                        ? "bg-[var(--pine)] text-white shadow-sm"
-                        : "text-[var(--ink-soft)] hover:bg-[var(--bg-alt)] hover:text-[var(--pine)]"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ),
-              )}
-
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] transition hover:border-[var(--pine)] hover:text-[var(--pine)] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Berikutnya
-              </button>
-            </nav>
-          )}
         </>
       )}
 
