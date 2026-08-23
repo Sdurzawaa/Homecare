@@ -139,7 +139,12 @@ function Hero({ heroRef, content }: HeroProps) {
               >
                 <img
                   alt="Bidan Profesional Homecare"
-                  className="h-auto w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  width="911"
+                  height="1024"
+                  fetchPriority="high"
+                  loading="eager"
+                  decoding="async"
+                  className="aspect-[911/1024] h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   src={heroContent.image || "/Person.jpg"}
                 />
               </div>
