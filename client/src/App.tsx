@@ -58,6 +58,7 @@ function App() {
   const isAdminPath = pathname === "/admin" || pathname === "/admin/";
   const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath;
   const [siteSections, setSiteSections] = useState(defaultSections);
+  const [siteSectionsReady, setSiteSectionsReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined" || isAdminPath) return;
@@ -83,6 +84,9 @@ function App() {
       .catch((error) => {
         if (error.name !== "AbortError") return undefined;
         return undefined;
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setSiteSectionsReady(true);
       });
 
     return () => controller.abort();
@@ -120,6 +124,18 @@ function App() {
   const achievementsCard1 = useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
   const achievementsCard2 = useScrollAnimation<HTMLDivElement>({ threshold: 0.6 });
   const achievementsCard3 = useScrollAnimation<HTMLDivElement>({ threshold: 1 });
+
+  if (!siteSectionsReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+        <div
+          className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--line)] border-t-[var(--pine)]"
+          role="status"
+          aria-label="Memuat halaman"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell">
