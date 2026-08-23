@@ -383,10 +383,8 @@ export function AnimatedNavFramer() {
     setExpanded(false);
     setLockedOpen(false); // Hilangkan kunci saat navigasi link diklik
 
-    // Membuka kunci body scroll butuh sedikit waktu sebelum browser memproses smooth scroll
-    setTimeout(() => {
-      scrollToSection(href);
-    }, 180);
+    // Mulai scroll segera setelah menu ditutup agar navigasi terasa responsif.
+    requestAnimationFrame(() => scrollToSection(href));
   };
 
   // Klik item di dropdown "Layanan": scroll ke section Pricing DAN kirim

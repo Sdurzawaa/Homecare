@@ -303,8 +303,8 @@ const TreatmentCard = memo(function TreatmentCard({
 });
 
 function Pricing({ pricingRef }: PricingProps) {
-  const [treatments, setTreatments] = useState<Treatment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [treatments, setTreatments] = useState<Treatment[]>(DEFAULT_TREATMENTS);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -373,7 +373,7 @@ function Pricing({ pricingRef }: PricingProps) {
   }, [tabsEl]);
 
   const fetchPricing = async (signal: AbortSignal) => {
-    setLoading(true);
+    setLoading(treatments.length === 0);
     setError(null);
     try {
       let url = `${API_URL}/api/public/pricing`;
