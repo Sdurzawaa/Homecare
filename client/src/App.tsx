@@ -1,15 +1,15 @@
 import "./App.css";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { AnimatedNavFramer } from "@/components/ui/navigation-menu";
 import Footer from "@/components/ui/Footer";
 import Hero from "./components/Hero-Panel";
 import Achievements from "./components/Achievement";
-import Testimonials from "./components/Testimonials";
-import Pricing from "./components/Pricing";
-
-import Contact from "./components/Contact";
 import Admin from "./components/admin/Admin";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
+
+const Pricing = lazy(() => import("./components/Pricing"));
+const Testimonials = lazy(() => import("./components/Testimonials"));
+const Contact = lazy(() => import("./components/Contact"));
 
 const defaultSections = {
   hero: {
@@ -144,7 +144,9 @@ function App() {
         {/* Hero Section */}
         <Hero heroRef={heroRef} content={siteSections.hero} />
         {/* Pricing Section */}
-        <Pricing pricingRef={pricingRef} />
+        <Suspense fallback={<div className="h-[28rem] w-full" aria-hidden="true" />}>
+          <Pricing pricingRef={pricingRef} />
+        </Suspense>
         {/* Achievements Section */}
         <Achievements
           achievementsRef={achievementsRef}
@@ -154,10 +156,14 @@ function App() {
           content={siteSections.about}
         />
         {/* Testimonials Section */}
-        <Testimonials testimonialsRef={testimonialsRef} />
+        <Suspense fallback={<div className="h-[24rem] w-full" aria-hidden="true" />}>
+          <Testimonials testimonialsRef={testimonialsRef} />
+        </Suspense>
 
         {/* Contact Section */}
-        <Contact contactRef={contactRef} content={siteSections.contact} />
+        <Suspense fallback={<div className="h-[28rem] w-full" aria-hidden="true" />}>
+          <Contact contactRef={contactRef} content={siteSections.contact} />
+        </Suspense>
       </main>
 
       <Footer content={siteSections.footer} />
