@@ -103,7 +103,12 @@ export default function Admin() {
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
@@ -198,6 +203,18 @@ export default function Admin() {
 
   const request = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
+    const method = (options.method || "GET").toUpperCase();
+
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      const csrfCookie = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("csrf_token="));
+      const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split("=")[1] || "") : "";
+
+      if (csrfToken) {
+        headers.set("X-CSRF-Token", csrfToken);
+      }
+    }
 
     const response = await fetch(url, {
       ...options,
@@ -216,9 +233,17 @@ export default function Admin() {
   const logout = async (skipServerLogout = false) => {
     if (!skipServerLogout && isAuthenticated) {
       try {
+        const csrfCookie = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("csrf_token="));
+        const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split("=")[1] || "") : "";
+
         await fetch("/api/admin/logout", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+          },
           credentials: "include",
         });
       } catch (error) {
@@ -303,6 +328,10 @@ export default function Admin() {
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data?.error || "Login gagal");
+      }
+
+      if (data?.csrfToken) {
+        document.cookie = `csrf_token=${encodeURIComponent(data.csrfToken)}; path=/; SameSite=Lax; Secure`;
       }
 
       setAdminUsername(data?.user || loginForm.username);
@@ -609,6 +638,7 @@ export default function Admin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword,
           confirmPassword: passwordForm.confirmPassword,
         }),
@@ -620,7 +650,8 @@ export default function Admin() {
       }
 
       setShowPasswordForm(false);
-      setPasswordForm({ newPassword: "", confirmPassword: "" });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setShowCurrentPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
       setAdminUsername("");
@@ -765,6 +796,17 @@ export default function Admin() {
             <h2 className="mb-4 text-xl font-semibold text-slate-900">Ubah Password</h2>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Password Lama</label>
+                <PasswordInput
+                  name="currentPassword"
+                  value={passwordForm.currentPassword}
+                  onChange={(value) => setPasswordForm((p) => ({ ...p, currentPassword: value }))}
+                  isVisible={showCurrentPassword}
+                  onToggleVisibility={() => setShowCurrentPassword((visible) => !visible)}
+                />
+              </div>
+
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Password Baru</label>
                 <PasswordInput

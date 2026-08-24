@@ -12,6 +12,7 @@ import multer from "multer";
 import bcrypt from "bcryptjs";
 import cookieParser from "cookie-parser";
 import pool from "./db.js";
+import { createCsrfToken, validateCsrfToken } from "./csrf.js";
 import {
   isValidAdminPassword,
   isValidAdminUsername,
@@ -28,15 +29,19 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
-app.set("trust proxy", process.env.TRUST_PROXY === "true");
+const resolveTrustProxy = () => {
+  const raw = process.env.TRUST_PROXY;
+  if (raw === undefined || raw === "") return 1;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  if (/^\d+$/.test(raw)) return Number(raw);
+  return 1;
+};
+app.set("trust proxy", resolveTrustProxy());
 const isProduction =
   process.env.NODE_ENV === "production" ||
   ["preview", "production"].includes(process.env.VERCEL_ENV);
-const requiredProductionSecrets = [
-  "ADMIN_SESSION_SECRET",
-  "ADMIN_JWT_SECRET",
-  "ADMIN_API_KEY",
-];
+const requiredProductionSecrets = ["ADMIN_SESSION_SECRET", "ADMIN_JWT_SECRET"];
 
 if (
   isProduction &&
@@ -464,6 +469,71 @@ const loginLimiter = rateLimit({
   message: { error: "Terlalu banyak percobaan login. Coba lagi nanti." },
 });
 
+const failedLoginAttempts = new Map();
+const failedLoginWindowMs = 15 * 60 * 1000;
+const failedLoginBlockMs = 5 * 60 * 1000;
+
+const getFailedLoginKey = (username) => normalizeAdminUsername(username) || "";
+
+const cleanupFailedLogins = () => {
+  const now = Date.now();
+  for (const [key, value] of failedLoginAttempts.entries()) {
+    if (now - value.firstAttempt > failedLoginWindowMs) {
+      failedLoginAttempts.delete(key);
+    }
+  }
+};
+
+setInterval(cleanupFailedLogins, 60 * 1000);
+
+const isUsernameLoginBlocked = (username) => {
+  const key = getFailedLoginKey(username);
+  if (!key) return false;
+
+  const entry = failedLoginAttempts.get(key);
+  if (!entry) return false;
+
+  const now = Date.now();
+  if (now - entry.firstAttempt > failedLoginWindowMs) {
+    failedLoginAttempts.delete(key);
+    return false;
+  }
+
+  if (entry.count >= 5 && now - entry.lastAttempt < failedLoginBlockMs) {
+    return true;
+  }
+
+  return false;
+};
+
+const recordFailedLogin = (username) => {
+  const key = getFailedLoginKey(username);
+  if (!key) return;
+
+  const now = Date.now();
+  const existing = failedLoginAttempts.get(key);
+
+  if (existing) {
+    existing.count += 1;
+    existing.lastAttempt = now;
+    failedLoginAttempts.set(key, existing);
+    return;
+  }
+
+  failedLoginAttempts.set(key, {
+    count: 1,
+    firstAttempt: now,
+    lastAttempt: now,
+  });
+};
+
+const clearFailedLogin = (username) => {
+  const key = getFailedLoginKey(username);
+  if (key) {
+    failedLoginAttempts.delete(key);
+  }
+};
+
 // Helper: Get client IP address
 const getClientIp = (req) => {
   return req.ip || req.socket.remoteAddress || "unknown";
@@ -515,11 +585,20 @@ const createAdminSession = async (username, token, req, res) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
-      maxAge: 12 * 60 * 60 * 1000, // 12 hours
+      maxAge: 12 * 60 * 60 * 1000,
       path: "/",
     });
     res.cookie("admin_auth_token", token, {
       httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 12 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    const csrfToken = createCsrfToken();
+    res.cookie("csrf_token", csrfToken, {
+      httpOnly: false,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
       maxAge: 12 * 60 * 60 * 1000,
@@ -611,19 +690,13 @@ const deleteAdminSession = async (token) => {
 const isObject = (value) =>
   value && typeof value === "object" && !Array.isArray(value);
 
-const resolveBearerToken = (req) => {
-  const auth = req.headers.authorization || "";
-  return auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-};
-
 const requireAdminAuth = async (req, res, next) => {
-  const token = resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
+  const token = req.cookies?.admin_auth_token || "";
 
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // Validate session dari database
   const jwtPayload = await validateAdminSession(token, req);
   if (jwtPayload) {
     req.adminUser = jwtPayload;
@@ -633,6 +706,23 @@ const requireAdminAuth = async (req, res, next) => {
   return res
     .status(401)
     .json({ error: "Unauthorized - Session tidak valid atau sudah berakhir" });
+};
+
+const requireCsrfToken = (req, res, next) => {
+  const method = (req.method || "GET").toUpperCase();
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+    return next();
+  }
+
+  const rawHeader = req.headers["x-csrf-token"];
+  const cookieToken = req.cookies?.csrf_token || "";
+  const headerToken = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader || "";
+
+  if (!validateCsrfToken(cookieToken, headerToken)) {
+    return res.status(403).json({ error: "CSRF token tidak valid" });
+  }
+
+  return next();
 };
 
 const validateNumericIdParam = (req, res, next) => {
@@ -727,18 +817,27 @@ app.get("/health", (req, res) => {
 
 app.post("/api/admin/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
+  const normalizedUsername = normalizeAdminUsername(username);
+
+  if (isUsernameLoginBlocked(normalizedUsername)) {
+    return res.status(429).json({
+      error: "Terlalu banyak percobaan login. Coba lagi nanti.",
+    });
+  }
 
   const credentialResult = await verifyAdminCredentials(username, password);
 
   if (!credentialResult.valid) {
+    recordFailedLogin(normalizedUsername);
     return res.status(401).json({ error: "Username atau password salah" });
   }
 
+  clearFailedLogin(normalizedUsername);
+
   const resolvedUsername = credentialResult.username || adminUsername;
-
   const jwtToken = createAdminJwt(resolvedUsername);
+  const csrfToken = createCsrfToken();
 
-  // Create session di database dengan IP dan device tracking
   const sessionCreated = await createAdminSession(
     resolvedUsername,
     jwtToken,
@@ -752,93 +851,114 @@ app.post("/api/admin/login", loginLimiter, async (req, res) => {
     });
   }
 
+  res.cookie("csrf_token", csrfToken, {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 12 * 60 * 60 * 1000,
+    path: "/",
+  });
+
   return res.json({
     user: resolvedUsername,
     message: "Login berhasil",
+    csrfToken,
   });
 });
 
 // Logout endpoint
-app.post("/api/admin/logout", requireAdminAuth, async (req, res) => {
-  const token = resolveBearerToken(req) || req.cookies?.admin_auth_token || "";
+app.post(
+  "/api/admin/logout",
+  requireAdminAuth,
+  requireCsrfToken,
+  async (req, res) => {
+    const token = req.cookies?.admin_auth_token || "";
 
-  try {
-    await pool.query(
-      `DELETE FROM ${table("admin_sessions")}
+    try {
+      await pool.query(
+        `DELETE FROM ${table("admin_sessions")}
        WHERE token = $1`,
-      [token],
-    );
-  } catch (error) {
-    console.error("Error while logging out admin:", error);
-  }
-
-  // Clear httpOnly cookie
-  res.clearCookie("admin_session_id", {
-    path: "/",
-  });
-  res.clearCookie("admin_auth_token", {
-    path: "/",
-  });
-
-  return res.json({
-    message: "Logout berhasil",
-  });
-});
-
-// Create new admin user endpoint
-app.post("/api/admin/create-user", requireAdminAuth, async (req, res) => {
-  const { username, password } = req.body || {};
-
-  // Validation
-  if (!username || typeof username !== "string" || !username.trim()) {
-    return res.status(400).json({ error: "Username tidak boleh kosong" });
-  }
-
-  if (!isValidAdminPassword(password)) {
-    return res.status(400).json({
-      error:
-        "Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka",
-    });
-  }
-
-  const trimmedUsername = normalizeAdminUsername(username);
-
-  try {
-    // Check if user already exists
-    const existing = await pool.query(
-      `SELECT username FROM ${table("admin_users")} WHERE LOWER(username) = $1 LIMIT 1`,
-      [trimmedUsername],
-    );
-
-    if (existing.rowCount > 0) {
-      return res.status(409).json({ error: "Username sudah terdaftar" });
+        [token],
+      );
+    } catch (error) {
+      console.error("Error while logging out admin:", error);
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
+    res.clearCookie("admin_session_id", {
+      path: "/",
+    });
+    res.clearCookie("admin_auth_token", {
+      path: "/",
+    });
+    res.clearCookie("csrf_token", {
+      path: "/",
+    });
 
-    // Insert new user
-    const result = await pool.query(
-      `INSERT INTO ${table("admin_users")} (username, password_hash)
+    return res.json({
+      message: "Logout berhasil",
+    });
+  },
+);
+
+// Create new admin user endpoint
+app.post(
+  "/api/admin/create-user",
+  requireAdminAuth,
+  requireCsrfToken,
+  async (req, res) => {
+    const { username, password } = req.body || {};
+
+    // Validation
+    if (!username || typeof username !== "string" || !username.trim()) {
+      return res.status(400).json({ error: "Username tidak boleh kosong" });
+    }
+
+    if (!isValidAdminPassword(password)) {
+      return res.status(400).json({
+        error:
+          "Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka",
+      });
+    }
+
+    const trimmedUsername = normalizeAdminUsername(username);
+
+    try {
+      // Check if user already exists
+      const existing = await pool.query(
+        `SELECT username FROM ${table("admin_users")} WHERE LOWER(username) = $1 LIMIT 1`,
+        [trimmedUsername],
+      );
+
+      if (existing.rowCount > 0) {
+        return res.status(409).json({ error: "Username sudah terdaftar" });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Insert new user
+      const result = await pool.query(
+        `INSERT INTO ${table("admin_users")} (username, password_hash)
        VALUES ($1, $2)
        RETURNING username, created_at`,
-      [trimmedUsername, passwordHash],
-    );
+        [trimmedUsername, passwordHash],
+      );
 
-    const newUser = result.rows[0];
+      const newUser = result.rows[0];
 
-    return res.status(201).json({
-      message: "User berhasil ditambahkan",
-      user: {
-        username: newUser.username,
-        created_at: newUser.created_at,
-      },
-    });
-  } catch (error) {
-    console.error("Error creating user:", error);
-    return res.status(500).json({ error: "Gagal membuat user" });
-  }
-});
+      return res.status(201).json({
+        message: "User berhasil ditambahkan",
+        user: {
+          username: newUser.username,
+          created_at: newUser.created_at,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      return res.status(500).json({ error: "Gagal membuat user" });
+    }
+  },
+);
 
 app.get("/api/public/site-sections", async (req, res) => {
   try {
@@ -875,6 +995,7 @@ app.get("/api/admin/site-sections", requireAdminAuth, async (req, res) => {
 app.put(
   "/api/admin/site-sections/:sectionKey",
   requireAdminAuth,
+  requireCsrfToken,
   async (req, res) => {
     const { sectionKey } = req.params;
 
@@ -1015,6 +1136,7 @@ app.get(
 app.post(
   "/api/testimoni",
   requireAdminAuth,
+  requireCsrfToken,
   validateTestimoniPayload,
   async (req, res) => {
     const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
@@ -1043,6 +1165,7 @@ app.post(
 app.put(
   "/api/testimoni/:id_testi",
   requireAdminAuth,
+  requireCsrfToken,
   validateNumericIdParam,
   validateTestimoniPayload,
   async (req, res) => {
@@ -1078,6 +1201,7 @@ app.put(
 app.delete(
   "/api/testimoni/:id_testi",
   requireAdminAuth,
+  requireCsrfToken,
   validateNumericIdParam,
   async (req, res) => {
     const { id_testi } = req.params;
@@ -1253,6 +1377,7 @@ app.get(
 app.post(
   "/api/pricing",
   requireAdminAuth,
+  requireCsrfToken,
   validatePricingPayload,
   async (req, res) => {
     const {
@@ -1283,6 +1408,7 @@ app.post(
 app.put(
   "/api/pricing/:id",
   requireAdminAuth,
+  requireCsrfToken,
   validateNumericIdParam,
   validatePricingPayload,
   async (req, res) => {
@@ -1325,6 +1451,7 @@ app.put(
 app.delete(
   "/api/pricing/:id",
   requireAdminAuth,
+  requireCsrfToken,
   validateNumericIdParam,
   async (req, res) => {
     const { id } = req.params;
@@ -1348,6 +1475,7 @@ app.delete(
 app.post(
   "/api/admin/upload",
   requireAdminAuth,
+  requireCsrfToken,
   upload.single("file"),
   (req, res) => {
     if (!req.file) {
@@ -1360,57 +1488,84 @@ app.post(
 );
 
 // Change password endpoint
-app.post("/api/admin/change-password", requireAdminAuth, async (req, res) => {
-  const { newPassword, confirmPassword } = req.body || {};
+app.post(
+  "/api/admin/change-password",
+  requireAdminAuth,
+  requireCsrfToken,
+  async (req, res) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body || {};
 
-  if (
-    typeof newPassword !== "string" ||
-    typeof confirmPassword !== "string" ||
-    newPassword.trim() === "" ||
-    confirmPassword.trim() === ""
-  ) {
-    return res.status(400).json({ error: "Password tidak valid" });
-  }
+    if (
+      typeof currentPassword !== "string" ||
+      currentPassword.trim() === "" ||
+      typeof newPassword !== "string" ||
+      typeof confirmPassword !== "string" ||
+      newPassword.trim() === "" ||
+      confirmPassword.trim() === ""
+    ) {
+      return res.status(400).json({ error: "Password tidak valid" });
+    }
 
-  if (newPassword !== confirmPassword) {
-    return res.status(400).json({ error: "Password tidak cocok" });
-  }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: "Password tidak cocok" });
+    }
 
-  if (!isValidAdminPassword(newPassword)) {
-    return res.status(400).json({
-      error:
-        "Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka",
-    });
-  }
+    if (!isValidAdminPassword(newPassword)) {
+      return res.status(400).json({
+        error:
+          "Password minimal 12 karakter dan harus mengandung huruf besar, huruf kecil, serta angka",
+      });
+    }
 
-  try {
-    const password = newPassword;
-    const passwordHash = await bcrypt.hash(password, 10);
-    const username = req.adminUser.username;
+    try {
+      const username = req.adminUser.username;
+      const userResult = await pool.query(
+        `SELECT password_hash FROM ${table("admin_users")}
+         WHERE LOWER(username) = LOWER($1) LIMIT 1`,
+        [username],
+      );
 
-    await pool.query(
-      `UPDATE ${table("admin_users")} SET password_hash = $1, updated_at = NOW()
-       WHERE LOWER(username) = LOWER($2)`,
-      [passwordHash, username],
-    );
+      const savedHash = userResult.rows[0]?.password_hash;
+      if (!savedHash) {
+        return res.status(401).json({ error: "Password lama tidak valid" });
+      }
 
-    await pool.query(
-      `DELETE FROM ${table("admin_sessions")}
-       WHERE LOWER(username) = LOWER($1)`,
-      [username],
-    );
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        savedHash,
+      );
 
-    res.clearCookie("admin_session_id", { path: "/" });
-    res.clearCookie("admin_auth_token", { path: "/" });
+      if (!isCurrentPasswordValid) {
+        return res.status(401).json({ error: "Password lama tidak sesuai" });
+      }
 
-    return res.json({
-      message: "Password berhasil diubah. Silakan login kembali.",
-    });
-  } catch (error) {
-    console.error("POST /api/admin/change-password error", error);
-    return res.status(500).json({ error: "Gagal mengubah password" });
-  }
-});
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+
+      await pool.query(
+        `UPDATE ${table("admin_users")} SET password_hash = $1, updated_at = NOW()
+         WHERE LOWER(username) = LOWER($2)`,
+        [passwordHash, username],
+      );
+
+      await pool.query(
+        `DELETE FROM ${table("admin_sessions")}
+         WHERE LOWER(username) = LOWER($1)`,
+        [username],
+      );
+
+      res.clearCookie("admin_session_id", { path: "/" });
+      res.clearCookie("admin_auth_token", { path: "/" });
+      res.clearCookie("csrf_token", { path: "/" });
+
+      return res.json({
+        message: "Password berhasil diubah. Silakan login kembali.",
+      });
+    } catch (error) {
+      console.error("POST /api/admin/change-password error", error);
+      return res.status(500).json({ error: "Gagal mengubah password" });
+    }
+  },
+);
 
 // Get admin info
 app.get("/api/admin/info", requireAdminAuth, async (req, res) => {
