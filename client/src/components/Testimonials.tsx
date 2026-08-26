@@ -38,7 +38,7 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
 
 // Semakin kecil angkanya, semakin cepat marquee berjalan.
 const MARQUEE_DURATION_SECONDS = 10;
-const MARQUEE_COLUMN_OFFSETS = [0, 4, 2];
+const MARQUEE_ROW_OFFSETS = [0, 4];
 
 function StarRow() {
   return (
@@ -81,19 +81,21 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   );
 }
 
-function TestimonialColumn({
+function TestimonialRow({
   items,
   duration,
+  reverse = false,
   className = "",
 }: {
   items: Testimonial[];
   duration: number;
+  reverse?: boolean;
   className?: string;
 }) {
   return (
-    <div className={`group h-full overflow-hidden ${className}`}>
+    <div className={`group w-full overflow-hidden ${className}`}>
       <ul
-        className="testimonial-track m-0 flex list-none flex-col gap-6 p-0 pb-6 group-hover:[animation-play-state:paused]"
+        className={`testimonial-track m-0 flex w-max list-none gap-6 p-0 group-hover:[animation-play-state:paused] ${reverse ? "testimonial-track-reverse" : ""}`}
         style={{ animationDuration: `${duration}s` }}
       >
         {[0, 1].map((dup) =>
@@ -174,14 +176,21 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
       ref={testimonialsRef}
     >
       <style>{`
-        @keyframes testimonial-marquee {
+        @keyframes testimonial-marquee-left {
           from { transform: translateY(0); }
-          to { transform: translateY(-50%); }
+          to { transform: translateX(calc(-50% - 0.75rem)); }
+        }
+        @keyframes testimonial-marquee-right {
+          from { transform: translateX(calc(-50% - 0.75rem)); }
+          to { transform: translateX(0); }
         }
         .testimonial-track {
-          animation-name: testimonial-marquee;
+          animation-name: testimonial-marquee-left;
           animation-timing-function: linear;
           animation-iteration-count: infinite;
+        }
+        .testimonial-track-reverse {
+          animation-name: testimonial-marquee-right;
         }
         @media (prefers-reduced-motion: reduce) {
           .testimonial-track {
@@ -221,23 +230,18 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
 
       {useMarquee ? (
         <div
-          className="relative flex h-[640px] justify-center gap-6 [mask-image:linear-gradient(to_bottom,transparent,black_8%,black_92%,transparent)]"
+          className="relative flex flex-col gap-6 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
           role="region"
           aria-label="Testimoni pelanggan"
         >
-          <TestimonialColumn
+          <TestimonialRow
             items={columns[0]}
-            duration={MARQUEE_DURATION_SECONDS + MARQUEE_COLUMN_OFFSETS[0]}
+            duration={MARQUEE_DURATION_SECONDS + MARQUEE_ROW_OFFSETS[0]}
           />
-          <TestimonialColumn
+          <TestimonialRow
             items={columns[1]}
-            duration={MARQUEE_DURATION_SECONDS + MARQUEE_COLUMN_OFFSETS[1]}
-            className="hidden md:block"
-          />
-          <TestimonialColumn
-            items={columns[2]}
-            duration={MARQUEE_DURATION_SECONDS + MARQUEE_COLUMN_OFFSETS[2]}
-            className="hidden lg:block"
+            duration={MARQUEE_DURATION_SECONDS + MARQUEE_ROW_OFFSETS[1]}
+            reverse
           />
         </div>
       ) : (
