@@ -37,7 +37,7 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
 ];
 
 // Semakin kecil angkanya, semakin cepat marquee berjalan.
-const MARQUEE_DURATION_SECONDS = 18;
+const MARQUEE_DURATION_SECONDS = 30;
 const MARQUEE_ROW_OFFSETS = [0, 4];
 
 function StarRow() {
@@ -54,7 +54,7 @@ function StarRow() {
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <li className="group/card w-[min(78vw,360px)] flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)] focus-within:-translate-y-1.5">
+    <li className="group/card w-[min(78vw,360px)] flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-shadow duration-300 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)]">
       <span
         aria-hidden="true"
         className="mb-3 block font-[family-name:var(--font-display)] text-[2.25rem] leading-none text-[var(--honey)]/25"

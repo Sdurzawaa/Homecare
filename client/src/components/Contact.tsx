@@ -23,24 +23,25 @@ interface Channel {
 
 function Contact({ contactRef, content }: ContactProps) {
   const [mapActive, setMapActive] = useState(false);
-  const address = content?.address || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama ";
+  const phone = content?.phone?.trim() || "";
+  const address = content?.address?.trim() || "";
   const mapsQuery = encodeURIComponent(address);
 
   const channels: Channel[] = [
     {
-      href: "https://wa.me/6285892006905",
+      href: phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "#",
       external: true,
       label: "Telepon / WhatsApp",
-      value: content?.phone || "+62 858-9200-6905",
+      value: phone,
       icon: (
         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" />
       ),
     },
     {
-      href: `mailto:${content?.email || "bidanrismacare@gmail.com"}`,
+      href: `mailto:${content?.email || ""}`,
       external: false,
       label: "Email",
-      value: content?.email || "bidanrismacare@gmail.com",
+      value: content?.email || "",
       icon: (
         <>
           <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -73,11 +74,10 @@ function Contact({ contactRef, content }: ContactProps) {
           <div className="flex min-w-0 flex-col justify-center">
             <p className="eyebrow mb-2">Hubungi Kami</p>
             <h3 className="m-0 mb-3 font-[family-name:var(--font-display)] text-[clamp(1.45rem,2.2vw,1.9rem)] font-medium leading-tight text-[var(--ink)]">
-              {content?.title || "Siap membantu kebutuhan kesehatan keluarga Anda"}
+              {content?.title}
             </h3>
             <p className="m-0 mb-6 max-w-[32rem] text-[0.98rem] leading-relaxed text-[var(--ink-soft)]">
-              {content?.description ||
-                "Kami siap memberikan dukungan medis profesional di rumah dengan cara yang aman, cepat, dan nyaman."}
+              {content?.description}
             </p>
 
             <div className="flex min-w-0 flex-col gap-2.5">
@@ -114,18 +114,18 @@ function Contact({ contactRef, content }: ContactProps) {
             </div>
 
             <a
-              href={content?.button_link || "https://wa.me/6285892006905"}
+              href={content?.button_link || "#"}
               target="_blank"
               rel="noreferrer noopener"
               className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92]"
             >
-              {content?.button_label || "Chat via WhatsApp"}
+              {content?.button_label}
               <span aria-hidden="true">→</span>
             </a>
           </div>
 
           {/* Card belakang (bg-alt + border + shadow) udah dihapus, map sekarang langsung nempel di section */}
-          <div className="relative h-[440px] sm:h-[520px] lg:h-auto lg:min-h-[620px] overflow-hidden rounded-[20px]">
+          <div className="relative hidden h-[440px] overflow-hidden rounded-[20px] sm:h-[520px] lg:block lg:h-auto lg:min-h-[620px]">
 
 
             <iframe

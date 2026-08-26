@@ -34,16 +34,7 @@ const defaultSections = {
     image_3:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuClz7KaBBUmaxbwURQ07RcddQ0oPFIlB7MzyKhrxk3rkmiK1PSq_8cnwUi2-qH70ICZgpl_AClFJceJVvE8tjILhabxYP61F3c7xfQzYlATCqZEnJEftbz5p4T4NOutPpb9JLiDobUpNBTqdjZvWEChCINfgn_zzeL51AMl2wfRc_ua-BPOasUSSGmorEw7wbvBPxFDULpaSr96MzRES_RRuwmJJ9ow-8vnwX8mypIRL0yKHXVzCDIGZw",
   },
-  contact: {
-    title: "Siap membantu kebutuhan kesehatan keluarga Anda",
-    description:
-      "Kami siap memberikan dukungan medis profesional di rumah dengan cara yang aman, cepat, dan nyaman.",
-    phone: "+62 858-9200-6905",
-    email: "bidanrismacare@gmail.com",
-    address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
-    button_label: "Chat via WhatsApp",
-    button_link: "https://wa.me/6285892006905",
-  },
+  contact: {},
   footer: {
     brand: "Homecare",
     description:
@@ -80,7 +71,7 @@ function App() {
         const nextSections = {
           hero: { ...defaultSections.hero, ...(data.hero || {}) },
           about: { ...defaultSections.about, ...(data.about || {}) },
-          contact: { ...defaultSections.contact, ...(data.contact || {}) },
+          contact: data.contact || {},
           footer: { ...defaultSections.footer, ...(data.footer || {}) },
         };
         setSiteSections((currentSections) =>
