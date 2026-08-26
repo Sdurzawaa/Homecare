@@ -156,7 +156,7 @@ function Contact({ contactRef, content }: ContactProps) {
                   </svg>
                 </span>
                 <span className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.1em]">
-                  Aktifkan Peta
+                  Sentuh Untuk Aktifkan Peta
                 </span>
               </button>
             )}
