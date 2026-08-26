@@ -54,14 +54,14 @@ function StarRow() {
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <li className="group/card w-[min(calc(100vw-3rem),300px)] flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-shadow duration-300 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)] sm:w-[min(45vw,340px)] sm:p-6 lg:w-[min(30vw,360px)]">
+    <li className="group/card w-[min(calc(100vw-3rem),300px)] flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-shadow duration-300 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)] sm:w-[min(45vw,340px)] sm:p-5 lg:w-[min(30vw,360px)]">
       <StarRow />
 
-      <p className="m-0 mb-6 font-[family-name:var(--font-body)] text-[0.92rem] italic leading-[1.65] text-[var(--ink)]">
+      <p className="m-0 mb-5 font-[family-name:var(--font-body)] text-[0.92rem] italic leading-[1.65] text-[var(--ink)]">
         {testimonial.text}
       </p>
 
-      <div className="flex items-center gap-3 border-t border-[var(--line)] pt-5">
+      <div className="flex items-center gap-3 border-t border-[var(--line)] pt-4">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--pine)]/10 text-[0.85rem] font-semibold text-[var(--pine)] ring-2 ring-transparent transition-colors duration-300 group-hover/card:ring-[var(--pine)]/25">
           {testimonial.initial}
         </div>
