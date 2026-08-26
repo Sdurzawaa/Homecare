@@ -37,12 +37,12 @@ const DEFAULT_TESTIMONIALS: Testimonial[] = [
 ];
 
 // Semakin kecil angkanya, semakin cepat marquee berjalan.
-const MARQUEE_DURATION_SECONDS = 10;
+const MARQUEE_DURATION_SECONDS = 18;
 const MARQUEE_ROW_OFFSETS = [0, 4];
 
 function StarRow() {
   return (
-    <div className="mb-4 flex items-center gap-1 text-[var(--honey)]" aria-label="Rating 5 dari 5 bintang">
+    <div className="mb-4 flex items-center gap-1 text-[var(--honey-deep)]" aria-label="Rating 5 dari 5 bintang">
       {Array.from({ length: 5 }).map((_, i) => (
         <svg key={i} className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 2.5l2.9 6.4 7 .7-5.3 4.7 1.6 6.9-6.2-3.6-6.2 3.6 1.6-6.9-5.3-4.7 7-.7z" />
@@ -54,7 +54,7 @@ function StarRow() {
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <li className="group/card w-full max-w-xs flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-8 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)] focus-within:-translate-y-1.5">
+    <li className="group/card w-[min(78vw,360px)] flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)] focus-within:-translate-y-1.5">
       <span
         aria-hidden="true"
         className="mb-3 block font-[family-name:var(--font-display)] text-[2.25rem] leading-none text-[var(--honey)]/25"
@@ -95,7 +95,7 @@ function TestimonialRow({
   return (
     <div className={`group w-full overflow-hidden ${className}`}>
       <ul
-        className={`testimonial-track m-0 flex w-max list-none gap-6 p-0 group-hover:[animation-play-state:paused] ${reverse ? "testimonial-track-reverse" : ""}`}
+        className={`testimonial-track m-0 flex w-max list-none gap-6 p-0 [will-change:transform] group-hover:[animation-play-state:paused] ${reverse ? "testimonial-track-reverse" : ""}`}
         style={{ animationDuration: `${duration}s` }}
       >
         {[0, 1].map((dup) =>
@@ -108,12 +108,12 @@ function TestimonialRow({
   );
 }
 
-function splitIntoColumns(items: Testimonial[], columnCount: number) {
-  const columns: Testimonial[][] = Array.from({ length: columnCount }, () => []);
+function splitIntoRows(items: Testimonial[], rowCount: number) {
+  const rows: Testimonial[][] = Array.from({ length: rowCount }, () => []);
   items.forEach((item, i) => {
-    columns[i % columnCount].push(item);
+    rows[i % rowCount].push(item);
   });
-  return columns;
+  return rows;
 }
 
 export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
@@ -160,12 +160,12 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
     return () => controller.abort();
   }, []);
 
-  // Marquee cuma masuk akal kalau kontennya cukup banyak buat 3 kolom.
+  // Marquee cuma masuk akal kalau kontennya cukup banyak buat 2 baris.
   // Kalau dikit, fallback ke grid statis biar ga awkward loop 1 kartu doang.
   const useMarquee = testimonials.length >= 6;
 
-  const columns = useMemo(
-    () => (useMarquee ? splitIntoColumns(testimonials, 3) : []),
+  const rows = useMemo(
+    () => (useMarquee ? splitIntoRows(testimonials, 2) : []),
     [testimonials, useMarquee],
   );
 
@@ -177,7 +177,7 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
     >
       <style>{`
         @keyframes testimonial-marquee-left {
-          from { transform: translateY(0); }
+          from { transform: translateX(0); }
           to { transform: translateX(calc(-50% - 0.75rem)); }
         }
         @keyframes testimonial-marquee-right {
@@ -235,11 +235,11 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
           aria-label="Testimoni pelanggan"
         >
           <TestimonialRow
-            items={columns[0]}
+            items={rows[0]}
             duration={MARQUEE_DURATION_SECONDS + MARQUEE_ROW_OFFSETS[0]}
           />
           <TestimonialRow
-            items={columns[1]}
+            items={rows[1]}
             duration={MARQUEE_DURATION_SECONDS + MARQUEE_ROW_OFFSETS[1]}
             reverse
           />
