@@ -57,14 +57,14 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
     <li className="group/card w-[min(78vw,360px)] flex-shrink-0 select-none rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[0_10px_30px_-18px_rgba(119,38,53,0.25)] transition-shadow duration-300 hover:shadow-[0_24px_48px_-20px_rgba(119,38,53,0.3)]">
       <span
         aria-hidden="true"
-        className="mb-3 block font-[family-name:var(--font-display)] text-[2.25rem] leading-none text-[var(--honey)]/25"
+        className="mb-3 block font-[family-name:var(--font-heading)] text-[2.25rem] leading-none text-[var(--honey)]/25"
       >
         "
       </span>
 
       <StarRow />
 
-      <p className="m-0 mb-6 font-[family-name:var(--font-display)] text-[0.92rem] italic leading-[1.65] text-[var(--ink)]">
+      <p className="m-0 mb-6 font-[family-name:var(--font-body)] text-[0.92rem] italic leading-[1.65] text-[var(--ink)]">
         {testimonial.text}
       </p>
 
@@ -223,7 +223,7 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
 
       <div className="relative z-10 mx-auto mb-14 max-w-[42rem] text-center">
         <p className="eyebrow">Testimoni</p>
-        <h3 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium text-[var(--ink)]">
+        <h3 className="m-0 font-[family-name:var(--font-heading)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium text-[var(--ink)]">
           Pelanggan merasa lebih tenang dan sehat
         </h3>
       </div>

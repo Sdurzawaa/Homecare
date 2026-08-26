@@ -163,7 +163,7 @@ function Achievements({
       {/* Layer z-10 — konten utama */}
       <div className="relative z-10 mb-[60px] text-center max-[768px]:mb-10">
         <p className="eyebrow m-0 mb-3">Mengapa Kami</p>
-        <h2 className="mx-auto m-0 max-w-2xl font-[family-name:var(--font-display)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium leading-[1.3] text-[var(--ink)]">
+        <h2 className="mx-auto m-0 max-w-2xl font-[family-name:var(--font-heading)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium leading-[1.3] text-[var(--ink)]">
           {content?.title || "Homecare modern untuk kebutuhan kesehatan keluarga"}
         </h2>
       </div>
@@ -197,7 +197,7 @@ function Achievements({
             <p className="m-0 mb-3 inline-flex items-center text-[0.68rem] font-[family-name:var(--font-body)] font-semibold uppercase tracking-[0.12em] text-[#8d5a6d]">
               Kepercayaan Keluarga
             </p>
-            <h3 className="m-0 mb-5 font-[family-name:var(--font-display)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
+            <h3 className="m-0 mb-5 font-[family-name:var(--font-heading)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
               Perawatan dengan Hati
             </h3>
             <p className="m-0 mb-6 text-[1rem] leading-[1.75] text-[var(--ink-soft)]">
@@ -236,7 +236,7 @@ function Achievements({
             <p className="m-0 mb-3 inline-flex items-center text-[0.68rem] font-[family-name:var(--font-body)] font-semibold uppercase tracking-[0.12em] text-[#6476b8]">
               Standar Profesional
             </p>
-            <h3 className="m-0 mb-5 font-[family-name:var(--font-display)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
+            <h3 className="m-0 mb-5 font-[family-name:var(--font-heading)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
               Tenaga Terlatih &amp; Bersertifikat
             </h3>
             <p className="m-0 mb-6 text-[1rem] leading-[1.75] text-[var(--ink-soft)]">
@@ -279,7 +279,7 @@ function Achievements({
             <p className="m-0 mb-3 inline-flex items-center text-[0.68rem] font-[family-name:var(--font-body)] font-semibold uppercase tracking-[0.12em] text-[#9C5C73]">
               Kepuasan Pelanggan
             </p>
-            <h3 className="m-0 mb-5 font-[family-name:var(--font-display)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
+            <h3 className="m-0 mb-5 font-[family-name:var(--font-heading)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
               Dipercaya Ribuan Keluarga
             </h3>
             <p className="m-0 text-[1rem] leading-[1.75] text-[var(--ink-soft)]">
@@ -297,11 +297,11 @@ function Achievements({
         <blockquote className="relative mx-auto max-w-3xl rounded-[28px] bg-white px-8 py-12 text-center shadow-[0_14px_32px_-18px_rgba(119,38,53,0.25)] ring-1 ring-[var(--line)] sm:px-14">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-6 top-3 font-[family-name:var(--font-display)] text-[5rem] leading-none text-[var(--honey)]/20 sm:text-[6rem]"
+            className="pointer-events-none absolute left-6 top-3 font-[family-name:var(--font-heading)] text-[5rem] leading-none text-[var(--honey)]/20 sm:text-[6rem]"
           >
             "
           </span>
-          <p className="relative m-0 font-[family-name:var(--font-display)] text-[1.15rem] italic leading-[1.7] text-[var(--ink-soft)] md:text-[1.3rem]">
+            <p className="relative m-0 font-[family-name:var(--font-body)] text-[1.15rem] italic leading-[1.7] text-[var(--ink-soft)] md:text-[1.3rem]">
             Kesehatan keluarga adalah prioritas kami. Kami berkomitmen
             memberikan layanan homecare terbaik dengan standar profesional dan
             harga terjangkau.

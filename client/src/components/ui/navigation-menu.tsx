@@ -670,7 +670,7 @@ export function AnimatedNavFramer() {
                       <a
                         href={item.href}
                         onClick={(e) => handleLinkClick(e, item.href)}
-                        className="group relative flex items-center justify-between rounded-xl px-3 py-4.5 font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight transition-colors duration-200 hover:bg-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
+                        className="group relative flex items-center justify-between rounded-xl px-3 py-4.5 font-[family-name:var(--font-heading)] text-[1.4rem] font-medium tracking-tight transition-colors duration-200 hover:bg-white/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
                       >
                         <span className={cn(
                           "transition-all duration-300",
@@ -699,7 +699,7 @@ export function AnimatedNavFramer() {
                   <button
                     type="button"
                     onClick={() => setMobileServiceOpen((open) => !open)}
-                    className="group flex w-full items-center justify-between rounded-xl px-3 py-4.5 text-left font-[family-name:var(--font-display)] text-[1.4rem] font-medium tracking-tight text-[var(--ink-soft)] transition-colors duration-200 hover:bg-white/45 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
+                    className="group flex w-full items-center justify-between rounded-xl px-3 py-4.5 text-left font-[family-name:var(--font-heading)] text-[1.4rem] font-medium tracking-tight text-[var(--ink-soft)] transition-colors duration-200 hover:bg-white/45 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pine)]"
                   >
                     <span className={cn(
                       "transition-all duration-300",

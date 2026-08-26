@@ -56,7 +56,7 @@ function Hero({ heroRef, content }: HeroProps) {
             </div>
 
             <h1
-              className="font-[family-name:var(--font-display,'Source_Serif_4',serif)]
+              className="font-[family-name:var(--font-heading,'Lora',Georgia,serif)]
                          text-[clamp(2rem,4vw,3.5rem)] font-semibold leading-[1.1]
                          tracking-[-0.02em] text-[var(--pine-deep,#772635)] max-w-xl"
             >

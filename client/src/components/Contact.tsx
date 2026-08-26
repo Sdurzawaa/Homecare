@@ -73,7 +73,7 @@ function Contact({ contactRef, content }: ContactProps) {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:items-stretch">
           <div className="flex min-w-0 flex-col justify-center">
             <p className="eyebrow mb-2">Hubungi Kami</p>
-            <h3 className="m-0 mb-3 font-[family-name:var(--font-display)] text-[clamp(1.45rem,2.2vw,1.9rem)] font-medium leading-tight text-[var(--ink)]">
+            <h3 className="m-0 mb-3 font-[family-name:var(--font-heading)] text-[clamp(1.45rem,2.2vw,1.9rem)] font-medium leading-tight text-[var(--ink)]">
               {content?.title}
             </h3>
             <p className="m-0 mb-6 max-w-[32rem] text-[0.98rem] leading-relaxed text-[var(--ink-soft)]">
@@ -125,7 +125,7 @@ function Contact({ contactRef, content }: ContactProps) {
           </div>
 
           {/* Card belakang (bg-alt + border + shadow) udah dihapus, map sekarang langsung nempel di section */}
-          <div className="relative hidden h-[440px] overflow-hidden rounded-[20px] sm:h-[520px] lg:block lg:h-auto lg:min-h-[620px]">
+          <div className="relative h-[440px] overflow-hidden rounded-[20px] sm:h-[520px] lg:h-auto lg:min-h-[620px]">
 
 
             <iframe
@@ -137,7 +137,7 @@ function Contact({ contactRef, content }: ContactProps) {
                 border: 0,
                 height: "100%",
                 display: "block",
-                pointerEvents: mapActive ? "auto" : "none",
+                pointerEvents: "auto",
               }}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -147,7 +147,7 @@ function Contact({ contactRef, content }: ContactProps) {
               <button
                 type="button"
                 onClick={() => setMapActive(true)}
-                className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/95 text-[var(--pine)] transition hover:bg-white"
+                className="absolute inset-0 z-30 hidden flex-col items-center justify-center gap-3 bg-white/95 text-[var(--pine)] transition hover:bg-white lg:flex"
               >
                 <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[var(--pine)]/30 bg-[var(--bg-alt)]">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -156,7 +156,7 @@ function Contact({ contactRef, content }: ContactProps) {
                   </svg>
                 </span>
                 <span className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.1em]">
-                  Sentuh Untuk Aktifkan Peta
+                  Aktifkan Peta
                 </span>
               </button>
             )}

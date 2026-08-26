@@ -1,7 +1,7 @@
 :root {
   --bg: #f4dde5;
   --bg-alt: #ead7e8;
-  --ink: #3a2435;
+  --ink: #2D2A26;
   --ink-soft: #61515d;
   --primary: #b9789f;
   --secondary: #8b7dbd;
@@ -17,8 +17,8 @@
   --honey: var(--accent);
   --honey-deep: #9aa8de;
 
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-heading: 'Lora', Georgia, serif;
+  --font-body: 'Figtree', ui-sans-serif, system-ui, sans-serif;
   --header-h: 84px;
 }
 
@@ -36,8 +36,14 @@ section[id] {
   font-family: var(--font-body);
   color: var(--ink);
   background: var(--bg);
-  line-height: 1.6;
+  line-height: 1.65;
   overflow-x: hidden;
+}
+
+.page-shell h1,
+.page-shell h2,
+.page-shell h3 {
+  font-family: var(--font-heading);
 }
 
 .eyebrow {
@@ -99,7 +105,7 @@ section[id] {
 .alt-section { background: var(--bg-alt); border-radius: 32px; }
 
 .about-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3rem; align-items: center; }
-.about-grid h3 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 2.3vw, 2rem); margin: 0.3rem 0 1rem; }
+.about-grid h3 { font-family: var(--font-heading); font-weight: 500; font-size: clamp(1.5rem, 2.3vw, 2rem); margin: 0.3rem 0 1rem; }
 .about-grid > div:first-child > p { color: var(--ink-soft); font-size: 0.98rem; margin: 0 0 1.3rem; }
 
 .about-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
@@ -130,7 +136,7 @@ section[id] {
   padding-bottom: 0.9rem;
 }
 .about-stat > div:last-child { border-bottom: none; padding-bottom: 0; }
-.about-stat span { font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; color: var(--honey); }
+.about-stat span { font-family: var(--font-heading); font-size: 1.7rem; font-weight: 600; color: var(--honey); }
 .about-stat p { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.75); }
 
 /* Testimonials */

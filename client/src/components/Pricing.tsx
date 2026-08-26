@@ -276,7 +276,7 @@ const TreatmentCard = memo(function TreatmentCard({
           </div>
         </div>
 
-        <h4 className="m-0 mb-4 line-clamp-2 font-[family-name:var(--font-display)] text-[1.15rem] font-semibold text-[var(--pine-deep)] transition-colors duration-500 group-hover:text-[var(--pine)]">
+        <h4 className="m-0 mb-4 line-clamp-2 font-[family-name:var(--font-heading)] text-[1.15rem] font-semibold text-[var(--pine-deep)] transition-colors duration-500 group-hover:text-[var(--pine)]">
           {treatment.title}
         </h4>
 
@@ -285,7 +285,7 @@ const TreatmentCard = memo(function TreatmentCard({
             <span className="text-[0.65rem] font-bold uppercase tracking-tight text-[var(--ink-soft)]">
               Mulai dari
             </span>
-            <p className="m-0 font-[family-name:var(--font-display)] text-[1.3rem] font-bold text-[var(--pine-deep)] transition-colors duration-500 group-hover:text-[var(--pine)]">
+            <p className="m-0 font-[family-name:var(--font-heading)] text-[1.3rem] font-bold text-[var(--pine-deep)] transition-colors duration-500 group-hover:text-[var(--pine)]">
               Rp{treatment.price.toLocaleString("id-ID")}
             </p>
           </div>
@@ -603,7 +603,7 @@ function Pricing({ pricingRef }: PricingProps) {
         <span className="mb-4 inline-block text-[0.75rem] font-bold uppercase tracking-[0.15em] text-[var(--pine)]">
           Layanan &amp; Tarif
         </span>
-        <h3 className="m-0 mb-4 font-[family-name:var(--font-display)] text-[clamp(1.9rem,3.6vw,3rem)] font-semibold leading-tight text-[var(--pine-deep)]">
+        <h3 className="m-0 mb-4 font-[family-name:var(--font-heading)] text-[clamp(1.9rem,3.6vw,3rem)] font-semibold leading-tight text-[var(--pine-deep)]">
           Pilihan Perawatan Terbaik Untuk Ibu &amp; Buah Hati
         </h3>
         <p className="m-0 text-[1.05rem] leading-relaxed font-[family-name:var(--font-body)] text-[var(--ink-soft)]">
@@ -669,7 +669,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-xl">
-              <h2 className="m-0 mb-2 font-[family-name:var(--font-display)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
+              <h2 className="m-0 mb-2 font-[family-name:var(--font-heading)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
                 {activeInfo?.title || selectedCategory}
               </h2>
               <p className="m-0 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
@@ -805,7 +805,7 @@ function Pricing({ pricingRef }: PricingProps) {
 
                   <h3
                     id="modal-title"
-                    className="m-0 mb-6 font-[family-name:var(--font-display)] text-[1.8rem] font-bold leading-tight text-[var(--pine-deep)] sm:text-[2.1rem]"
+                    className="m-0 mb-6 font-[family-name:var(--font-heading)] text-[1.8rem] font-bold leading-tight text-[var(--pine-deep)] sm:text-[2.1rem]"
                   >
                     {selectedTreatment.title}
                   </h3>

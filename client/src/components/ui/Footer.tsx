@@ -11,7 +11,7 @@ function Footer({ content }: { content?: { brand?: string; description?: string;
                 alt={content?.brand || "Homecare"}
                 className="h-10 w-10 flex-shrink-0 rounded-lg object-cover"
               />
-              <span className="font-[family-name:var(--font-display)] text-[1.1rem] font-medium text-white">
+              <span className="font-[family-name:var(--font-heading)] text-[1.1rem] font-medium text-white">
                 {content?.brand || "Homecare"}
               </span>
             </div>
