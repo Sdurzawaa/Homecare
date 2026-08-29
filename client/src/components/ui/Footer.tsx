@@ -1,6 +1,6 @@
 function Footer({ content }: { content?: { brand?: string; description?: string; phone?: string; address?: string } }) {
   return (
-    <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pt-16 pb-8 sm:px-6 md:px-8 lg:px-12">
+    <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-8 pt-16 sm:px-6 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1240px]">
         <div className="grid grid-cols-1 gap-x-[1.6rem] gap-y-10 md:grid-cols-[1.3fr_1fr_1fr_1.1fr]">
           {/* Brand */}
@@ -118,17 +118,11 @@ function Footer({ content }: { content?: { brand?: string; description?: string;
             © 2024 Homecare. Seluruh hak cipta dilindungi.
           </p>
           <div className="flex gap-5 text-[0.82rem] text-white/40">
-            <a
-              href="#"
-              className="text-white/40 no-underline hover:text-white/70"
-            >
+            <a href="#" className="text-white/40 no-underline hover:text-white/70">
               Kebijakan Privasi
             </a>
-            <a
-              href="#"
-              className="text-white/40 no-underline hover:text-white/70"
-            >
-              Syarat & Ketentuan
+            <a href="#" className="text-white/40 no-underline hover:text-white/70">
+              Syarat &amp; Ketentuan
             </a>
           </div>
         </div>
