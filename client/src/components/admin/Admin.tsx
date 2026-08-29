@@ -92,7 +92,7 @@ const defaultSections = {
     brand: "Homecare",
     description:
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
-    phone: "+62 857-7378-0406",
+    phone: "+62 858-9200-6905",
     address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
   },
 } as const;
@@ -1554,8 +1554,33 @@ export default function Admin() {
           <div className="grid gap-3 grid-cols-1 xl:grid-cols-2 auto-rows-max xl:auto-rows-auto">
             {/* Editor Panel */}
             <section className="flex flex-col bg-white border border-slate-200 rounded-lg">
-              <div className="p-4 border-b border-slate-200 flex-shrink-0">
-                <h2 className="text-base font-semibold text-slate-900 mb-3">Edit Section</h2>
+              <div className="p-4 border-b border-slate-200 flex-shrink-0 space-y-3">
+                <div className="rounded-xl border border-[var(--pine)]/20 bg-[var(--bg-alt)] p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--pine)]">Default WhatsApp</p>
+                      <p className="mt-1 text-xs text-slate-600">Dipakai untuk CTA hero, pricing, kontak, dan footer.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={saveDefaultWa}
+                      className="rounded-lg bg-[var(--pine)] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[var(--pine-dark)]"
+                    >
+                      Simpan WA
+                    </button>
+                  </div>
+                  <div className="mt-3">
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Nomor WhatsApp Default</label>
+                    <input
+                      value={defaultWaPhone || ""}
+                      onChange={(e) => setDefaultWaPhone(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5"
+                      placeholder="+62 8xx xxx xxx"
+                    />
+                  </div>
+                </div>
+
+                <h2 className="text-base font-semibold text-slate-900">Edit Section</h2>
                 <select
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
@@ -1718,31 +1743,6 @@ export default function Admin() {
                       </div>
                     </>
                   )}
-
-                  <div className="mb-4 rounded-xl border border-[var(--pine)]/20 bg-[var(--bg-alt)] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--pine)]">Default WhatsApp</p>
-                        <p className="mt-1 text-sm text-slate-600">Nomor ini dipakai untuk semua CTA/default WA yang tidak memakai link khusus.</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={saveDefaultWa}
-                        className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white"
-                      >
-                        Simpan WA
-                      </button>
-                    </div>
-                    <div className="mt-3">
-                      <label className="mb-1 block text-sm font-medium text-slate-700">Nomor WhatsApp Default</label>
-                      <input
-                        value={defaultWaPhone || ""}
-                        onChange={(e) => setDefaultWaPhone(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5"
-                        placeholder="+62 8xx xxx xxx"
-                      />
-                    </div>
-                  </div>
 
                   {selectedSection === "contact" && (
                     <>
