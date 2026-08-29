@@ -19,6 +19,12 @@ interface PricingFormState {
   recommended: boolean;
 }
 
+interface PricingCategoryFormState {
+  category: string;
+  title: string;
+  description: string;
+}
+
 interface TestimoniFormState {
   teks: string;
   author: string;
@@ -34,6 +40,12 @@ const emptyPricingForm = (): PricingFormState => ({
   duration: 60,
   price: 100000,
   recommended: false,
+});
+
+const emptyPricingCategoryForm = (): PricingCategoryFormState => ({
+  category: "",
+  title: "",
+  description: "",
 });
 
 const emptyTestimoniForm = (): TestimoniFormState => ({
@@ -94,8 +106,11 @@ export default function Admin() {
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
   const [selectedSection, setSelectedSection] = useState("hero");
   const [pricingItems, setPricingItems] = useState<any[]>([]);
+  const [pricingCategoryItems, setPricingCategoryItems] = useState<any[]>([]);
   const [pricingForm, setPricingForm] = useState<PricingFormState>(emptyPricingForm());
+  const [pricingCategoryForm, setPricingCategoryForm] = useState<PricingCategoryFormState>(emptyPricingCategoryForm());
   const [editId, setEditId] = useState<number | null>(null);
+  const [editPricingCategoryId, setEditPricingCategoryId] = useState<number | null>(null);
   const [testimoniItems, setTestimoniItems] = useState<any[]>([]);
   const [testimoniForm, setTestimoniForm] = useState<TestimoniFormState>(emptyTestimoniForm());
   const [editTestimoniId, setEditTestimoniId] = useState<number | null>(null);
@@ -148,6 +163,7 @@ export default function Admin() {
   const [adminTab, setAdminTab] = useState<"sections" | "pricing" | "testimoni">("sections");
   const [searchQuery, setSearchQuery] = useState("");
   const [showPricingFormModal, setShowPricingFormModal] = useState(false);
+  const [showPricingCategoryFormModal, setShowPricingCategoryFormModal] = useState(false);
   const [editingPricingModal, setEditingPricingModal] = useState<any | null>(null);
   const [showTestimoniFormModal, setShowTestimoniFormModal] = useState(false);
 
@@ -180,6 +196,7 @@ export default function Admin() {
         errorModal ||
         confirmModal ||
         showPricingFormModal ||
+        showPricingCategoryFormModal ||
         editingPricingModal ||
         showTestimoniFormModal ||
         showPasswordForm,
@@ -199,7 +216,7 @@ export default function Admin() {
       document.body.style.overflow = previousOverflow;
       if (lenis) lenis.start();
     };
-  }, [successModal, errorModal, confirmModal, showPricingFormModal, editingPricingModal, showTestimoniFormModal, showPasswordForm]);
+  }, [successModal, errorModal, confirmModal, showPricingFormModal, showPricingCategoryFormModal, editingPricingModal, showTestimoniFormModal, showPasswordForm]);
 
   const request = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
@@ -259,13 +276,15 @@ export default function Admin() {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
-      const [pricingRes, sectionsRes, testimoniRes] = await Promise.all([
+      const [pricingRes, pricingCategoriesRes, sectionsRes, testimoniRes] = await Promise.all([
         fetch("/api/public/pricing").then((res) => (res.ok ? res.json() : [])),
+        fetch("/api/public/pricing-categories").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/site-sections").then((res) => (res.ok ? res.json() : {})),
         fetch("/api/public/testimoni").then((res) => (res.ok ? res.json() : [])),
       ]);
 
       const pricingData = Array.isArray(pricingRes) ? pricingRes : [];
+      const pricingCategoryData = Array.isArray(pricingCategoriesRes) ? pricingCategoriesRes : [];
       const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
 
@@ -278,6 +297,7 @@ export default function Admin() {
       };
 
       setPricingItems(pricingData);
+      setPricingCategoryItems(pricingCategoryData);
       setTestimoniItems(testimoniData);
       setSectionData(merged);
     } catch (error: any) {
@@ -413,11 +433,23 @@ export default function Admin() {
     }));
   };
 
+  const handlePricingCategoryValue = (field: keyof PricingCategoryFormState, value: string) => {
+    setPricingCategoryForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const resetPricingForm = () => {
     setPricingForm(emptyPricingForm());
     setEditId(null);
     if (typeof window !== "undefined") {
     }
+  };
+
+  const resetPricingCategoryForm = () => {
+    setPricingCategoryForm(emptyPricingCategoryForm());
+    setEditPricingCategoryId(null);
   };
 
   const savePricing = async () => {
@@ -511,6 +543,91 @@ export default function Admin() {
           openSuccessModal("Berhasil", "Pricing telah berhasil dihapus.");
         } catch (error: any) {
           openErrorModal("Gagal Menghapus", error.message || "Gagal menghapus pricing");
+        }
+      },
+      onCancel: () => setConfirmModal(null),
+    });
+  };
+
+  const savePricingCategory = async () => {
+    if (!pricingCategoryForm.category?.trim()) {
+      openErrorModal("Validasi Gagal", "Nama kategori tidak boleh kosong");
+      return false;
+    }
+    if (!pricingCategoryForm.title?.trim()) {
+      openErrorModal("Validasi Gagal", "Judul kategori tidak boleh kosong");
+      return false;
+    }
+    if (!pricingCategoryForm.description?.trim()) {
+      openErrorModal("Validasi Gagal", "Deskripsi kategori tidak boleh kosong");
+      return false;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        category: pricingCategoryForm.category.trim(),
+        title: pricingCategoryForm.title.trim(),
+        description: pricingCategoryForm.description.trim(),
+      };
+
+      const url = editPricingCategoryId ? `/api/pricing-categories/${editPricingCategoryId}` : "/api/pricing-categories";
+      const method = editPricingCategoryId ? "PUT" : "POST";
+
+      const response = await request(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Gagal menyimpan kategori pricing");
+      }
+
+      await loadAll();
+      resetPricingCategoryForm();
+      setShowPricingCategoryFormModal(false);
+      openSuccessModal(
+        "Kategori berhasil disimpan",
+        editPricingCategoryId ? "Kategori pricing berhasil diperbarui." : "Kategori pricing baru berhasil ditambahkan.",
+      );
+      return true;
+    } catch (error: any) {
+      openErrorModal("Gagal Menyimpan", error.message || "Gagal menyimpan kategori pricing");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const editPricingCategory = (item: any) => {
+    setEditPricingCategoryId(item.id);
+    setPricingCategoryForm({
+      category: item.category,
+      title: item.title,
+      description: item.description,
+    });
+    setShowPricingCategoryFormModal(true);
+  };
+
+  const deletePricingCategory = async (id: number) => {
+    setConfirmModal({
+      title: "Konfirmasi Hapus",
+      message: "Apakah Anda yakin ingin menghapus kategori ini? Kategori yang masih dipakai oleh pricing tidak bisa dihapus.",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          const response = await request(`/api/pricing-categories/${id}`, { method: "DELETE" });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data?.error || "Gagal menghapus kategori pricing");
+          }
+          await loadAll();
+          if (editPricingCategoryId === id) resetPricingCategoryForm();
+          openSuccessModal("Berhasil", "Kategori pricing telah berhasil dihapus.");
+        } catch (error: any) {
+          openErrorModal("Gagal Menghapus", error.message || "Gagal menghapus kategori pricing");
         }
       },
       onCancel: () => setConfirmModal(null),
@@ -950,6 +1067,81 @@ export default function Admin() {
           </div>
         )}
 
+        {showPricingCategoryFormModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl" data-lenis-prevent>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-xl font-semibold text-slate-900">
+                  {editPricingCategoryId ? "Edit Kategori" : "Tambah Kategori"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPricingCategoryFormModal(false);
+                    if (!editPricingCategoryId) {
+                      resetPricingCategoryForm();
+                    }
+                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Tutup
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Nama Kategori <span className="text-red-500">*</span></label>
+                  <input
+                    value={pricingCategoryForm.category}
+                    onChange={(e) => handlePricingCategoryValue("category", e.target.value)}
+                    placeholder="Contoh: Inisiasi Menyusu"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Judul <span className="text-red-500">*</span></label>
+                  <input
+                    value={pricingCategoryForm.title}
+                    onChange={(e) => handlePricingCategoryValue("title", e.target.value)}
+                    placeholder="Contoh: Perawatan Kehamilan"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Deskripsi <span className="text-red-500">*</span></label>
+                  <textarea
+                    rows={3}
+                    value={pricingCategoryForm.description}
+                    onChange={(e) => handlePricingCategoryValue("description", e.target.value)}
+                    placeholder="Deskripsikan kategori ini..."
+                    className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPricingCategoryFormModal(false)}
+                    className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={savePricingCategory}
+                    disabled={saving}
+                    className="flex-1 rounded-lg bg-[var(--pine)] px-4 py-2.5 font-medium text-white hover:brightness-95 disabled:opacity-60"
+                  >
+                    {saving ? "Menyimpan..." : editPricingCategoryId ? "Update" : "Simpan"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Add / Edit Pricing Modal */}
         {showPricingFormModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
@@ -974,11 +1166,17 @@ export default function Admin() {
                 <div>
                   <label className="mb-1 block text-sm font-medium text-slate-700">Kategori <span className="text-red-500">*</span></label>
                   <input
+                    list="pricing-category-options"
                     value={pricingForm.category}
                     onChange={(e) => handlePricingValue("category", e.target.value)}
                     placeholder="Contoh: Perawatan Kehamilan"
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
                   />
+                  <datalist id="pricing-category-options">
+                    {pricingCategoryItems.map((item) => (
+                      <option key={item.id} value={item.category} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div>
@@ -1587,6 +1785,53 @@ export default function Admin() {
 
             <div className="hide-scrollbar overflow-y-auto p-4 xl:max-h-none xl:flex-1">
               <div className="space-y-3 min-h-0">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <h3 className="font-medium text-slate-800">Kategori Layanan ({pricingCategoryItems.length})</h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditPricingCategoryId(null);
+                        setPricingCategoryForm(emptyPricingCategoryForm());
+                        setShowPricingCategoryFormModal(true);
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      + Tambah Kategori
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {pricingCategoryItems.length === 0 ? (
+                      <p className="text-xs text-slate-500">Belum ada kategori layanan.</p>
+                    ) : (
+                      pricingCategoryItems.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white p-2">
+                          <div>
+                            <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
+                            <p className="text-xs text-slate-600">{item.title}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => editPricingCategory(item)}
+                              className="rounded bg-blue-100 px-2 py-1 text-[10px] font-medium text-blue-600 hover:bg-blue-200"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deletePricingCategory(item.id)}
+                              className="rounded bg-red-100 px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-200"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-medium text-slate-800">Pricing List ({pricingItems.length})</h3>
                 </div>

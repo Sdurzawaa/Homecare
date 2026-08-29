@@ -365,6 +365,51 @@ async function ensureSiteSectionsTable() {
 }
 
 async function ensureCatalogTables() {
+  const defaultPricingCategories = [
+    {
+      category: "Perawatan Kehamilan",
+      title: "Perawatan Kehamilan",
+      description:
+        "Layanan pemeriksaan dan dukungan kehamilan, termasuk monitoring janin, gizi, dan penanganan keluhan agar ibu tetap nyaman selama masa hamil.",
+    },
+    {
+      category: "Persalinan",
+      title: "Pendampingan Persalinan",
+      description:
+        "Layanan support penuh pada proses persalinan normal, IMD, dan perawatan luka jalan lahir untuk kelahiran yang aman dan nyaman.",
+    },
+    {
+      category: "Perawatan Nifas",
+      title: "Perawatan Nifas",
+      description:
+        "Perawatan pasca melahirkan untuk memulihkan tubuh ibu, mendukung produksi ASI, dan mendeteksi tanda bahaya nifas sejak dini.",
+    },
+    {
+      category: "Perawatan Bayi Baru Lahir",
+      title: "Perawatan Bayi Baru Lahir",
+      description:
+        "Layanan neonatus, perawatan tali pusat, pijat bayi, dan pemeriksaan tumbuh kembang untuk menjaga kesehatan si kecil sejak awal.",
+    },
+    {
+      category: "Imunisasi",
+      title: "Layanan Imunisasi",
+      description:
+        "Pemberian vaksin dasar, booster, dan suntik awal untuk menjaga kekebalan tubuh bayi dan anak sesuai jadwal nasional.",
+    },
+    {
+      category: "Keluarga Berencana",
+      title: "Keluarga Berencana",
+      description:
+        "Konsultasi dan prosedur KB untuk rencana keluarga yang sehat dengan pilihan metode kontrasepsi yang tepat dan aman.",
+    },
+    {
+      category: "Kesehatan Reproduksi",
+      title: "Kesehatan Reproduksi",
+      description:
+        "Layanan pemeriksaan dan konsultasi reproduksi untuk deteksi dini, skrining pra-nikah, dan edukasi kesehatan wanita.",
+    },
+  ];
+
   await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${table("pricing")} (
@@ -395,6 +440,23 @@ async function ensureCatalogTables() {
       initial TEXT NOT NULL
     );
   `);
+
+  await pool.query(
+    `INSERT INTO ${table("pricing_categories")} (category, title, description)
+     VALUES ${defaultPricingCategories
+       .map(
+         (_, index) =>
+           `($${index * 3 + 1}, $${index * 3 + 2}, $${index * 3 + 3})`,
+       )
+       .join(", ")}
+     ON CONFLICT (category) DO NOTHING`,
+    defaultPricingCategories.flatMap(({ category, title, description }) => [
+      category,
+      title,
+      description,
+    ]),
+  );
+
   await pool.query(
     `SELECT setval(
        pg_get_serial_sequence($1, $2),
@@ -794,6 +856,29 @@ const validatePricingPayload = (req, res, next) => {
     return res.status(400).json({ error: "Payload pricing tidak valid" });
   }
 
+  next();
+};
+
+const validatePricingCategoryPayload = (req, res, next) => {
+  const { category, title, description } = req.body || {};
+
+  if (
+    !isObject(req.body) ||
+    typeof category !== "string" ||
+    category.trim() === "" ||
+    typeof title !== "string" ||
+    title.trim() === "" ||
+    typeof description !== "string" ||
+    description.trim() === ""
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Payload kategori pricing tidak valid" });
+  }
+
+  req.body.category = category.trim();
+  req.body.title = title.trim();
+  req.body.description = description.trim();
   next();
 };
 
@@ -1307,6 +1392,123 @@ app.get("/api/pricing-categories", requireAdminAuth, async (req, res) => {
     res.status(500).json({ error: "Gagal mengambil data kategori pricing" });
   }
 });
+
+app.post(
+  "/api/pricing-categories",
+  requireAdminAuth,
+  requireCsrfToken,
+  validatePricingCategoryPayload,
+  async (req, res) => {
+    const { category, title, description } = req.body;
+
+    try {
+      const result = await pool.query(
+        `INSERT INTO ${table("pricing_categories")} (category, title, description)
+         VALUES ($1, $2, $3)
+         RETURNING id, category, title, description`,
+        [category, title, description],
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("POST /api/pricing-categories error", error);
+      if (error && error.code === "23505") {
+        return res.status(409).json({ error: "Kategori pricing sudah ada" });
+      }
+      return res.status(500).json({ error: "Gagal menambah kategori pricing" });
+    }
+  },
+);
+
+app.put(
+  "/api/pricing-categories/:id",
+  requireAdminAuth,
+  requireCsrfToken,
+  validateNumericIdParam,
+  validatePricingCategoryPayload,
+  async (req, res) => {
+    const { id } = req.params;
+    const { category, title, description } = req.body;
+
+    try {
+      const result = await pool.query(
+        `UPDATE ${table("pricing_categories")}
+         SET category = $1,
+             title = $2,
+             description = $3
+         WHERE id = $4
+         RETURNING id, category, title, description`,
+        [category, title, description, id],
+      );
+
+      if (result.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Kategori pricing tidak ditemukan" });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("PUT /api/pricing-categories/:id error", error);
+      if (error && error.code === "23505") {
+        return res
+          .status(409)
+          .json({ error: "Nama kategori pricing sudah dipakai" });
+      }
+      return res
+        .status(500)
+        .json({ error: "Gagal memperbarui kategori pricing" });
+    }
+  },
+);
+
+app.delete(
+  "/api/pricing-categories/:id",
+  requireAdminAuth,
+  requireCsrfToken,
+  validateNumericIdParam,
+  async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const inUse = await pool.query(
+        `SELECT 1 FROM ${table("pricing")}
+         WHERE category = (
+           SELECT category FROM ${table("pricing_categories")} WHERE id = $1
+         )
+         LIMIT 1`,
+        [id],
+      );
+
+      if (inUse.rows.length > 0) {
+        return res.status(400).json({
+          error:
+            "Kategori masih digunakan oleh pricing, ubah atau hapus pricing terkait terlebih dahulu",
+        });
+      }
+
+      const result = await pool.query(
+        `DELETE FROM ${table("pricing_categories")}
+         WHERE id = $1
+         RETURNING id`,
+        [id],
+      );
+
+      if (result.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Kategori pricing tidak ditemukan" });
+      }
+
+      res.json({ message: "Kategori pricing berhasil dihapus" });
+    } catch (error) {
+      console.error("DELETE /api/pricing-categories/:id error", error);
+      return res
+        .status(500)
+        .json({ error: "Gagal menghapus kategori pricing" });
+    }
+  },
+);
 
 // Search pricing cards by category and query (admin only)
 app.get("/api/pricing/search", requireAdminAuth, async (req, res) => {

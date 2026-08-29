@@ -12,10 +12,7 @@ const NAV_LINKS = [
   { name: "Kontak", href: "#contact", icon: Phone },
 ];
 
-// Kategori ini harus persis sama dengan key di `categoryInfo` pada Pricing.jsx,
-// karena label ini yang dikirim lewat custom event "select-service-category"
-// dan dipakai Pricing.jsx buat `setSelectedCategory(category)`.
-const SERVICE_ITEMS = [
+const DEFAULT_SERVICE_ITEMS = [
   { name: "Perawatan Kehamilan", href: "#services" },
   { name: "Persalinan", href: "#services" },
   { name: "Perawatan Nifas", href: "#services" },
@@ -129,6 +126,7 @@ export function AnimatedNavFramer() {
   const [isMobileServiceOpen, setMobileServiceOpen] = React.useState(false);
   const [isMobileScrolled, setMobileScrolled] = React.useState(false);
   const [isMobileHeaderVisible, setMobileHeaderVisible] = React.useState(true);
+  const [serviceItems, setServiceItems] = React.useState(DEFAULT_SERVICE_ITEMS);
 
   const [activeHash, setActiveHash] = React.useState("#home");
 
@@ -313,6 +311,25 @@ export function AnimatedNavFramer() {
   }, [isMobileMenuOpen]);
 
   // Pantau posisi scroll untuk mengubah link aktif secara otomatis (hanya untuk mobile)
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${import.meta.env.VITE_API_URL || ""}/api/public/pricing-categories`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setServiceItems(data.map((item) => ({ name: item.category, href: "#services" })));
+        } else {
+          setServiceItems(DEFAULT_SERVICE_ITEMS);
+        }
+      })
+      .catch(() => setServiceItems(DEFAULT_SERVICE_ITEMS));
+
+    return () => controller.abort();
+  }, []);
+
   React.useEffect(() => {
     const hashList = [...NAV_LINKS.map((link) => link.href), "#services"];
     const sections = hashList.map((href) => document.querySelector(href));
@@ -548,7 +565,7 @@ export function AnimatedNavFramer() {
             role="menu"
           >
             <div className="grid grid-cols-1 gap-1 p-2">
-              {SERVICE_ITEMS.map((item) => (
+              {serviceItems.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
@@ -717,7 +734,7 @@ export function AnimatedNavFramer() {
                     )}
                   >
                     <div className="mt-2 flex flex-col divide-y divide-[var(--line)]/70 rounded-2xl border border-[var(--line)] bg-white/45 p-2.5 gap-0.5">
-                      {SERVICE_ITEMS.map((item) => (
+                      {serviceItems.map((item) => (
                         <a
                           key={item.name}
                           href={item.href}

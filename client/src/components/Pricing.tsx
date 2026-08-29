@@ -53,7 +53,14 @@ const categoryInfo = {
 } as const;
 
 type ServiceCategory = Exclude<keyof typeof categoryInfo, undefined>;
-type PricingCategory = ServiceCategory | "Semua";
+type PricingCategory = string | "Semua";
+
+interface CategoryOption {
+  id?: number;
+  category: string;
+  title: string;
+  description: string;
+}
 
 interface Treatment {
   id: number | string;
@@ -317,6 +324,7 @@ function Pricing({ pricingRef }: PricingProps) {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<PricingCategory>("Semua");
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -450,6 +458,18 @@ function Pricing({ pricingRef }: PricingProps) {
   }, [selectedCategory, searchQuery]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API_URL}/api/public/pricing-categories`, { cache: "no-store", signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) setCategoryOptions(data);
+      })
+      .catch(() => setCategoryOptions([]));
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
     const debounce = window.setTimeout(() => {
       setSearchQuery(searchInput.trim());
     }, 300);
@@ -457,23 +477,42 @@ function Pricing({ pricingRef }: PricingProps) {
     return () => window.clearTimeout(debounce);
   }, [searchInput]);
 
-  const categories = useMemo(() => ["Semua" as const, ...CATEGORY_ORDER], []);
+  const categoryMap = useMemo(() => {
+    const merged = new Map<string, { title: string; description: string }>();
+
+    Object.entries(categoryInfo).forEach(([category, info]) => {
+      merged.set(category, { title: info.title, description: info.description });
+    });
+
+    categoryOptions.forEach((item) => {
+      if (item.category && item.category.trim()) {
+        merged.set(item.category, {
+          title: item.title || item.category,
+          description: item.description || "",
+        });
+      }
+    });
+
+    return merged;
+  }, [categoryOptions]);
+
+  const categories = useMemo(
+    () => ["Semua" as const, ...Array.from(new Set([...Object.keys(categoryInfo), ...categoryOptions.map((item) => item.category)]))],
+    [categoryOptions],
+  );
 
   useEffect(() => {
     const onSelectCategory = (event: Event) => {
       const customEvent = event as CustomEvent<PricingCategory>;
       const category = customEvent.detail;
 
-      if (category === "Semua" || category in categoryInfo) {
+      if (category === "Semua" || categoryMap.has(category)) {
         setSelectedCategory(category);
       }
     };
 
     const pendingCategory = sessionStorage.getItem("pendingServiceCategory");
-    if (
-      pendingCategory &&
-      (pendingCategory === "Semua" || pendingCategory in categoryInfo)
-    ) {
+    if (pendingCategory && (pendingCategory === "Semua" || categoryMap.has(pendingCategory))) {
       setSelectedCategory(pendingCategory as PricingCategory);
       sessionStorage.removeItem("pendingServiceCategory");
     }
@@ -482,7 +521,7 @@ function Pricing({ pricingRef }: PricingProps) {
     return () => {
       window.removeEventListener("select-service-category", onSelectCategory);
     };
-  }, []);
+  }, [categoryMap]);
 
   useEffect(() => {
     const container = tabsEl;
@@ -548,7 +587,8 @@ function Pricing({ pricingRef }: PricingProps) {
   const activeInfo =
     selectedCategory === "Semua"
       ? undefined
-      : categoryInfo[selectedCategory as ServiceCategory];
+      : categoryMap.get(selectedCategory as string) ??
+        categoryInfo[selectedCategory as ServiceCategory];
 
   const paginationControls = totalPages > 1 && (
     <nav
