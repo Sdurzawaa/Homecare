@@ -15,6 +15,7 @@ import pool from "./db.js";
 import { createCsrfToken, validateCsrfToken } from "./csrf.js";
 import {
   deriveInitialFromAuthor,
+  getLatestWaPhone,
   isValidAdminPassword,
   isValidAdminUsername,
   normalizeAdminUsername,
@@ -1140,14 +1141,43 @@ app.post(
   },
 );
 
+const pruneOldDefaultWaRows = async (keepId = null) => {
+  let targetId = keepId;
+
+  if (!targetId) {
+    try {
+      const latestResult = await pool.query(
+        `SELECT id FROM ${table("default_wa")} ORDER BY id DESC LIMIT 1`,
+      );
+      targetId = latestResult.rows[0]?.id ?? null;
+    } catch (error) {
+      console.error("pruneOldDefaultWaRows lookup error", error);
+      return;
+    }
+  }
+
+  if (!targetId) return;
+
+  try {
+    await pool.query(
+      `DELETE FROM ${table("default_wa")}
+       WHERE id IS NOT NULL
+         AND id <> $1`,
+      [targetId],
+    );
+  } catch (error) {
+    console.error("pruneOldDefaultWaRows error", error);
+  }
+};
+
 const getDefaultWaPhone = async () => {
   try {
     const result = await pool.query(
-      `SELECT "Phone" FROM ${table("default_wa")} ORDER BY id ASC LIMIT 1`,
+      `SELECT * FROM ${table("default_wa")} ORDER BY id DESC LIMIT 10`,
     );
-    const phone = result.rows[0]?.Phone;
-    if (typeof phone === "string" && phone.trim()) {
-      return phone.trim();
+    const latestPhone = getLatestWaPhone(result.rows);
+    if (latestPhone) {
+      return latestPhone;
     }
   } catch (error) {
     console.error("getDefaultWaPhone error", error);
@@ -1235,26 +1265,6 @@ app.put(
       }
 
       const normalizedPhone = phone.replace(/\s+/g, " ").trim();
-      const existing = await pool.query(
-        `SELECT id FROM ${table("default_wa")} ORDER BY id DESC LIMIT 1`,
-      );
-
-      if (existing.rows[0]?.id) {
-        const result = await pool.query(
-          `UPDATE ${table("default_wa")}
-         SET "Phone" = $1,
-             updated_at = NOW()
-         WHERE id = $2
-         RETURNING *`,
-          [normalizedPhone, existing.rows[0].id],
-        );
-
-        return res.json({
-          phone: result.rows[0]?.Phone || normalizedPhone,
-          link: normalizeWhatsAppLink(normalizedPhone, DEFAULT_WA_LINK),
-        });
-      }
-
       const result = await pool.query(
         `INSERT INTO ${table("default_wa")} ("Phone", updated_at)
        VALUES ($1, NOW())
@@ -1262,9 +1272,16 @@ app.put(
         [normalizedPhone],
       );
 
+      const inserted = result.rows[0];
+      const latestPhone = inserted?.Phone || normalizedPhone;
+
+      setTimeout(() => {
+        void pruneOldDefaultWaRows(inserted?.id ?? null);
+      }, 10000);
+
       return res.json({
-        phone: result.rows[0]?.Phone || normalizedPhone,
-        link: normalizeWhatsAppLink(normalizedPhone, DEFAULT_WA_LINK),
+        phone: latestPhone,
+        link: normalizeWhatsAppLink(latestPhone, DEFAULT_WA_LINK),
       });
     } catch (error) {
       console.error("PUT /api/admin/default-wa error", error);

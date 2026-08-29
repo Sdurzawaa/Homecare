@@ -90,6 +90,18 @@ export function normalizeAdminUsername(username) {
   return username.trim().toLowerCase();
 }
 
+export function getLatestWaPhone(rows = []) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return "";
+  }
+
+  const validRows = rows
+    .filter((row) => row && typeof row.Phone === "string" && row.Phone.trim())
+    .sort((a, b) => Number(b.id ?? 0) - Number(a.id ?? 0));
+
+  return validRows[0]?.Phone?.trim() || "";
+}
+
 export function isValidAdminUsername(username) {
   return (
     typeof username === "string" &&

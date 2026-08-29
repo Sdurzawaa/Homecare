@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildSearchPath,
   deriveInitialFromAuthor,
+  getLatestWaPhone,
   isTestimoniExpired,
   isValidAdminPassword,
   isValidAdminUsername,
@@ -75,4 +76,22 @@ test("isTestimoniExpired deletes reviews that are older than 5 days while pendin
   assert.equal(isTestimoniExpired("pending", oldDate, now), true);
   assert.equal(isTestimoniExpired("approved", oldDate, now), false);
   assert.equal(isTestimoniExpired("pending", recentDate, now), false);
+});
+
+test("getLatestWaPhone prefers the newest default WhatsApp row", () => {
+  assert.equal(
+    getLatestWaPhone([
+      { id: 1, Phone: "+62 812 342" },
+      { id: 2, Phone: "+62 812 188" },
+    ]),
+    "+62 812 188",
+  );
+
+  assert.equal(
+    getLatestWaPhone([
+      { id: 9, Phone: "+62 812 342" },
+      { id: 3, Phone: "+62 812 188" },
+    ]),
+    "+62 812 342",
+  );
 });
