@@ -799,9 +799,9 @@ function Pricing({ pricingRef }: PricingProps) {
         title={selectedTreatment?.title || null}
       >
         {selectedTreatment && (
-          <div className="max-h-[85vh] w-full overflow-y-auto overflow-x-hidden">
+          <div className="max-h-none md:max-h-[85vh] w-full overflow-y-visible md:overflow-y-auto overflow-x-hidden">
             <div className="flex flex-col md:flex-row">
-              <div className="relative min-h-[260px] flex-shrink-0 overflow-hidden bg-[var(--bg-alt)] md:min-h-full md:w-5/12">
+              <div className="relative min-h-[200px] sm:min-h-[260px] flex-shrink-0 overflow-hidden bg-[var(--bg-alt)] md:min-h-full md:w-5/12">
                 {!imageError[`modal-${selectedTreatment.id}`] ? (
                   <img
                     src={optimizeCloudinaryUrl(selectedTreatment.image, 800)}
@@ -830,7 +830,7 @@ function Pricing({ pricingRef }: PricingProps) {
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col justify-between p-8 sm:p-10">
+              <div className="flex flex-1 flex-col justify-between p-6 sm:p-8 md:p-10">
                 <div>
                   {selectedTreatment.recommended && (
                     <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-alt)] px-3.5 py-1.5">
@@ -845,12 +845,12 @@ function Pricing({ pricingRef }: PricingProps) {
 
                   <h3
                     id="modal-title"
-                    className="m-0 mb-6 font-[family-name:var(--font-heading)] text-[1.8rem] font-bold leading-tight text-[var(--pine-deep)] sm:text-[2.1rem]"
+                    className="m-0 mb-4 sm:mb-6 font-[family-name:var(--font-heading)] text-[1.4rem] sm:text-[1.8rem] md:text-[2.1rem] font-bold leading-tight text-[var(--pine-deep)]"
                   >
                     {selectedTreatment.title}
                   </h3>
 
-                  <div className="mb-8 flex flex-wrap gap-6 text-[var(--ink-soft)]">
+                  <div className="mb-6 md:mb-8 flex flex-wrap gap-4 sm:gap-6 text-[var(--ink-soft)]">
                     <div className="flex items-center gap-2">
                       <svg className="h-5 w-5 text-[var(--pine)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" />
@@ -872,13 +872,13 @@ function Pricing({ pricingRef }: PricingProps) {
                     </div>
                   </div>
 
-                  <p className="m-0 mb-8 text-[1rem] leading-8 text-[var(--ink-soft)]">
+                  <p className="m-0 mb-6 md:mb-8 text-[0.95rem] sm:text-[1rem] leading-relaxed sm:leading-8 text-[var(--ink-soft)]">
                     {selectedTreatment.description}
                   </p>
 
                   {Array.isArray(selectedTreatment.benefits) &&
                     selectedTreatment.benefits.length > 0 && (
-                      <ul className="mb-8 space-y-3">
+                      <ul className="mb-6 md:mb-8 space-y-2.5 sm:space-y-3">
                         {selectedTreatment.benefits.map((benefit, i) => (
                           <li key={i} className="flex items-start gap-3">
                             <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--pine)]" viewBox="0 0 24 24" fill="currentColor">
@@ -893,7 +893,7 @@ function Pricing({ pricingRef }: PricingProps) {
                     )}
                 </div>
 
-                <div className="flex justify-end border-t border-[var(--line)] pt-6">
+                <div className="flex justify-end border-t border-[var(--line)] pt-5 md:pt-6">
                   <a
                     className="inline-flex w-full items-center justify-center gap-3 whitespace-nowrap rounded-full bg-[var(--pine)] px-8 py-4 text-[0.95rem] font-bold text-white transition-transform duration-300 hover:scale-105 hover:shadow-[0_16px_32px_rgba(178,77,98,0.35)] focus-visible:outline-2 focus-visible:outline-[var(--pine)] focus-visible:outline-offset-2 sm:w-auto"
                     href={buildWhatsAppLink(

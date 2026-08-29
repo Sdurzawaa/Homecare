@@ -117,7 +117,7 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
   return createPortal(
     <div
       onClick={handleClose}
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6"
+      className="fixed inset-0 z-50 overflow-y-auto"
       style={{
         // Backdrop: transisi warna aja yang di-animate. backdrop-filter (blur)
         // sengaja TIDAK ikut di-transisi — nge-interpolasi nilai blur tiap
@@ -134,43 +134,46 @@ function Modal({ isOpen, onClose, children, title = null }: ModalProps) {
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
     >
-      {/* Modal content container */}
-      <div
-        ref={modalContentRef}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          // GPU-accelerated: akan-change supaya browser reservasi layer compositor
-          willChange: "transform, opacity",
-          transform: entered
-            ? "translateY(0) scale(1)"
-            : "translateY(24px) scale(0.96)",
-          opacity: entered ? 1 : 0,
-          transition: `transform ${ANIMATION_DURATION}ms cubic-bezier(0.34, 1.2, 0.64, 1), opacity ${ANIMATION_DURATION}ms ease`,
-        }}
-        className="relative w-full max-w-4xl"
-      >
-        {/* Tombol close */}
-        <button
-          onClick={handleClose}
-          data-modal-close
-          className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#5b2333] backdrop-blur-md transition-all duration-300 hover:bg-white hover:rotate-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pine)]"
-          aria-label="Tutup"
+      {/* Wrapper to center modal content and handle natural scaling */}
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6 md:p-10">
+        {/* Modal content container */}
+        <div
+          ref={modalContentRef}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            // GPU-accelerated: akan-change supaya browser reservasi layer compositor
+            willChange: "transform, opacity",
+            transform: entered
+              ? "translateY(0) scale(1)"
+              : "translateY(24px) scale(0.96)",
+            opacity: entered ? 1 : 0,
+            transition: `transform ${ANIMATION_DURATION}ms cubic-bezier(0.34, 1.2, 0.64, 1), opacity ${ANIMATION_DURATION}ms ease`,
+          }}
+          className="relative w-full max-w-4xl"
         >
-          <svg
-            className="h-5 w-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+          {/* Tombol close */}
+          <button
+            onClick={handleClose}
+            data-modal-close
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#5b2333] backdrop-blur-md transition-all duration-300 hover:bg-white hover:rotate-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pine)]"
+            aria-label="Tutup"
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+            <svg
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
 
-        {/* Main content */}
-        <div className="overflow-hidden rounded-[20px] bg-white shadow-[0_20px_60px_rgba(28,58,48,0.3)]">
-          {children}
+          {/* Main content */}
+          <div className="overflow-hidden rounded-[20px] bg-white shadow-[0_20px_60px_rgba(28,58,48,0.3)]">
+            {children}
+          </div>
         </div>
       </div>
     </div>,
