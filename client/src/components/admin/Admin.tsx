@@ -55,7 +55,7 @@ const emptyTestimoniForm = (): TestimoniFormState => ({
   initial: "",
 });
 
-const normalizeWhatsAppLink = (value: string | undefined, fallback = "#") => {
+const normalizeWhatsAppLink = (value: string | undefined, fallback = "https://wa.me/6285892006905") => {
   if (!value || !value.trim()) return fallback;
 
   const trimmed = value.trim();
@@ -311,7 +311,10 @@ export default function Admin() {
       const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
       const defaultWaPhoneValue = typeof defaultWaRes?.phone === "string" ? defaultWaRes.phone : "";
-      const defaultWaLinkValue = normalizeWhatsAppLink(defaultWaPhoneValue, defaultSections.contact.button_link || "#");
+      const defaultWaLinkValue = normalizeWhatsAppLink(
+        defaultWaPhoneValue,
+        defaultSections.contact.button_link || "https://wa.me/6285892006905",
+      );
 
       if (testimoniRes instanceof Response && !testimoniRes.ok) {
         throw new Error("Gagal memuat data ulasan");
@@ -458,7 +461,10 @@ export default function Admin() {
       }
 
       const nextPhone = data.phone || defaultWaPhone;
-      const nextWaLink = normalizeWhatsAppLink(nextPhone, defaultSections.contact.button_link || "#");
+      const nextWaLink = normalizeWhatsAppLink(
+        nextPhone,
+        defaultSections.contact.button_link || "https://wa.me/6285892006905",
+      );
 
       setDefaultWaPhone(nextPhone);
       setSectionData((prev) => ({

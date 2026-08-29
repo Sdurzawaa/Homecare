@@ -51,7 +51,7 @@ const defaultSections = {
   },
 };
 
-const normalizeWhatsAppLink = (value?: string, fallback = "#") => {
+const normalizeWhatsAppLink = (value?: string, fallback = "https://wa.me/6285892006905") => {
   if (!value || !value.trim()) return fallback;
 
   const trimmed = value.trim();
@@ -147,7 +147,7 @@ function App() {
           if (typeof data.contact?.button_link === "string" && data.contact.button_link.trim()) {
             setDefaultWaLink(data.contact.button_link);
           } else if (typeof data.contact?.phone === "string" && data.contact.phone.trim()) {
-            setDefaultWaLink(normalizeWhatsAppLink(data.contact.phone, "#"));
+            setDefaultWaLink(normalizeWhatsAppLink(data.contact.phone, "https://wa.me/6285892006905"));
           }
 
           setSiteSections((currentSections) =>
@@ -268,7 +268,7 @@ function App() {
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
               defaultWaLink ||
-              normalizeWhatsAppLink(siteSections.contact.phone || siteSections.footer.phone, "#")
+              normalizeWhatsAppLink(siteSections.contact.phone || siteSections.footer.phone, "https://wa.me/6285892006905")
             }
           />
         </Suspense>

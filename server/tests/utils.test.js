@@ -107,4 +107,14 @@ test("normalizeWhatsAppLink converts +62 numbers into a wa.me URL", () => {
     normalizeWhatsAppLink("081289861639"),
     "https://wa.me/6281289861639",
   );
+
+  assert.equal(
+    normalizeWhatsAppLink("", "https://wa.me/6285892006905"),
+    "https://wa.me/6285892006905",
+  );
+
+  assert.equal(
+    normalizeWhatsAppLink("#", "https://wa.me/6285892006905"),
+    "https://wa.me/6285892006905",
+  );
 });

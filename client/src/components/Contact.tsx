@@ -21,7 +21,7 @@ interface Channel {
   icon: React.ReactNode;
 }
 
-function normalizeWhatsAppLink(value: string | undefined, fallback = "#") {
+function normalizeWhatsAppLink(value: string | undefined, fallback = "https://wa.me/6285892006905") {
   if (!value || !value.trim()) return fallback;
 
   const trimmed = value.trim();
@@ -46,7 +46,7 @@ function Contact({ contactRef, content }: ContactProps) {
   const phone = content?.phone?.trim() || "";
   const address = content?.address?.trim() || "";
   const mapsQuery = encodeURIComponent(address);
-  const defaultWhatsAppLink = content?.button_link || normalizeWhatsAppLink(phone, "#");
+  const defaultWhatsAppLink = content?.button_link || normalizeWhatsAppLink(phone, "https://wa.me/6285892006905");
 
   const channels: Channel[] = [
     {

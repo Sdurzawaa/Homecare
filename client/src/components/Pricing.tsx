@@ -179,7 +179,7 @@ function formatDuration(minutes: number) {
   return `${minutes} menit`;
 }
 
-function normalizeWhatsAppLink(value?: string, fallback = "#") {
+function normalizeWhatsAppLink(value?: string, fallback = "https://wa.me/6285892006905") {
   if (!value || !value.trim()) {
     return fallback;
   }
@@ -207,7 +207,7 @@ function normalizeWhatsAppLink(value?: string, fallback = "#") {
 
 function buildWhatsAppLink(title: string, price: number, baseLink?: string) {
   const message = `Halo, saya tertarik dengan layanan "${title}". Apakah bisa dibantu info lebih lanjut?`;
-  const normalizedBase = normalizeWhatsAppLink(baseLink || "#");
+  const normalizedBase = normalizeWhatsAppLink(baseLink || "https://wa.me/6285892006905");
 
   try {
     const url = new URL(normalizedBase);

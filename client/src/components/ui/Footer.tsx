@@ -1,4 +1,4 @@
-function normalizeWhatsAppLink(value?: string, fallback = "#") {
+function normalizeWhatsAppLink(value?: string, fallback = "https://wa.me/6285892006905") {
   if (!value || !value.trim()) return fallback;
 
   const trimmed = value.trim();
@@ -18,7 +18,7 @@ function Footer({
 }: {
   content?: { brand?: string; description?: string; phone?: string; email?: string; address?: string; button_link?: string };
 }) {
-  const waHref = content?.button_link || normalizeWhatsAppLink(content?.phone, "#");
+  const waHref = content?.button_link || normalizeWhatsAppLink(content?.phone, "https://wa.me/6285892006905");
 
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-6 pt-10 sm:px-6 md:px-8 lg:px-12">
