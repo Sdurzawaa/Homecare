@@ -1,4 +1,4 @@
-function Footer({ content }: { content?: { brand?: string; description?: string; phone?: string; address?: string } }) {
+function Footer({ content }: { content?: { brand?: string; description?: string; phone?: string; email?: string } }) {
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-8 pt-16 sm:px-6 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1240px]">
@@ -107,7 +107,7 @@ function Footer({ content }: { content?: { brand?: string; description?: string;
               Kontak
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem] text-white/70">
-              <p className="m-0">{content?.address || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama"}</p>
+              <p className="m-0">{content?.email || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama"}</p>
               <p className="m-0">{content?.phone || "+62 858-9200-6905"}</p>
             </div>
           </div>
