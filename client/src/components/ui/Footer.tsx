@@ -1,3 +1,32 @@
+function formatPhoneDisplay(phone?: string) {
+  const raw = (phone || "+62 812-8986-1639").replace(/\s+/g, "");
+  const digits = raw.replace(/\D/g, "");
+
+  if (!digits) return "+62 812-8986-1639";
+
+  if (digits.startsWith("62")) {
+    const rest = digits.slice(2);
+    if (rest.length >= 10) {
+      return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
+    }
+    return `+62 ${rest}`;
+  }
+
+  if (digits.startsWith("0")) {
+    const rest = digits.slice(1);
+    if (rest.length >= 10) {
+      return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
+    }
+    return `+62 ${rest}`;
+  }
+
+  if (digits.length >= 10) {
+    return `+62 ${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
+  }
+
+  return `+62 ${digits}`;
+}
+
 function normalizeWhatsAppLink(value?: string, fallback = "https://wa.me/6285892006905") {
   if (!value || !value.trim()) return fallback;
 
@@ -147,7 +176,7 @@ function Footer({
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0 text-white/60">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.09 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.34 1.77.66 2.61a2 2 0 0 1-.45 2.11L9 10.91a16 16 0 0 0 4.09 4.09l1.47-1.29a2 2 0 0 1 2.11-.45c.84.32 1.71.54 2.61.66A2 2 0 0 1 22 16.92Z"/>
                 </svg>
-                <p className="m-0">{content?.phone || "+62 858-9200-6905"}</p>
+                <p className="m-0">{formatPhoneDisplay(content?.phone || "+62 858-9200-6905")}</p>
               </div>
               <div className="flex items-center gap-2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0 text-white/60">
