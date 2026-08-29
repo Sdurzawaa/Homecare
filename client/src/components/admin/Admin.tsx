@@ -1068,8 +1068,8 @@ export default function Admin() {
         )}
 
         {showPricingCategoryFormModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl" data-lenis-prevent>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-2 sm:p-4">
+            <div className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-[22rem] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:max-w-xl sm:p-5" data-lenis-prevent>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-slate-900">
                   {editPricingCategoryId ? "Edit Kategori" : "Tambah Kategori"}
@@ -1144,8 +1144,8 @@ export default function Admin() {
 
         {/* Add / Edit Pricing Modal */}
         {showPricingFormModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl" data-lenis-prevent>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-2 sm:p-4">
+            <div className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-[22rem] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:max-w-2xl sm:p-5" data-lenis-prevent>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-slate-900">{editId ? "Edit Pricing" : "Tambah Pricing"}</h2>
                 <button
@@ -1363,8 +1363,8 @@ export default function Admin() {
 
         {/* Add / Edit Testimoni Modal */}
         {showTestimoniFormModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl" data-lenis-prevent>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-2 sm:p-4">
+            <div className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-[22rem] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:max-w-2xl sm:p-5" data-lenis-prevent>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-slate-900">{editTestimoniId ? "Edit Testimoni" : "Tambah Testimoni"}</h2>
                 <button
