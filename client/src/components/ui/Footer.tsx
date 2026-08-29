@@ -1,7 +1,7 @@
 function Footer({
   content,
 }: {
-  content?: { brand?: string; description?: string; phone?: string; email?: string; address?: string };
+  content?: { brand?: string; description?: string; phone?: string; email?: string; };
 }) {
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-8 pt-16 sm:px-6 md:px-8 lg:px-12">
@@ -111,13 +111,6 @@ function Footer({
               Kontak
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem] text-white/70">
-              <div className="flex items-start gap-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-0.5 h-4 w-4 shrink-0 text-white/60">
-                  <path d="M12 21s-6.5-5.1-9-8.5C1.7 10.1 3.2 5 8 5c2.4 0 3.8 1.5 4 2.2.2-.7 1.6-2.2 4-2.2 4.8 0 6.3 5.1 5 7.5-2.5 3.4-9 8.5-9 8.5Z"/>
-                  <circle cx="12" cy="9" r="2.2"/>
-                </svg>
-                <p className="m-0">{content?.address || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama"}</p>
-              </div>
               <div className="flex items-center gap-2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0 text-white/60">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.09 5.18 2 2 0 0 1 5.08 3h3a2 2 0 0 1 2 1.72c.12.9.34 1.77.66 2.61a2 2 0 0 1-.45 2.11L9 10.91a16 16 0 0 0 4.09 4.09l1.47-1.29a2 2 0 0 1 2.11-.45c.84.32 1.71.54 2.61.66A2 2 0 0 1 22 16.92Z"/>
