@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { name: "Beranda", href: "/", icon: Home },
   { name: "Kenapa Kami", href: "#about", icon: Info },
-  { name: "Testimoni", href: "/form/testimoni", icon: MessageSquareQuote },
   { name: "Kontak", href: "#contact", icon: Phone },
 ];
 
