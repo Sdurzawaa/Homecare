@@ -824,6 +824,7 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
               hasError={!!imageError[treatment.id]}
               onClick={() => handleCardClick(treatment)}
               onImageError={() => handleImageError(treatment.id)}
+              defaultWhatsAppLink={defaultWhatsAppLink}
             />
           ))}
           </div>
