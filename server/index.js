@@ -44,6 +44,33 @@ const isProduction =
   process.env.NODE_ENV === "production" ||
   ["preview", "production"].includes(process.env.VERCEL_ENV);
 const requiredProductionSecrets = ["ADMIN_SESSION_SECRET", "ADMIN_JWT_SECRET"];
+const TESTIMONI_PUBLIC_LIMIT = Number(process.env.TESTIMONI_PUBLIC_LIMIT || 12);
+
+const getApprovedTestimoniCount = async () => {
+  const result = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM ${table("testimoni")}
+     WHERE status = 'approved'`,
+  );
+
+  return Number(result.rows[0]?.total || 0);
+};
+
+const ensureApprovedTestimoniLimit = async (
+  nextStatus,
+  currentStatus = "pending",
+) => {
+  if (nextStatus !== "approved" || currentStatus === "approved") {
+    return;
+  }
+
+  const approvedCount = await getApprovedTestimoniCount();
+  if (approvedCount >= TESTIMONI_PUBLIC_LIMIT) {
+    throw new Error(
+      `Batas maksimal testimoni yang ditampilkan di publik sudah tercapai (${TESTIMONI_PUBLIC_LIMIT}). Tolak atau hapus ulasan yang ada terlebih dahulu.`,
+    );
+  }
+};
 
 const cleanupExpiredPendingTestimonials = async () => {
   try {
@@ -55,16 +82,21 @@ const cleanupExpiredPendingTestimonials = async () => {
     );
 
     if (result.rows.length > 0) {
-      console.info(`Deleted ${result.rows.length} expired pending testimonials`);
+      console.info(
+        `Deleted ${result.rows.length} expired pending testimonials`,
+      );
     }
   } catch (error) {
     console.error("cleanupExpiredPendingTestimonials error", error);
   }
 };
 
-setInterval(() => {
-  void cleanupExpiredPendingTestimonials();
-}, 60 * 60 * 1000);
+setInterval(
+  () => {
+    void cleanupExpiredPendingTestimonials();
+  },
+  60 * 60 * 1000,
+);
 
 if (
   isProduction &&
@@ -838,7 +870,9 @@ const validateTestimoniPayload = (req, res, next) => {
     return res.status(400).json({ error: "Payload testimoni tidak valid" });
   }
 
-  const isAdminRoute = req.path.startsWith("/api/testimoni") && !req.path.startsWith("/api/public");
+  const isAdminRoute =
+    req.path.startsWith("/api/testimoni") &&
+    !req.path.startsWith("/api/public");
   const resolvedStatus = normalizeTestimoniStatus(
     status ?? (isAdminRoute ? "approved" : "pending"),
   );
@@ -1293,11 +1327,14 @@ app.post(
   requireCsrfToken,
   validateTestimoniPayload,
   async (req, res) => {
-    const { teks, author, latarBelakang, latarbelakang, initial, status } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, initial, status } =
+      req.body;
     const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
     const resolvedStatus = normalizeTestimoniStatus(status ?? "approved");
 
     try {
+      await ensureApprovedTestimoniLimit(resolvedStatus);
+
       const result = await pool.query(
         `INSERT INTO ${table("testimoni")} (
         teks,
@@ -1315,7 +1352,9 @@ app.post(
       res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error("POST /api/testimoni error", error);
-      res.status(500).json({ error: "Gagal membuat testimoni card" });
+      const message =
+        error instanceof Error ? error.message : "Gagal membuat testimoni card";
+      return res.status(400).json({ error: message });
     }
   },
 );
@@ -1329,11 +1368,28 @@ app.put(
   validateTestimoniPayload,
   async (req, res) => {
     const { id_testi } = req.params;
-    const { teks, author, latarBelakang, latarbelakang, initial, status } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, initial, status } =
+      req.body;
     const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
     const resolvedStatus = normalizeTestimoniStatus(status ?? "approved");
 
     try {
+      const existing = await pool.query(
+        `SELECT status FROM ${table("testimoni")} WHERE id_testi = $1 LIMIT 1`,
+        [id_testi],
+      );
+
+      if (existing.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "testimoni card tidak ditemukan" });
+      }
+
+      await ensureApprovedTestimoniLimit(
+        resolvedStatus,
+        existing.rows[0]?.status || "pending",
+      );
+
       const result = await pool.query(
         `UPDATE ${table("testimoni")}
        SET teks = $1,
@@ -1344,7 +1400,14 @@ app.put(
            updated_at = NOW()
        WHERE id_testi = $6
        RETURNING id_testi, teks, author, latarbelakang, initial, status, created_at, updated_at`,
-        [teks, author, resolvedLatarBelakang, initial, resolvedStatus, id_testi],
+        [
+          teks,
+          author,
+          resolvedLatarBelakang,
+          initial,
+          resolvedStatus,
+          id_testi,
+        ],
       );
       if (result.rows.length === 0) {
         return res
@@ -1354,7 +1417,11 @@ app.put(
       res.json(result.rows[0]);
     } catch (error) {
       console.error("PUT /api/testimoni/:id_testi error", error);
-      res.status(500).json({ error: "Gagal mengupdate testimoni card" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Gagal mengupdate testimoni card";
+      return res.status(400).json({ error: message });
     }
   },
 );
@@ -1370,10 +1437,28 @@ app.patch(
     const resolvedStatus = normalizeTestimoniStatus(status);
 
     if (resolvedStatus === "pending") {
-      return res.status(400).json({ error: "Status pending tidak diizinkan untuk peninjauan manual" });
+      return res.status(400).json({
+        error: "Status pending tidak diizinkan untuk peninjauan manual",
+      });
     }
 
     try {
+      const existing = await pool.query(
+        `SELECT status FROM ${table("testimoni")} WHERE id_testi = $1 LIMIT 1`,
+        [id_testi],
+      );
+
+      if (existing.rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "testimoni card tidak ditemukan" });
+      }
+
+      await ensureApprovedTestimoniLimit(
+        resolvedStatus,
+        existing.rows[0]?.status || "pending",
+      );
+
       const result = await pool.query(
         `UPDATE ${table("testimoni")}
          SET status = $1,
@@ -1384,13 +1469,19 @@ app.patch(
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: "testimoni card tidak ditemukan" });
+        return res
+          .status(404)
+          .json({ error: "testimoni card tidak ditemukan" });
       }
 
       res.json(result.rows[0]);
     } catch (error) {
       console.error("PATCH /api/testimoni/:id_testi/status error", error);
-      res.status(500).json({ error: "Gagal mengubah status testimoni" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Gagal mengubah status testimoni";
+      return res.status(400).json({ error: message });
     }
   },
 );

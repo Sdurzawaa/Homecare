@@ -715,6 +715,12 @@ export default function Admin() {
   };
 
   const approveTestimoni = async (id: number) => {
+    const approvedCount = testimoniItems.filter((item) => item.status === "approved").length;
+    if (approvedCount >= 12) {
+      openErrorModal("Batas Limit Tercapai", "Sudah ada 12 testimoni yang disetujui. Tolak atau hapus salah satu agar bisa menambahkan yang baru.");
+      return;
+    }
+
     try {
       const response = await request(`/api/testimoni/${id}/status`, {
         method: "PATCH",
