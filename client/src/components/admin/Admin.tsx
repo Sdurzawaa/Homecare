@@ -1165,18 +1165,25 @@ export default function Admin() {
               <div className="space-y-3" data-pricing-form>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-slate-700">Kategori <span className="text-red-500">*</span></label>
-                  <input
-                    list="pricing-category-options"
+                  <select
                     value={pricingForm.category}
                     onChange={(e) => handlePricingValue("category", e.target.value)}
-                    placeholder="Contoh: Perawatan Kehamilan"
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
-                  />
-                  <datalist id="pricing-category-options">
-                    {pricingCategoryItems.map((item) => (
-                      <option key={item.id} value={item.category} />
-                    ))}
-                  </datalist>
+                    disabled={pricingCategoryItems.length === 0}
+                  >
+                    {pricingCategoryItems.length === 0 ? (
+                      <option value="">Belum ada kategori tersimpan</option>
+                    ) : (
+                      <>
+                        <option value="">Pilih kategori</option>
+                        {pricingCategoryItems.map((item) => (
+                          <option key={item.id} value={item.category}>
+                            {item.category}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
                 </div>
 
                 <div>
