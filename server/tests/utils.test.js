@@ -67,9 +67,9 @@ test("normalizeTestimoniStatus accepts only valid moderation states", () => {
   assert.equal(normalizeTestimoniStatus("random"), "pending");
 });
 
-test("isTestimoniExpired deletes reviews that are older than 14 days while pending", () => {
+test("isTestimoniExpired deletes reviews that are older than 5 days while pending", () => {
   const now = new Date("2026-01-20T00:00:00.000Z");
-  const oldDate = new Date("2025-12-30T00:00:00.000Z");
+  const oldDate = new Date("2026-01-12T00:00:00.000Z");
   const recentDate = new Date("2026-01-18T00:00:00.000Z");
 
   assert.equal(isTestimoniExpired("pending", oldDate, now), true);

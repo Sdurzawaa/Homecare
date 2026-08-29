@@ -75,13 +75,14 @@ export function isTestimoniExpired(status, createdAt, now = new Date()) {
     return false;
   }
 
-  const createdTime = createdAt instanceof Date ? createdAt : new Date(createdAt);
+  const createdTime =
+    createdAt instanceof Date ? createdAt : new Date(createdAt);
   if (Number.isNaN(createdTime.getTime())) {
     return false;
   }
 
   const diffMs = now.getTime() - createdTime.getTime();
-  return diffMs >= 14 * 24 * 60 * 60 * 1000;
+  return diffMs >= 5 * 24 * 60 * 60 * 1000;
 }
 
 export function normalizeAdminUsername(username) {

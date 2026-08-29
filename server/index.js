@@ -77,7 +77,7 @@ const cleanupExpiredPendingTestimonials = async () => {
     const result = await pool.query(
       `DELETE FROM ${table("testimoni")}
        WHERE status = 'pending'
-         AND created_at < NOW() - INTERVAL '14 days'
+         AND created_at < NOW() - INTERVAL '5 days'
        RETURNING id_testi`,
     );
 
