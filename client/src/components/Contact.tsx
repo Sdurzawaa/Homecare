@@ -42,6 +42,35 @@ function normalizeWhatsAppLink(value: string | undefined, fallback = "https://wa
   return `https://wa.me/62${digits}`;
 }
 
+function formatPhoneDisplay(phone?: string) {
+  const raw = (phone || "+62 812-8986-1639").replace(/\s+/g, "");
+  const digits = raw.replace(/\D/g, "");
+
+  if (!digits) return "+62 812-8986-1639";
+
+  if (digits.startsWith("62")) {
+    const rest = digits.slice(2);
+    if (rest.length >= 10) {
+      return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
+    }
+    return `+62 ${rest}`;
+  }
+
+  if (digits.startsWith("0")) {
+    const rest = digits.slice(1);
+    if (rest.length >= 10) {
+      return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
+    }
+    return `+62 ${rest}`;
+  }
+
+  if (digits.length >= 10) {
+    return `+62 ${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
+  }
+
+  return `+62 ${digits}`;
+}
+
 function Contact({ contactRef, content, defaultWhatsAppLink: defaultWhatsAppLinkOverride }: ContactProps) {
   const [mapActive, setMapActive] = useState(false);
   const phone = content?.phone?.trim() || "";
@@ -57,7 +86,7 @@ function Contact({ contactRef, content, defaultWhatsAppLink: defaultWhatsAppLink
       href: defaultWhatsAppLink,
       external: true,
       label: "Telepon / WhatsApp",
-      value: phone,
+      value: formatPhoneDisplay(phone || "+62 81289861639"),
       icon: (
         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" />
       ),
