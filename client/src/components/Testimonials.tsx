@@ -295,21 +295,6 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
         </h3>
       </div>
 
-      {!showForm && (
-        <div className="mb-10 flex flex-col items-center justify-center gap-3 rounded-[22px] border border-[var(--line)] bg-[var(--card)] px-5 py-5 text-center shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:px-7">
-          <p className="m-0 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--pine)]">
-            Umpan balik pelanggan
-          </p>
-          <a
-            href="/form/testimoni"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--pine)] px-5 py-2.5 text-sm font-semibold text-white no-underline transition hover:brightness-[0.97]"
-          >
-            Berikan tanggapan?
-            <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      )}
-
       {showForm && (
         <div className="mb-12 rounded-[24px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:p-7">
           <div className="mb-6 text-center sm:text-left">
@@ -407,6 +392,21 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
             <TestimonialCard key={t.id} testimonial={t} />
           ))}
         </ul>
+      )}
+
+      {!showForm && (
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 rounded-[22px] border border-[var(--line)] bg-[var(--card)] px-5 py-5 text-center shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:px-7">
+          <p className="m-0 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--pine)]">
+            Umpan balik pelanggan
+          </p>
+          <a
+            href="/form/testimoni"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--pine)] px-5 py-2.5 text-sm font-semibold text-white no-underline transition hover:brightness-[0.97]"
+          >
+            Berikan tanggapan?
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
       )}
     </section>
   );
