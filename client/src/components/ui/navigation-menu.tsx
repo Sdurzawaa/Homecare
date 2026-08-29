@@ -6,9 +6,9 @@ import { Navigation, Menu, X, ChevronDown, Home, Info, MessageSquareQuote, Phone
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { name: "Beranda", href: "#home", icon: Home },
+  { name: "Beranda", href: "/", icon: Home },
   { name: "Kenapa Kami", href: "#about", icon: Info },
-  { name: "Testimoni", href: "#testimonials", icon: MessageSquareQuote },
+  { name: "Testimoni", href: "/form/testimoni", icon: MessageSquareQuote },
   { name: "Kontak", href: "#contact", icon: Phone },
 ];
 

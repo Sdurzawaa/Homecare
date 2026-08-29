@@ -54,7 +54,8 @@ const mergeSiteSections = (data: Record<string, any> = {}) => ({
 function App() {
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
   const isAdminPath = pathname === "/admin" || pathname === "/admin/";
-  const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath;
+  const isTestimoniFormPath = pathname === "/form/testimoni" || pathname === "/form/testimoni/";
+  const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath || isTestimoniFormPath;
   const [siteSections, setSiteSections] = useState(defaultSections);
   const [siteSectionsReady, setSiteSectionsReady] = useState(false);
   const heroRef = useScrollAnimation({ threshold: 0.3 });
@@ -120,6 +121,18 @@ function App() {
     return <Admin />;
   }
 
+  if (isTestimoniFormPath) {
+    return (
+      <div className="page-shell">
+        <AnimatedNavFramer />
+        <main>
+          <Testimonials showForm={true} />
+        </main>
+        <Footer content={siteSections.footer} />
+      </div>
+    );
+  }
+
   if (!isValidPath) {
     return (
       <div className="page-shell">
@@ -173,7 +186,7 @@ function App() {
         />
         {/* Testimonials Section */}
         <Suspense fallback={<div className="h-[24rem] w-full" aria-hidden="true" />}>
-          <Testimonials testimonialsRef={testimonialsRef} />
+          <Testimonials testimonialsRef={testimonialsRef} showForm={false} />
         </Suspense>
 
         {/* Contact Section */}

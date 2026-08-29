@@ -17,6 +17,7 @@ interface TestimonialFormState {
 
 interface TestimonialsProps {
   testimonialsRef?: Ref<HTMLElement | null>;
+  showForm?: boolean;
 }
 
 const DEFAULT_TESTIMONIALS: Testimonial[] = [
@@ -116,7 +117,7 @@ function splitIntoRows(items: Testimonial[], rowCount: number) {
   return rows;
 }
 
-export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
+export default function Testimonials({ testimonialsRef, showForm = false }: TestimonialsProps) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
   const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -294,78 +295,80 @@ export default function Testimonials({ testimonialsRef }: TestimonialsProps) {
         </h3>
       </div>
 
-      <div className="mb-12 rounded-[24px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:p-7">
-        <div className="mb-6 text-center sm:text-left">
-          <p className="eyebrow mb-2">Bagikan pengalaman</p>
-          <h4 className="m-0 text-[1.35rem] font-medium text-[var(--ink)]">Tulis testimoni Anda</h4>
-        </div>
+      {showForm && (
+        <div className="mb-12 rounded-[24px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:p-7">
+          <div className="mb-6 text-center sm:text-left">
+            <p className="eyebrow mb-2">Bagikan pengalaman</p>
+            <h4 className="m-0 text-[1.35rem] font-medium text-[var(--ink)]">Tulis testimoni Anda</h4>
+          </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-            Nama
-            <input
-              value={form.author}
-              onChange={(event) => handleFormChange("author", event.target.value)}
-              className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
-              placeholder="Masukkan nama Anda"
-            />
-          </label>
+          <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
+              Nama
+              <input
+                value={form.author}
+                onChange={(event) => handleFormChange("author", event.target.value)}
+                className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
+                placeholder="Masukkan nama Anda"
+              />
+            </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-            Latar belakang / profesi
-            <input
-              value={form.role}
-              onChange={(event) => handleFormChange("role", event.target.value)}
-              className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
-              placeholder="Contoh: Ibu rumah tangga"
-            />
-          </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
+              Latar belakang / profesi
+              <input
+                value={form.role}
+                onChange={(event) => handleFormChange("role", event.target.value)}
+                className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
+                placeholder="Contoh: Ibu rumah tangga"
+              />
+            </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)] md:col-span-2">
-            Testimoni
-            <textarea
-              value={form.text}
-              onChange={(event) => handleFormChange("text", event.target.value)}
-              rows={4}
-              className="resize-none rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
-              placeholder="Ceritakan pengalaman Anda menggunakan layanan kami..."
-            />
-          </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)] md:col-span-2">
+              Testimoni
+              <textarea
+                value={form.text}
+                onChange={(event) => handleFormChange("text", event.target.value)}
+                rows={4}
+                className="resize-none rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
+                placeholder="Ceritakan pengalaman Anda menggunakan layanan kami..."
+              />
+            </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-            Inisial
-            <input
-              value={form.initial}
-              maxLength={2}
-              onChange={(event) => handleFormChange("initial", event.target.value.toUpperCase())}
-              className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] uppercase outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
-              placeholder="A"
-            />
-          </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
+              Inisial
+              <input
+                value={form.initial}
+                maxLength={2}
+                onChange={(event) => handleFormChange("initial", event.target.value.toUpperCase())}
+                className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] uppercase outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
+                placeholder="A"
+              />
+            </label>
 
-          <div className="flex flex-col justify-end gap-3 md:col-span-1">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center rounded-full bg-[var(--pine)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-70"
+            <div className="flex flex-col justify-end gap-3 md:col-span-1">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--pine)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmitting ? "Mengirim..." : "Kirim Testimoni"}
+              </button>
+            </div>
+          </form>
+
+          {(submitError || submitSuccess) && (
+            <div
+              className={`mt-4 rounded-xl px-4 py-3 text-sm ${
+                submitError
+                  ? "border border-[#f2c7c2] bg-[#fff1f0] text-[#b02a37]"
+                  : "border border-[#cfe9dc] bg-[#ebfff4] text-[#0f7a3f]"
+              }`}
             >
-              {isSubmitting ? "Mengirim..." : "Kirim Testimoni"}
-            </button>
-          </div>
-        </form>
-
-        {(submitError || submitSuccess) && (
-          <div
-            className={`mt-4 rounded-xl px-4 py-3 text-sm ${
-              submitError
-                ? "border border-[#f2c7c2] bg-[#fff1f0] text-[#b02a37]"
-                : "border border-[#cfe9dc] bg-[#ebfff4] text-[#0f7a3f]"
-            }`}
-          >
-            {submitError || submitSuccess}
-          </div>
-        )}
-      </div>
+              {submitError || submitSuccess}
+            </div>
+          )}
+        </div>
+      )}
 
       {useMarquee ? (
         <div
