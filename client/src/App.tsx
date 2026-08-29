@@ -287,7 +287,16 @@ function App() {
 
         {/* Contact Section */}
         <Suspense fallback={<div className="h-[28rem] w-full" aria-hidden="true" />}>
-          <Contact contactRef={contactRef} content={siteSections.contact} />
+          <Contact
+            contactRef={contactRef}
+            content={siteSections.contact}
+            defaultWhatsAppLink={
+              defaultWaLink ||
+              siteSections.contact.button_link ||
+              siteSections.footer.button_link ||
+              normalizeWhatsAppLink(siteSections.contact.phone || siteSections.footer.phone, "https://wa.me/6285892006905")
+            }
+          />
         </Suspense>
       </main>
 

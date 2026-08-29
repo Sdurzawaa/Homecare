@@ -2,6 +2,7 @@ import { useState, type Ref } from "react";
 
 interface ContactProps {
   contactRef?: Ref<HTMLElement | null>;
+  defaultWhatsAppLink?: string;
   content?: {
     title?: string;
     description?: string;
@@ -41,12 +42,15 @@ function normalizeWhatsAppLink(value: string | undefined, fallback = "https://wa
   return `https://wa.me/62${digits}`;
 }
 
-function Contact({ contactRef, content }: ContactProps) {
+function Contact({ contactRef, content, defaultWhatsAppLink: defaultWhatsAppLinkOverride }: ContactProps) {
   const [mapActive, setMapActive] = useState(false);
   const phone = content?.phone?.trim() || "";
   const address = content?.address?.trim() || "";
   const mapsQuery = encodeURIComponent(address);
-  const defaultWhatsAppLink = content?.button_link || normalizeWhatsAppLink(phone, "https://wa.me/6285892006905");
+  const defaultWhatsAppLink =
+    defaultWhatsAppLinkOverride ||
+    content?.button_link ||
+    normalizeWhatsAppLink(phone, "https://wa.me/6285892006905");
 
   const channels: Channel[] = [
     {
