@@ -936,6 +936,7 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
                     href={buildWhatsAppLink(
                       selectedTreatment.title,
                       selectedTreatment.price,
+                      defaultWhatsAppLink,
                     )}
                     target="_blank"
                     rel="noreferrer noopener"
