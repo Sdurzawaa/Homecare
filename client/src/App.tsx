@@ -53,21 +53,31 @@ const defaultSections = {
   },
 };
 
-const mergeSiteSections = (data: Record<string, any> = {}) => {
-  const contact = { ...defaultSections.contact, ...(data.contact ?? {}) };
+const mergeSiteSections = (
+  data: Record<string, any> = {},
+  defaultWaLinkOverride = DEFAULT_WHATSAPP_LINK,
+) => {
+  const contact = {
+    ...defaultSections.contact,
+    ...(data.contact ?? {}),
+    button_link:
+      data.contact?.button_link || defaultWaLinkOverride || defaultSections.contact.button_link,
+  };
 
   return {
     hero: {
       ...defaultSections.hero,
       ...(data.hero ?? {}),
-      cta_link: data.hero?.cta_link || contact.button_link || defaultSections.hero.cta_link,
+      cta_link:
+        data.hero?.cta_link || contact.button_link || defaultWaLinkOverride || defaultSections.hero.cta_link,
     },
     about: { ...defaultSections.about, ...(data.about ?? {}) },
     contact,
     footer: {
       ...defaultSections.footer,
       ...(data.footer ?? {}),
-      button_link: data.footer?.button_link || contact.button_link || defaultSections.footer.button_link,
+      button_link:
+        data.footer?.button_link || contact.button_link || defaultWaLinkOverride || defaultSections.footer.button_link,
     },
   };
 };
@@ -78,6 +88,7 @@ function App() {
   const isTestimoniFormPath = pathname.startsWith("/form/testimoni");
   const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath || isTestimoniFormPath;
   const [siteSections, setSiteSections] = useState(defaultSections);
+  const [defaultWaLink, setDefaultWaLink] = useState(DEFAULT_WHATSAPP_LINK);
   const [siteSectionsReady, setSiteSectionsReady] = useState(false);
   const heroRef = useScrollAnimation({ threshold: 0.3 });
   const achievementsRef = useScrollAnimation({ threshold: 0.1 });
@@ -93,6 +104,22 @@ function App() {
 
     const controller = new AbortController();
 
+    const loadDefaultWa = () => {
+      fetch("/api/public/default-wa", {
+        cache: "no-store",
+        signal: controller.signal,
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => {
+          if (!data || typeof data.link !== "string") return;
+          setDefaultWaLink(data.link);
+        })
+        .catch((error) => {
+          if (error.name !== "AbortError") return undefined;
+          return undefined;
+        });
+    };
+
     const loadSiteSections = () => {
       fetch("/api/public/site-sections", {
         cache: "no-store",
@@ -101,7 +128,13 @@ function App() {
         .then((response) => (response.ok ? response.json() : null))
         .then((data) => {
           if (!data) return;
-          const nextSections = mergeSiteSections(data);
+
+          const nextSections = mergeSiteSections(data, defaultWaLink || DEFAULT_WHATSAPP_LINK);
+
+          if (typeof data.contact?.button_link === "string" && data.contact.button_link.trim()) {
+            setDefaultWaLink(data.contact.button_link);
+          }
+
           setSiteSections((currentSections) =>
             JSON.stringify(currentSections) === JSON.stringify(nextSections)
               ? currentSections
@@ -117,14 +150,24 @@ function App() {
         });
     };
 
+    loadDefaultWa();
     loadSiteSections();
 
-    const handleFocus = () => loadSiteSections();
+    const handleFocus = () => {
+      loadDefaultWa();
+      loadSiteSections();
+    };
     const handleVisibility = () => {
-      if (!document.hidden) loadSiteSections();
+      if (!document.hidden) {
+        loadDefaultWa();
+        loadSiteSections();
+      }
     };
     const refreshTimer = window.setInterval(() => {
-      if (!document.hidden) loadSiteSections();
+      if (!document.hidden) {
+        loadDefaultWa();
+        loadSiteSections();
+      }
     }, 10000);
 
     window.addEventListener("focus", handleFocus);
@@ -155,6 +198,7 @@ function App() {
             button_link:
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
+              defaultWaLink ||
               DEFAULT_WHATSAPP_LINK,
           }}
         />
@@ -208,6 +252,7 @@ function App() {
             defaultWhatsAppLink={
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
+              defaultWaLink ||
               DEFAULT_WHATSAPP_LINK
             }
           />
@@ -237,6 +282,7 @@ function App() {
           button_link:
             siteSections.contact.button_link ||
             siteSections.footer.button_link ||
+            defaultWaLink ||
             DEFAULT_WHATSAPP_LINK,
         }}
       />

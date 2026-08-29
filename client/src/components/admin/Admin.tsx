@@ -55,6 +55,26 @@ const emptyTestimoniForm = (): TestimoniFormState => ({
   initial: "",
 });
 
+const normalizeWhatsAppLink = (value: string | undefined, fallback = "https://wa.me/6285892006905") => {
+  if (!value || !value.trim()) return fallback;
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return fallback;
+
+  if (digits.startsWith("62")) {
+    return `https://wa.me/${digits}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return `https://wa.me/62${digits.slice(1)}`;
+  }
+
+  return `https://wa.me/62${digits}`;
+};
+
 const defaultSections = {
   hero: {
     title: "Kenyamanan Perawatan Medis di Rumah Anda",
@@ -290,6 +310,7 @@ export default function Admin() {
       const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
       const defaultWaPhoneValue = typeof defaultWaRes?.phone === "string" ? defaultWaRes.phone : "+62 858-9200-6905";
+      const defaultWaLinkValue = normalizeWhatsAppLink(defaultWaPhoneValue, defaultSections.contact.button_link);
 
       if (testimoniRes instanceof Response && !testimoniRes.ok) {
         throw new Error("Gagal memuat data ulasan");
@@ -298,10 +319,24 @@ export default function Admin() {
 
       const merged = {
         ...defaultSections,
-        hero: { ...defaultSections.hero, ...(sectionDataRes.hero || {}) },
+        hero: {
+          ...defaultSections.hero,
+          ...(sectionDataRes.hero || {}),
+          cta_link: sectionDataRes.hero?.cta_link || defaultWaLinkValue || defaultSections.hero.cta_link,
+        },
         about: { ...defaultSections.about, ...(sectionDataRes.about || {}) },
-        contact: { ...defaultSections.contact, ...(sectionDataRes.contact || {}), phone: defaultWaPhoneValue },
-        footer: { ...defaultSections.footer, ...(sectionDataRes.footer || {}), phone: defaultWaPhoneValue },
+        contact: {
+          ...defaultSections.contact,
+          ...(sectionDataRes.contact || {}),
+          phone: defaultWaPhoneValue,
+          button_link: sectionDataRes.contact?.button_link || defaultWaLinkValue || defaultSections.contact.button_link,
+        },
+        footer: {
+          ...defaultSections.footer,
+          ...(sectionDataRes.footer || {}),
+          phone: defaultWaPhoneValue,
+          button_link: sectionDataRes.footer?.button_link || defaultWaLinkValue || defaultSections.footer.button_link,
+        },
       };
 
       setDefaultWaPhone(defaultWaPhoneValue);
@@ -421,17 +456,25 @@ export default function Admin() {
         throw new Error(data?.error || "Gagal menyimpan nomor WhatsApp default");
       }
 
-      setDefaultWaPhone(data.phone || defaultWaPhone);
+      const nextPhone = data.phone || defaultWaPhone;
+      const nextWaLink = normalizeWhatsAppLink(nextPhone, defaultSections.contact.button_link);
+
+      setDefaultWaPhone(nextPhone);
       setSectionData((prev) => ({
         ...prev,
+        hero: {
+          ...(prev.hero || defaultSections.hero),
+          cta_link: prev.hero?.cta_link || defaultSections.hero.cta_link || nextWaLink,
+        },
         contact: {
           ...(prev.contact || defaultSections.contact),
-          phone: data.phone || defaultWaPhone,
-          button_link: data.link || (prev.contact?.button_link || defaultSections.contact.button_link),
+          phone: nextPhone,
+          button_link: data.link || nextWaLink || (prev.contact?.button_link || defaultSections.contact.button_link),
         },
         footer: {
           ...(prev.footer || defaultSections.footer),
-          phone: data.phone || defaultWaPhone,
+          phone: nextPhone,
+          button_link: data.link || nextWaLink || (prev.footer?.button_link || defaultSections.footer.button_link),
         },
       }));
       openSuccessModal("Nomor WhatsApp berhasil disimpan", "Semua link default WhatsApp akan mengikuti nomor terbaru.");
