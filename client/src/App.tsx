@@ -74,7 +74,7 @@ const mergeSiteSections = (
     ...defaultSections.contact,
     ...(data.contact ?? {}),
     button_link:
-      data.contact?.button_link || defaultWaLinkOverride || defaultSections.contact.button_link,
+      defaultWaLinkOverride || data.contact?.button_link || defaultSections.contact.button_link,
   };
 
   return {
@@ -82,7 +82,7 @@ const mergeSiteSections = (
       ...defaultSections.hero,
       ...(data.hero ?? {}),
       cta_link:
-        data.hero?.cta_link || contact.button_link || defaultWaLinkOverride || defaultSections.hero.cta_link,
+        defaultWaLinkOverride || data.hero?.cta_link || contact.button_link || defaultSections.hero.cta_link,
     },
     about: { ...defaultSections.about, ...(data.about ?? {}) },
     contact,
@@ -90,7 +90,7 @@ const mergeSiteSections = (
       ...defaultSections.footer,
       ...(data.footer ?? {}),
       button_link:
-        data.footer?.button_link || contact.button_link || defaultWaLinkOverride || defaultSections.footer.button_link,
+        defaultWaLinkOverride || data.footer?.button_link || contact.button_link || defaultSections.footer.button_link,
     },
   };
 };
@@ -265,9 +265,9 @@ function App() {
           <Pricing
             pricingRef={pricingRef}
             defaultWhatsAppLink={
+              defaultWaLink ||
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
-              defaultWaLink ||
               normalizeWhatsAppLink(siteSections.contact.phone || siteSections.footer.phone, "https://wa.me/6285892006905")
             }
           />
@@ -295,9 +295,9 @@ function App() {
         content={{
           ...siteSections.footer,
           button_link:
+            defaultWaLink ||
             siteSections.contact.button_link ||
             siteSections.footer.button_link ||
-            defaultWaLink ||
             "",
         }}
       />
