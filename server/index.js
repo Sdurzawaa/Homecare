@@ -14,6 +14,7 @@ import cookieParser from "cookie-parser";
 import pool from "./db.js";
 import { createCsrfToken, validateCsrfToken } from "./csrf.js";
 import {
+  deriveInitialFromAuthor,
   isValidAdminPassword,
   isValidAdminUsername,
   normalizeAdminUsername,
@@ -796,8 +797,7 @@ const validateNumericIdParam = (req, res, next) => {
 };
 
 const validateTestimoniPayload = (req, res, next) => {
-  const { teks, author, latarBelakang, latarbelakang, initial } =
-    req.body || {};
+  const { teks, author, latarBelakang, latarbelakang } = req.body || {};
   const resolvedLatarBelakang = (
     latarBelakang ??
     latarbelakang ??
@@ -811,15 +811,15 @@ const validateTestimoniPayload = (req, res, next) => {
     typeof author !== "string" ||
     author.trim() === "" ||
     typeof resolvedLatarBelakang !== "string" ||
-    resolvedLatarBelakang.trim() === "" ||
-    typeof initial !== "string" ||
-    initial.trim() === ""
+    resolvedLatarBelakang.trim() === ""
   ) {
     return res.status(400).json({ error: "Payload testimoni tidak valid" });
   }
 
+  req.body.author = author.trim();
   req.body.latarBelakang = resolvedLatarBelakang.trim();
   req.body.latarbelakang = resolvedLatarBelakang.trim();
+  req.body.initial = deriveInitialFromAuthor(author);
 
   next();
 };
@@ -1174,8 +1174,9 @@ app.post(
   "/api/public/testimoni",
   validateTestimoniPayload,
   async (req, res) => {
-    const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
+    const { teks, author, latarBelakang, latarbelakang } = req.body;
     const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+    const initial = deriveInitialFromAuthor(author);
 
     try {
       const result = await pool.query(

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildSearchPath,
+  deriveInitialFromAuthor,
   isValidAdminPassword,
   isValidAdminUsername,
   normalizeAdminUsername,
@@ -48,4 +49,10 @@ test("normalizeApiKey accepts the admin header regardless of casing", () => {
   assert.equal(normalizeApiKey({ "x-api-key": "abc123" }), "abc123");
   assert.equal(normalizeApiKey({ "X-API-Key": "xyz789" }), "xyz789");
   assert.equal(normalizeApiKey({}), undefined);
+});
+
+test("deriveInitialFromAuthor builds initials from the author name", () => {
+  assert.equal(deriveInitialFromAuthor("Risma"), "R");
+  assert.equal(deriveInitialFromAuthor("Risma Putri"), "RP");
+  assert.equal(deriveInitialFromAuthor("   "), "?");
 });

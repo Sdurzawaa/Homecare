@@ -12,7 +12,6 @@ interface TestimonialFormState {
   author: string;
   role: string;
   text: string;
-  initial: string;
 }
 
 interface TestimonialsProps {
@@ -127,7 +126,6 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
     author: "",
     role: "",
     text: "",
-    initial: "",
   });
 
   const normalizeTestimonials = (data: Array<Record<string, unknown>>) =>
@@ -187,12 +185,19 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
     const trimmedText = form.text.trim();
     const trimmedAuthor = form.author.trim();
     const trimmedRole = form.role.trim();
-    const trimmedInitial = form.initial.trim();
 
-    if (!trimmedText || !trimmedAuthor || !trimmedRole || !trimmedInitial) {
+    if (!trimmedText || !trimmedAuthor || !trimmedRole) {
       setSubmitError("Semua field harus diisi sebelum mengirim testimoni.");
       return;
     }
+
+    const derivedInitial =
+      trimmedAuthor
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join("") || "?";
 
     setIsSubmitting(true);
 
@@ -206,7 +211,7 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
           teks: trimmedText,
           author: trimmedAuthor,
           latarBelakang: trimmedRole,
-          initial: trimmedInitial,
+          initial: derivedInitial,
         }),
       });
 
@@ -215,7 +220,7 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
         throw new Error(data?.error || "Gagal mengirim testimoni");
       }
 
-      setForm({ author: "", role: "", text: "", initial: "" });
+      setForm({ author: "", role: "", text: "" });
       setSubmitSuccess("Terima kasih! Testimoni Anda berhasil terkirim dan akan ditinjau.");
       await fetchTestimonials();
       setError(null);
@@ -334,17 +339,6 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
               />
             </label>
 
-            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-              Inisial
-              <input
-                value={form.initial}
-                maxLength={2}
-                onChange={(event) => handleFormChange("initial", event.target.value.toUpperCase())}
-                className="rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-[0.95rem] text-[var(--ink)] uppercase outline-none transition focus:border-[var(--pine)] focus:ring-2 focus:ring-[var(--pine)]/20"
-                placeholder="A"
-              />
-            </label>
-
             <div className="flex flex-col justify-end gap-3 md:col-span-1">
               <button
                 type="submit"
@@ -407,7 +401,6 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
             className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pine)] px-6 py-3 text-[0.96rem] font-semibold text-white no-underline transition hover:brightness-[0.97]"
           >
             Tulis Ulasan Sekarang!
-            <span aria-hidden="true">→</span>
           </a>
         </div>
       )}

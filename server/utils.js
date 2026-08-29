@@ -45,6 +45,21 @@ export function normalizeApiKey(headers = {}) {
   return header ? header[1] : undefined;
 }
 
+export function deriveInitialFromAuthor(author) {
+  const value = typeof author === "string" ? author.trim() : "";
+  if (!value) return "?";
+
+  const parts = value.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+
+  const initials = parts
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+
+  return initials || "?";
+}
+
 export function normalizeAdminUsername(username) {
   if (typeof username !== "string") return "";
   return username.trim().toLowerCase();
