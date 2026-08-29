@@ -110,13 +110,21 @@ function Footer({
             <h4 className="m-0 text-[0.85rem] font-semibold uppercase tracking-wide text-white/40">
               Kontak
             </h4>
-            <div className="flex flex-col gap-2.5 text-[0.9rem] text-white/70">
-              <div className="flex items-start gap-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-0.5 h-4 w-4 shrink-0 text-white/60">
-                  <path d="M12 21s-6.5-5.1-9-8.5C1.7 10.1 3.2 5 8 5c2.4 0 3.8 1.5 4 2.2.2-.7 1.6-2.2 4-2.2 4.8 0 6.3 5.1 5 7.5-2.5 3.4-9 8.5-9 8.5Z"/>
-                  <circle cx="12" cy="9" r="2.2"/>
+            <div className="flex flex-col gap-3.5 text-[0.95rem] text-white/70">
+              <div className="flex items-start gap-2.5">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="mt-0.5 h-4 w-4 shrink-0 text-white/60"
+                >
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
-                <p className="m-0">{content?.address || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama"}</p>
+                <p className="m-0 leading-relaxed">
+                  {content?.address || "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran Lama"}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0 text-white/60">
