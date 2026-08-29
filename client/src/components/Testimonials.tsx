@@ -221,7 +221,7 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
       }
 
       setForm({ author: "", role: "", text: "" });
-      setSubmitSuccess("Terima kasih! Testimoni Anda berhasil terkirim dan akan ditinjau.");
+      setSubmitSuccess("Terima kasih banyak! Ulasan Anda sudah kami terima dengan baik.");
       await fetchTestimonials();
       setError(null);
     } catch (submitErrorCaught: unknown) {
@@ -343,7 +343,7 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center rounded-full bg-[var(--pine)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97] disabled:cursor-not-allowed disabled:opacity-70"
+                className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? "Mengirim..." : "Kirim Ulasan"}
               </button>
@@ -398,7 +398,7 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
           </p>
           <a
             href="/form/testimoni"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pine)] px-6 py-3 text-[0.96rem] font-semibold text-white no-underline shadow-[0_12px_24px_-12px_rgba(87,57,76,0.8)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-[var(--pine)]/90 hover:shadow-[0_18px_30px_-14px_rgba(87,57,76,0.9)] active:translate-y-0 active:scale-[0.99]"
+            className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92]"
           >
             Tulis Ulasan Sekarang!
           </a>
