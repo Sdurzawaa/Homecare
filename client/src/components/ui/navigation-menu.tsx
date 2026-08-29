@@ -332,7 +332,9 @@ export function AnimatedNavFramer() {
 
   React.useEffect(() => {
     const hashList = [...NAV_LINKS.map((link) => link.href), "#services"];
-    const sections = hashList.map((href) => document.querySelector(href));
+    const sections = hashList
+      .filter((href) => href.startsWith("#"))
+      .map((href) => document.querySelector(href));
 
     const observerOptions = {
       root: null,
@@ -363,6 +365,11 @@ export function AnimatedNavFramer() {
   }, []);
 
   const scrollToSection = (href: string) => {
+    if (!href.startsWith("#")) {
+      window.location.assign(href);
+      return;
+    }
+
     const el = document.querySelector(href);
     if (!el) return;
     const headerH = 76;
@@ -394,6 +401,15 @@ export function AnimatedNavFramer() {
   ) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (href.startsWith("/")) {
+      closeAllMenus();
+      setExpanded(false);
+      setLockedOpen(false);
+      window.location.assign(href);
+      return;
+    }
+
     suppressScrollCollapse();
     setActiveHash(href);
     closeAllMenus();

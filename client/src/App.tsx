@@ -54,7 +54,7 @@ const mergeSiteSections = (data: Record<string, any> = {}) => ({
 function App() {
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
   const isAdminPath = pathname === "/admin" || pathname === "/admin/";
-  const isTestimoniFormPath = pathname === "/form/testimoni" || pathname === "/form/testimoni/";
+  const isTestimoniFormPath = pathname.startsWith("/form/testimoni");
   const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath || isTestimoniFormPath;
   const [siteSections, setSiteSections] = useState(defaultSections);
   const [siteSectionsReady, setSiteSectionsReady] = useState(false);
