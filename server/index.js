@@ -1170,6 +1170,33 @@ app.get("/api/public/testimoni", async (req, res) => {
   }
 });
 
+app.post(
+  "/api/public/testimoni",
+  validateTestimoniPayload,
+  async (req, res) => {
+    const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
+    const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+
+    try {
+      const result = await pool.query(
+        `INSERT INTO ${table("testimoni")} (
+        teks,
+        author,
+        latarbelakang,
+        initial
+      ) VALUES ($1, $2, $3, $4)
+      RETURNING id_testi, teks, author, latarbelakang, initial`,
+        [teks, author, resolvedLatarBelakang, initial],
+      );
+
+      return res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("POST /api/public/testimoni error", error);
+      return res.status(500).json({ error: "Gagal membuat testimoni" });
+    }
+  },
+);
+
 // Read all testimoni (admin only)
 app.get("/api/testimoni", requireAdminAuth, async (req, res) => {
   try {
