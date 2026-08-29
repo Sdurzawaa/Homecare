@@ -5,7 +5,7 @@ function Footer({
 }) {
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-6 pt-10 sm:px-6 md:px-8 lg:px-12">
-      <div className="mx-auto max-w-[1240px]">
+      <div className="mx-auto max-w-[1240px] md:pl-4 lg:pl-8">
         <div className="grid grid-cols-1 gap-x-[1.6rem] gap-y-8 md:grid-cols-[1.3fr_1fr_1fr_1.1fr]">
           {/* Brand */}
           <div className="flex flex-col gap-4">
