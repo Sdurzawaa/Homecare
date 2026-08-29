@@ -280,13 +280,18 @@ export default function Admin() {
         fetch("/api/public/pricing").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/pricing-categories").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/site-sections").then((res) => (res.ok ? res.json() : {})),
-        fetch("/api/public/testimoni").then((res) => (res.ok ? res.json() : [])),
+        request("/api/testimoni"),
       ]);
 
       const pricingData = Array.isArray(pricingRes) ? pricingRes : [];
       const pricingCategoryData = Array.isArray(pricingCategoriesRes) ? pricingCategoriesRes : [];
       const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
+
+      if (testimoniRes instanceof Response && !testimoniRes.ok) {
+        throw new Error("Gagal memuat data ulasan");
+      }
+      const resolvedTestimoniData = testimoniRes instanceof Response ? await testimoniRes.json() : testimoniRes;
 
       const merged = {
         ...defaultSections,
@@ -298,7 +303,7 @@ export default function Admin() {
 
       setPricingItems(pricingData);
       setPricingCategoryItems(pricingCategoryData);
-      setTestimoniItems(testimoniData);
+      setTestimoniItems(Array.isArray(resolvedTestimoniData) ? resolvedTestimoniData : []);
       setSectionData(merged);
     } catch (error: any) {
       console.error(error);
@@ -673,6 +678,7 @@ export default function Admin() {
         ...testimoniForm,
         latarBelakang: testimoniForm.latarbelakang.trim(),
         latarbelakang: testimoniForm.latarbelakang.trim(),
+        status: editTestimoniId ? undefined : "approved",
       };
 
       const response = await request(url, {
@@ -705,6 +711,50 @@ export default function Admin() {
       author: item.author,
       latarbelakang: item.latarbelakang,
       initial: item.initial,
+    });
+  };
+
+  const approveTestimoni = async (id: number) => {
+    try {
+      const response = await request(`/api/testimoni/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Gagal menyetujui testimoni");
+      }
+
+      await loadAll();
+      openSuccessModal("Testimoni disetujui", "Ulasan telah dipublikasikan ke halaman publik.");
+    } catch (error: any) {
+      openErrorModal("Gagal Menyetujui", error.message || "Gagal menyetujui testimoni");
+    }
+  };
+
+  const rejectTestimoni = async (id: number) => {
+    setConfirmModal({
+      title: "Tolak Ulasan",
+      message: "Ulasan ini akan dihapus dan tidak akan tampil di halaman publik.",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          const response = await request(`/api/testimoni/${id}`, { method: "DELETE" });
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data?.error || "Gagal menolak testimoni");
+          }
+
+          await loadAll();
+          openSuccessModal("Ulasan ditolak", "Data ulasan sementara telah dihapus.");
+        } catch (error: any) {
+          openErrorModal("Gagal Menolak", error.message || "Gagal menolak testimoni");
+        }
+      },
+      onCancel: () => setConfirmModal(null),
     });
   };
 
@@ -1984,9 +2034,48 @@ export default function Admin() {
                                   <p className="text-xs text-slate-600">{item.latarbelakang}</p>
                                 </div>
                               </div>
+                              <div className="mb-2 flex items-center gap-2">
+                                <span
+                                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                                    item.status === "approved"
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : item.status === "rejected"
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-amber-100 text-amber-700"
+                                  }`}
+                                >
+                                  {item.status === "approved" ? "Disetujui" : item.status === "rejected" ? "Ditolak" : "Menunggu"}
+                                </span>
+                                <span className="text-[10px] text-slate-500">
+                                  {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              </div>
                               <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
                             </div>
-                            <div className="flex gap-1 flex-shrink-0">
+                            <div className="flex flex-col gap-1 flex-shrink-0">
+                              {item.status !== "approved" && (
+                                <button
+                                  onClick={() => approveTestimoni(item.id_testi)}
+                                  className="rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
+                                >
+                                  Setujui
+                                </button>
+                              )}
+                              {item.status !== "rejected" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    rejectTestimoni(item.id_testi);
+                                  }}
+                                  className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                                >
+                                  Tolak
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   editTestimoni(item);
@@ -2001,7 +2090,7 @@ export default function Admin() {
                                   e.stopPropagation();
                                   deleteTestimoni(item.id_testi);
                                 }}
-                                className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                                className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
                               >
                                 Hapus
                               </button>

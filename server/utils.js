@@ -60,6 +60,30 @@ export function deriveInitialFromAuthor(author) {
   return initials || "?";
 }
 
+export function normalizeTestimoniStatus(status) {
+  const value = typeof status === "string" ? status.trim().toLowerCase() : "";
+  if (value === "approved" || value === "rejected" || value === "pending") {
+    return value;
+  }
+
+  return "pending";
+}
+
+export function isTestimoniExpired(status, createdAt, now = new Date()) {
+  const normalizedStatus = normalizeTestimoniStatus(status);
+  if (normalizedStatus !== "pending") {
+    return false;
+  }
+
+  const createdTime = createdAt instanceof Date ? createdAt : new Date(createdAt);
+  if (Number.isNaN(createdTime.getTime())) {
+    return false;
+  }
+
+  const diffMs = now.getTime() - createdTime.getTime();
+  return diffMs >= 14 * 24 * 60 * 60 * 1000;
+}
+
 export function normalizeAdminUsername(username) {
   if (typeof username !== "string") return "";
   return username.trim().toLowerCase();

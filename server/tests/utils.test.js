@@ -4,10 +4,12 @@ import assert from "node:assert/strict";
 import {
   buildSearchPath,
   deriveInitialFromAuthor,
+  isTestimoniExpired,
   isValidAdminPassword,
   isValidAdminUsername,
   normalizeAdminUsername,
   normalizeApiKey,
+  normalizeTestimoniStatus,
   resolveSchemaName,
   withSchema,
 } from "../utils.js";
@@ -55,4 +57,22 @@ test("deriveInitialFromAuthor builds initials from the author name", () => {
   assert.equal(deriveInitialFromAuthor("Risma"), "R");
   assert.equal(deriveInitialFromAuthor("Risma Putri"), "RP");
   assert.equal(deriveInitialFromAuthor("   "), "?");
+});
+
+test("normalizeTestimoniStatus accepts only valid moderation states", () => {
+  assert.equal(normalizeTestimoniStatus("pending"), "pending");
+  assert.equal(normalizeTestimoniStatus("approved"), "approved");
+  assert.equal(normalizeTestimoniStatus("rejected"), "rejected");
+  assert.equal(normalizeTestimoniStatus("APPROVED"), "approved");
+  assert.equal(normalizeTestimoniStatus("random"), "pending");
+});
+
+test("isTestimoniExpired deletes reviews that are older than 14 days while pending", () => {
+  const now = new Date("2026-01-20T00:00:00.000Z");
+  const oldDate = new Date("2025-12-30T00:00:00.000Z");
+  const recentDate = new Date("2026-01-18T00:00:00.000Z");
+
+  assert.equal(isTestimoniExpired("pending", oldDate, now), true);
+  assert.equal(isTestimoniExpired("approved", oldDate, now), false);
+  assert.equal(isTestimoniExpired("pending", recentDate, now), false);
 });

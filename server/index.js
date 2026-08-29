@@ -18,6 +18,7 @@ import {
   isValidAdminPassword,
   isValidAdminUsername,
   normalizeAdminUsername,
+  normalizeTestimoniStatus,
   quoteIdent,
   resolveSchemaName,
   withSchema,
@@ -43,6 +44,27 @@ const isProduction =
   process.env.NODE_ENV === "production" ||
   ["preview", "production"].includes(process.env.VERCEL_ENV);
 const requiredProductionSecrets = ["ADMIN_SESSION_SECRET", "ADMIN_JWT_SECRET"];
+
+const cleanupExpiredPendingTestimonials = async () => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM ${table("testimoni")}
+       WHERE status = 'pending'
+         AND created_at < NOW() - INTERVAL '14 days'
+       RETURNING id_testi`,
+    );
+
+    if (result.rows.length > 0) {
+      console.info(`Deleted ${result.rows.length} expired pending testimonials`);
+    }
+  } catch (error) {
+    console.error("cleanupExpiredPendingTestimonials error", error);
+  }
+};
+
+setInterval(() => {
+  void cleanupExpiredPendingTestimonials();
+}, 60 * 60 * 1000);
 
 if (
   isProduction &&
@@ -797,7 +819,7 @@ const validateNumericIdParam = (req, res, next) => {
 };
 
 const validateTestimoniPayload = (req, res, next) => {
-  const { teks, author, latarBelakang, latarbelakang } = req.body || {};
+  const { teks, author, latarBelakang, latarbelakang, status } = req.body || {};
   const resolvedLatarBelakang = (
     latarBelakang ??
     latarbelakang ??
@@ -816,10 +838,16 @@ const validateTestimoniPayload = (req, res, next) => {
     return res.status(400).json({ error: "Payload testimoni tidak valid" });
   }
 
+  const isAdminRoute = req.path.startsWith("/api/testimoni") && !req.path.startsWith("/api/public");
+  const resolvedStatus = normalizeTestimoniStatus(
+    status ?? (isAdminRoute ? "approved" : "pending"),
+  );
+
   req.body.author = author.trim();
   req.body.latarBelakang = resolvedLatarBelakang.trim();
   req.body.latarbelakang = resolvedLatarBelakang.trim();
   req.body.initial = deriveInitialFromAuthor(author);
+  req.body.status = resolvedStatus;
 
   next();
 };
@@ -1154,6 +1182,7 @@ app.put(
 // Read all testimoni (public)
 app.get("/api/public/testimoni", async (req, res) => {
   try {
+    await cleanupExpiredPendingTestimonials();
     const result = await pool.query(
       `SELECT 
        id_testi,
@@ -1161,7 +1190,9 @@ app.get("/api/public/testimoni", async (req, res) => {
        author, 
        latarbelakang, 
        initial 
-      FROM ${table("testimoni")} ORDER BY id_testi ASC`,
+      FROM ${table("testimoni")}
+      WHERE status = 'approved'
+      ORDER BY id_testi ASC`,
     );
     res.json(result.rows);
   } catch (error) {
@@ -1174,8 +1205,9 @@ app.post(
   "/api/public/testimoni",
   validateTestimoniPayload,
   async (req, res) => {
-    const { teks, author, latarBelakang, latarbelakang } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, status } = req.body;
     const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+    const resolvedStatus = normalizeTestimoniStatus(status ?? "pending");
     const initial = deriveInitialFromAuthor(author);
 
     try {
@@ -1184,10 +1216,13 @@ app.post(
         teks,
         author,
         latarbelakang,
-        initial
-      ) VALUES ($1, $2, $3, $4)
-      RETURNING id_testi, teks, author, latarbelakang, initial`,
-        [teks, author, resolvedLatarBelakang, initial],
+        initial,
+        status,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      RETURNING id_testi, teks, author, latarbelakang, initial, status, created_at, updated_at`,
+        [teks, author, resolvedLatarBelakang, initial, resolvedStatus],
       );
 
       return res.status(201).json(result.rows[0]);
@@ -1201,14 +1236,18 @@ app.post(
 // Read all testimoni (admin only)
 app.get("/api/testimoni", requireAdminAuth, async (req, res) => {
   try {
+    await cleanupExpiredPendingTestimonials();
     const result = await pool.query(
       `SELECT 
        id_testi,
        teks, 
        author, 
        latarbelakang, 
-       initial 
-      FROM ${table("testimoni")} ORDER BY id_testi ASC`,
+       initial,
+       status,
+       created_at,
+       updated_at
+      FROM ${table("testimoni")} ORDER BY created_at DESC, id_testi DESC`,
     );
     res.json(result.rows);
   } catch (error) {
@@ -1254,8 +1293,9 @@ app.post(
   requireCsrfToken,
   validateTestimoniPayload,
   async (req, res) => {
-    const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, initial, status } = req.body;
     const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+    const resolvedStatus = normalizeTestimoniStatus(status ?? "approved");
 
     try {
       const result = await pool.query(
@@ -1263,10 +1303,14 @@ app.post(
         teks,
         author,
         latarbelakang,
-        initial )
-       VALUES ($1, $2, $3, $4)
-       RETURNING id_testi, teks, author, latarbelakang, initial`,
-        [teks, author, resolvedLatarBelakang, initial],
+        initial,
+        status,
+        created_at,
+        updated_at
+      )
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       RETURNING id_testi, teks, author, latarbelakang, initial, status, created_at, updated_at`,
+        [teks, author, resolvedLatarBelakang, initial, resolvedStatus],
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -1285,8 +1329,9 @@ app.put(
   validateTestimoniPayload,
   async (req, res) => {
     const { id_testi } = req.params;
-    const { teks, author, latarBelakang, latarbelakang, initial } = req.body;
+    const { teks, author, latarBelakang, latarbelakang, initial, status } = req.body;
     const resolvedLatarBelakang = (latarBelakang ?? latarbelakang ?? "").trim();
+    const resolvedStatus = normalizeTestimoniStatus(status ?? "approved");
 
     try {
       const result = await pool.query(
@@ -1294,10 +1339,12 @@ app.put(
        SET teks = $1,
            author = $2,
            latarbelakang = $3,
-           initial = $4
-       WHERE id_testi = $5
-       RETURNING id_testi, teks, author, latarbelakang, initial`,
-        [teks, author, resolvedLatarBelakang, initial, id_testi],
+           initial = $4,
+           status = $5,
+           updated_at = NOW()
+       WHERE id_testi = $6
+       RETURNING id_testi, teks, author, latarbelakang, initial, status, created_at, updated_at`,
+        [teks, author, resolvedLatarBelakang, initial, resolvedStatus, id_testi],
       );
       if (result.rows.length === 0) {
         return res
@@ -1308,6 +1355,42 @@ app.put(
     } catch (error) {
       console.error("PUT /api/testimoni/:id_testi error", error);
       res.status(500).json({ error: "Gagal mengupdate testimoni card" });
+    }
+  },
+);
+
+app.patch(
+  "/api/testimoni/:id_testi/status",
+  requireAdminAuth,
+  requireCsrfToken,
+  validateNumericIdParam,
+  async (req, res) => {
+    const { id_testi } = req.params;
+    const { status } = req.body || {};
+    const resolvedStatus = normalizeTestimoniStatus(status);
+
+    if (resolvedStatus === "pending") {
+      return res.status(400).json({ error: "Status pending tidak diizinkan untuk peninjauan manual" });
+    }
+
+    try {
+      const result = await pool.query(
+        `UPDATE ${table("testimoni")}
+         SET status = $1,
+             updated_at = NOW()
+         WHERE id_testi = $2
+         RETURNING id_testi, teks, author, latarbelakang, initial, status, created_at, updated_at`,
+        [resolvedStatus, id_testi],
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "testimoni card tidak ditemukan" });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("PATCH /api/testimoni/:id_testi/status error", error);
+      res.status(500).json({ error: "Gagal mengubah status testimoni" });
     }
   },
 );
