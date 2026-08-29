@@ -55,7 +55,7 @@ const emptyTestimoniForm = (): TestimoniFormState => ({
   initial: "",
 });
 
-const normalizeWhatsAppLink = (value: string | undefined, fallback = "https://wa.me/6285892006905") => {
+const normalizeWhatsAppLink = (value: string | undefined, fallback = "#") => {
   if (!value || !value.trim()) return fallback;
 
   const trimmed = value.trim();
@@ -83,7 +83,7 @@ const defaultSections = {
     image: "/Person.jpg",
     badge: "Dipercaya 1000+ keluarga",
     cta_label: "Konsultasi Gratis",
-    cta_link: "https://wa.me/6285892006905",
+    cta_link: "",
     secondary_cta_label: "Lihat Layanan",
     secondary_cta_link: "#services",
   },
@@ -106,7 +106,7 @@ const defaultSections = {
     email: "bidanrismacare@gmail.com",
     address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
     button_label: "Chat via WhatsApp",
-    button_link: "https://wa.me/6285892006905",
+    button_link: "",
   },
   footer: {
     brand: "Homecare",
@@ -124,7 +124,7 @@ export default function Admin() {
   const [adminUsername, setAdminUsername] = useState("");
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
-  const [defaultWaPhone, setDefaultWaPhone] = useState("+62 858-9200-6905");
+  const [defaultWaPhone, setDefaultWaPhone] = useState("");
   const [selectedSection, setSelectedSection] = useState("hero");
   const [pricingItems, setPricingItems] = useState<any[]>([]);
   const [pricingCategoryItems, setPricingCategoryItems] = useState<any[]>([]);
@@ -301,7 +301,7 @@ export default function Admin() {
         fetch("/api/public/pricing").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/pricing-categories").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/site-sections").then((res) => (res.ok ? res.json() : {})),
-        fetch("/api/public/default-wa").then((res) => (res.ok ? res.json() : { phone: "+62 858-9200-6905" })),
+        fetch("/api/public/default-wa").then((res) => (res.ok ? res.json() : { phone: "" })),
         request("/api/testimoni"),
       ]);
 
@@ -309,8 +309,8 @@ export default function Admin() {
       const pricingCategoryData = Array.isArray(pricingCategoriesRes) ? pricingCategoriesRes : [];
       const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
-      const defaultWaPhoneValue = typeof defaultWaRes?.phone === "string" ? defaultWaRes.phone : "+62 858-9200-6905";
-      const defaultWaLinkValue = normalizeWhatsAppLink(defaultWaPhoneValue, defaultSections.contact.button_link);
+      const defaultWaPhoneValue = typeof defaultWaRes?.phone === "string" ? defaultWaRes.phone : "";
+      const defaultWaLinkValue = normalizeWhatsAppLink(defaultWaPhoneValue, defaultSections.contact.button_link || "#");
 
       if (testimoniRes instanceof Response && !testimoniRes.ok) {
         throw new Error("Gagal memuat data ulasan");
@@ -457,7 +457,7 @@ export default function Admin() {
       }
 
       const nextPhone = data.phone || defaultWaPhone;
-      const nextWaLink = normalizeWhatsAppLink(nextPhone, defaultSections.contact.button_link);
+      const nextWaLink = normalizeWhatsAppLink(nextPhone, defaultSections.contact.button_link || "#");
 
       setDefaultWaPhone(nextPhone);
       setSectionData((prev) => ({

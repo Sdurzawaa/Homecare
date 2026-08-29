@@ -21,7 +21,7 @@ interface Channel {
   icon: React.ReactNode;
 }
 
-function normalizeWhatsAppLink(value: string | undefined, fallback = "https://wa.me/6285892006905") {
+function normalizeWhatsAppLink(value: string | undefined, fallback = "#") {
   if (!value || !value.trim()) return fallback;
 
   const trimmed = value.trim();

@@ -11,8 +11,6 @@ const Pricing = lazy(() => import("./components/Pricing"));
 const Testimonials = lazy(() => import("./components/Testimonials"));
 const Contact = lazy(() => import("./components/Contact"));
 
-const DEFAULT_WHATSAPP_LINK = "https://wa.me/6285892006905";
-
 const defaultSections = {
   hero: {
     title: "Kenyamanan Perawatan Medis di Rumah Anda",
@@ -21,7 +19,7 @@ const defaultSections = {
     image: "/Person.jpg",
     badge: "Dipercaya 1000+ keluarga",
     cta_label: "Konsultasi Gratis",
-    cta_link: DEFAULT_WHATSAPP_LINK,
+    cta_link: "",
     secondary_cta_label: "Lihat Layanan",
     secondary_cta_link: "#services",
   },
@@ -37,25 +35,25 @@ const defaultSections = {
       "https://lh3.googleusercontent.com/aida-public/AB6AXuClz7KaBBUmaxbwURQ07RcddQ0oPFIlB7MzyKhrxk3rkmiK1PSq_8cnwUi2-qH70ICZgpl_AClFJceJVvE8tjILhabxYP61F3c7xfQzYlATCqZEnJEftbz5p4T4NOutPpb9JLiDobUpNBTqdjZvWEChCINfgn_zzeL51AMl2wfRc_ua-BPOasUSSGmorEw7wbvBPxFDULpaSr96MzRES_RRuwmJJ9ow-8vnwX8mypIRL0yKHXVzCDIGZw",
   },
   contact: {
-    phone: "+62 858-9200-6905",
+    phone: "",
     email: "bidanrismacare@gmail.com",
     address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
     button_label: "Chat via WhatsApp",
-    button_link: DEFAULT_WHATSAPP_LINK,
+    button_link: "",
   },
   footer: {
     brand: "Homecare",
     description:
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
-    phone: "+62 858-9200-6905",
+    phone: "",
     address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
-    button_link: DEFAULT_WHATSAPP_LINK,
+    button_link: "",
   },
 };
 
 const mergeSiteSections = (
   data: Record<string, any> = {},
-  defaultWaLinkOverride = DEFAULT_WHATSAPP_LINK,
+  defaultWaLinkOverride = "",
 ) => {
   const contact = {
     ...defaultSections.contact,
@@ -88,7 +86,7 @@ function App() {
   const isTestimoniFormPath = pathname.startsWith("/form/testimoni");
   const isValidPath = pathname === "/" || pathname === "/index.html" || isAdminPath || isTestimoniFormPath;
   const [siteSections, setSiteSections] = useState(defaultSections);
-  const [defaultWaLink, setDefaultWaLink] = useState(DEFAULT_WHATSAPP_LINK);
+  const [defaultWaLink, setDefaultWaLink] = useState("");
   const [siteSectionsReady, setSiteSectionsReady] = useState(false);
   const heroRef = useScrollAnimation({ threshold: 0.3 });
   const achievementsRef = useScrollAnimation({ threshold: 0.1 });
@@ -129,7 +127,7 @@ function App() {
         .then((data) => {
           if (!data) return;
 
-          const nextSections = mergeSiteSections(data, defaultWaLink || DEFAULT_WHATSAPP_LINK);
+          const nextSections = mergeSiteSections(data, defaultWaLink || "");
 
           if (typeof data.contact?.button_link === "string" && data.contact.button_link.trim()) {
             setDefaultWaLink(data.contact.button_link);
@@ -199,7 +197,7 @@ function App() {
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
               defaultWaLink ||
-              DEFAULT_WHATSAPP_LINK,
+              "",
           }}
         />
       </div>
@@ -253,7 +251,7 @@ function App() {
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
               defaultWaLink ||
-              DEFAULT_WHATSAPP_LINK
+              ""
             }
           />
         </Suspense>
@@ -283,7 +281,7 @@ function App() {
             siteSections.contact.button_link ||
             siteSections.footer.button_link ||
             defaultWaLink ||
-            DEFAULT_WHATSAPP_LINK,
+            "",
         }}
       />
     </div>

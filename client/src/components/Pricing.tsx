@@ -11,7 +11,6 @@ import { motion } from "framer-motion";
 import Modal from "./Modal";
 import { optimizeCloudinaryUrl } from "../lib/image";
 
-const DEFAULT_WHATSAPP_LINK = "https://wa.me/6285892006905";
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 const categoryInfo = {
@@ -180,7 +179,7 @@ function formatDuration(minutes: number) {
   return `${minutes} menit`;
 }
 
-function normalizeWhatsAppLink(value?: string, fallback = DEFAULT_WHATSAPP_LINK) {
+function normalizeWhatsAppLink(value?: string, fallback = "#") {
   if (!value || !value.trim()) {
     return fallback;
   }
@@ -208,7 +207,7 @@ function normalizeWhatsAppLink(value?: string, fallback = DEFAULT_WHATSAPP_LINK)
 
 function buildWhatsAppLink(title: string, price: number, baseLink?: string) {
   const message = `Halo, saya tertarik dengan layanan "${title}". Apakah bisa dibantu info lebih lanjut?`;
-  const normalizedBase = normalizeWhatsAppLink(baseLink || DEFAULT_WHATSAPP_LINK);
+  const normalizedBase = normalizeWhatsAppLink(baseLink || "#");
 
   try {
     const url = new URL(normalizedBase);

@@ -25,7 +25,7 @@ function Footer({
             </p>
             <div className="mt-1 flex items-center gap-3">
               <a
-                href={content?.button_link || "https://wa.me/6285892006905"}
+                href={content?.button_link || "#"}
                 target="_blank"
                 rel="noreferrer noopener"
                 aria-label="WhatsApp"
