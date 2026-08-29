@@ -395,15 +395,18 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
       )}
 
       {!showForm && (
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 rounded-[22px] border border-[var(--line)] bg-[var(--card)] px-5 py-5 text-center shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:px-7">
-          <p className="m-0 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--pine)]">
-            Umpan balik pelanggan
+        <div className="mt-10 flex flex-col items-center justify-center gap-4 rounded-[22px] border border-[var(--line)] bg-[var(--card)] px-6 py-7 text-center shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:px-8">
+          <h4 className="m-0 text-[clamp(1.25rem,2vw,1.7rem)] font-medium text-[var(--ink)]">
+            Cerita Bunda Sangat Berarti
+          </h4>
+          <p className="m-0 max-w-[40rem] text-[0.98rem] leading-relaxed text-[var(--ink-soft)]">
+            Bagikan pengalaman Bunda bersama Homecare Bidan Fatimah - Risma. Ulasan Bunda membantu kami terus memberikan pelayanan kebidanan yang nyaman, aman, dan penuh kasih.
           </p>
           <a
             href="/form/testimoni"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--pine)] px-5 py-2.5 text-sm font-semibold text-white no-underline transition hover:brightness-[0.97]"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pine)] px-6 py-3 text-[0.96rem] font-semibold text-white no-underline transition hover:brightness-[0.97]"
           >
-            Berikan tanggapan?
+            Tulis Ulasan Sekarang!
             <span aria-hidden="true">→</span>
           </a>
         </div>
