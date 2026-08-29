@@ -1,7 +1,7 @@
 function Footer({
   content,
 }: {
-  content?: { brand?: string; description?: string; phone?: string; email?: string; address?: string };
+  content?: { brand?: string; description?: string; phone?: string; email?: string; address?: string; button_link?: string };
 }) {
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-6 pt-10 sm:px-6 md:px-8 lg:px-12">
@@ -25,7 +25,7 @@ function Footer({
             </p>
             <div className="mt-1 flex items-center gap-3">
               <a
-                href="https://wa.me/6285892006905"
+                href={content?.button_link || "https://wa.me/6285892006905"}
                 target="_blank"
                 rel="noreferrer noopener"
                 aria-label="WhatsApp"

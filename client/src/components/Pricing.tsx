@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import Modal from "./Modal";
 import { optimizeCloudinaryUrl } from "../lib/image";
 
-const WHATSAPP_NUMBER = "6285892006905";
+const DEFAULT_WHATSAPP_LINK = "https://wa.me/6285892006905";
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 const categoryInfo = {
@@ -156,6 +156,7 @@ const DEFAULT_TREATMENTS: Treatment[] = [
 
 interface PricingProps {
   pricingRef?: RefObject<HTMLElement | null>;
+  defaultWhatsAppLink?: string;
 }
 
 const CATEGORY_ORDER = Object.keys(categoryInfo) as ServiceCategory[];
@@ -179,9 +180,18 @@ function formatDuration(minutes: number) {
   return `${minutes} menit`;
 }
 
-function buildWhatsAppLink(title: string, price: number) {
+function buildWhatsAppLink(title: string, price: number, baseLink?: string) {
   const message = `Halo, saya tertarik dengan layanan "${title}". Apakah bisa dibantu info lebih lanjut?`;
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const normalizedBase = (baseLink || DEFAULT_WHATSAPP_LINK).trim();
+
+  try {
+    const url = new URL(normalizedBase);
+    url.searchParams.set("text", message);
+    return url.toString();
+  } catch {
+    const separator = normalizedBase.includes("?") ? "&" : "?";
+    return `${normalizedBase}${separator}text=${encodeURIComponent(message)}`;
+  }
 }
 
 function CardSkeleton() {
@@ -206,12 +216,14 @@ const TreatmentCard = memo(function TreatmentCard({
   hasError,
   onClick,
   onImageError,
+  defaultWhatsAppLink,
 }: {
   treatment: Treatment;
   index: number;
   hasError: boolean;
   onClick: () => void;
   onImageError: () => void;
+  defaultWhatsAppLink?: string;
 }) {
   const [loaded, setLoaded] = useState(false);
 
@@ -299,7 +311,7 @@ const TreatmentCard = memo(function TreatmentCard({
 
           <a
             className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#25d366] transition-transform duration-300 ease-out hover:scale-110 hover:shadow-[0_8px_20px_rgba(37,211,102,0.4)] focus-visible:outline-2 focus-visible:outline-[#25d366] focus-visible:outline-offset-2"
-            href={buildWhatsAppLink(treatment.title, treatment.price)}
+            href={buildWhatsAppLink(treatment.title, treatment.price, defaultWhatsAppLink)}
             target="_blank"
             rel="noreferrer noopener"
             title="Pesan via WhatsApp"
@@ -316,7 +328,7 @@ const TreatmentCard = memo(function TreatmentCard({
   );
 });
 
-function Pricing({ pricingRef }: PricingProps) {
+function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
   const [treatments, setTreatments] = useState<Treatment[]>(DEFAULT_TREATMENTS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

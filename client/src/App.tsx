@@ -11,6 +11,8 @@ const Pricing = lazy(() => import("./components/Pricing"));
 const Testimonials = lazy(() => import("./components/Testimonials"));
 const Contact = lazy(() => import("./components/Contact"));
 
+const DEFAULT_WHATSAPP_LINK = "https://wa.me/6285892006905";
+
 const defaultSections = {
   hero: {
     title: "Kenyamanan Perawatan Medis di Rumah Anda",
@@ -19,7 +21,7 @@ const defaultSections = {
     image: "/Person.jpg",
     badge: "Dipercaya 1000+ keluarga",
     cta_label: "Konsultasi Gratis",
-    cta_link: "#contact",
+    cta_link: DEFAULT_WHATSAPP_LINK,
     secondary_cta_label: "Lihat Layanan",
     secondary_cta_link: "#services",
   },
@@ -34,22 +36,41 @@ const defaultSections = {
     image_3:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuClz7KaBBUmaxbwURQ07RcddQ0oPFIlB7MzyKhrxk3rkmiK1PSq_8cnwUi2-qH70ICZgpl_AClFJceJVvE8tjILhabxYP61F3c7xfQzYlATCqZEnJEftbz5p4T4NOutPpb9JLiDobUpNBTqdjZvWEChCINfgn_zzeL51AMl2wfRc_ua-BPOasUSSGmorEw7wbvBPxFDULpaSr96MzRES_RRuwmJJ9ow-8vnwX8mypIRL0yKHXVzCDIGZw",
   },
-  contact: {},
+  contact: {
+    phone: "+62 858-9200-6905",
+    email: "bidanrismacare@gmail.com",
+    address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
+    button_label: "Chat via WhatsApp",
+    button_link: DEFAULT_WHATSAPP_LINK,
+  },
   footer: {
     brand: "Homecare",
     description:
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
     phone: "+62 858-9200-6905",
     address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
+    button_link: DEFAULT_WHATSAPP_LINK,
   },
 };
 
-const mergeSiteSections = (data: Record<string, any> = {}) => ({
-  hero: { ...defaultSections.hero, ...(data.hero ?? {}) },
-  about: { ...defaultSections.about, ...(data.about ?? {}) },
-  contact: { ...defaultSections.contact, ...(data.contact ?? {}) },
-  footer: { ...defaultSections.footer, ...(data.footer ?? {}) },
-});
+const mergeSiteSections = (data: Record<string, any> = {}) => {
+  const contact = { ...defaultSections.contact, ...(data.contact ?? {}) };
+
+  return {
+    hero: {
+      ...defaultSections.hero,
+      ...(data.hero ?? {}),
+      cta_link: data.hero?.cta_link || contact.button_link || defaultSections.hero.cta_link,
+    },
+    about: { ...defaultSections.about, ...(data.about ?? {}) },
+    contact,
+    footer: {
+      ...defaultSections.footer,
+      ...(data.footer ?? {}),
+      button_link: data.footer?.button_link || contact.button_link || defaultSections.footer.button_link,
+    },
+  };
+};
 
 function App() {
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -128,7 +149,15 @@ function App() {
         <main>
           <Testimonials showForm={true} />
         </main>
-        <Footer content={siteSections.footer} />
+        <Footer
+          content={{
+            ...siteSections.footer,
+            button_link:
+              siteSections.contact.button_link ||
+              siteSections.footer.button_link ||
+              DEFAULT_WHATSAPP_LINK,
+          }}
+        />
       </div>
     );
   }
@@ -174,7 +203,14 @@ function App() {
         <Hero heroRef={heroRef} content={siteSections.hero} />
         {/* Pricing Section */}
         <Suspense fallback={<div className="h-[28rem] w-full" aria-hidden="true" />}>
-          <Pricing pricingRef={pricingRef} />
+          <Pricing
+            pricingRef={pricingRef}
+            defaultWhatsAppLink={
+              siteSections.contact.button_link ||
+              siteSections.footer.button_link ||
+              DEFAULT_WHATSAPP_LINK
+            }
+          />
         </Suspense>
         {/* Achievements Section */}
         <Achievements
@@ -195,7 +231,15 @@ function App() {
         </Suspense>
       </main>
 
-      <Footer content={siteSections.footer} />
+      <Footer
+        content={{
+          ...siteSections.footer,
+          button_link:
+            siteSections.contact.button_link ||
+            siteSections.footer.button_link ||
+            DEFAULT_WHATSAPP_LINK,
+        }}
+      />
     </div>
   );
 }

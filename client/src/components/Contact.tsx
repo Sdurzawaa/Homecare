@@ -26,10 +26,11 @@ function Contact({ contactRef, content }: ContactProps) {
   const phone = content?.phone?.trim() || "";
   const address = content?.address?.trim() || "";
   const mapsQuery = encodeURIComponent(address);
+  const defaultWhatsAppLink = content?.button_link || (phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "#");
 
   const channels: Channel[] = [
     {
-      href: phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "#",
+      href: defaultWhatsAppLink,
       external: true,
       label: "Telepon / WhatsApp",
       value: phone,
@@ -114,7 +115,7 @@ function Contact({ contactRef, content }: ContactProps) {
             </div>
 
             <a
-              href={content?.button_link || "#"}
+              href={defaultWhatsAppLink}
               target="_blank"
               rel="noreferrer noopener"
               className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92]"

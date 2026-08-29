@@ -63,7 +63,7 @@ const defaultSections = {
     image: "/Person.jpg",
     badge: "Dipercaya 1000+ keluarga",
     cta_label: "Konsultasi Gratis",
-    cta_link: "#contact",
+    cta_link: "https://wa.me/6285892006905",
     secondary_cta_label: "Lihat Layanan",
     secondary_cta_link: "#services",
   },
