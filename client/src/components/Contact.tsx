@@ -21,12 +21,32 @@ interface Channel {
   icon: React.ReactNode;
 }
 
+function normalizeWhatsAppLink(value: string | undefined, fallback = "https://wa.me/6285892006905") {
+  if (!value || !value.trim()) return fallback;
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return fallback;
+
+  if (digits.startsWith("62")) {
+    return `https://wa.me/${digits}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return `https://wa.me/62${digits.slice(1)}`;
+  }
+
+  return `https://wa.me/62${digits}`;
+}
+
 function Contact({ contactRef, content }: ContactProps) {
   const [mapActive, setMapActive] = useState(false);
   const phone = content?.phone?.trim() || "";
   const address = content?.address?.trim() || "";
   const mapsQuery = encodeURIComponent(address);
-  const defaultWhatsAppLink = content?.button_link || (phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "#");
+  const defaultWhatsAppLink = content?.button_link || normalizeWhatsAppLink(phone, "#");
 
   const channels: Channel[] = [
     {

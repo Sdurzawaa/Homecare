@@ -45,6 +45,39 @@ export function normalizeApiKey(headers = {}) {
   return header ? header[1] : undefined;
 }
 
+export function normalizeWhatsAppLink(
+  value,
+  fallback = "https://wa.me/6285892006905",
+) {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) {
+    return fallback;
+  }
+
+  if (digits.startsWith("62")) {
+    return `https://wa.me/${digits}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return `https://wa.me/62${digits.slice(1)}`;
+  }
+
+  return `https://wa.me/62${digits}`;
+}
+
 export function deriveInitialFromAuthor(author) {
   const value = typeof author === "string" ? author.trim() : "";
   if (!value) return "?";

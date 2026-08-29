@@ -11,6 +11,7 @@ import {
   normalizeAdminUsername,
   normalizeApiKey,
   normalizeTestimoniStatus,
+  normalizeWhatsAppLink,
   resolveSchemaName,
   withSchema,
 } from "../utils.js";
@@ -93,5 +94,17 @@ test("getLatestWaPhone prefers the newest default WhatsApp row", () => {
       { id: 3, Phone: "+62 812 188" },
     ]),
     "+62 812 342",
+  );
+});
+
+test("normalizeWhatsAppLink converts +62 numbers into a wa.me URL", () => {
+  assert.equal(
+    normalizeWhatsAppLink("+62 81289861639"),
+    "https://wa.me/6281289861639",
+  );
+
+  assert.equal(
+    normalizeWhatsAppLink("081289861639"),
+    "https://wa.me/6281289861639",
   );
 });

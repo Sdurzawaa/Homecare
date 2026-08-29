@@ -20,6 +20,7 @@ import {
   isValidAdminUsername,
   normalizeAdminUsername,
   normalizeTestimoniStatus,
+  normalizeWhatsAppLink,
   quoteIdent,
   resolveSchemaName,
   withSchema,
@@ -270,16 +271,6 @@ const defaultSections = {
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
     address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
   },
-};
-
-const normalizeWhatsAppLink = (value, fallback = DEFAULT_WA_LINK) => {
-  if (typeof value !== "string") return fallback;
-  const trimmed = value.trim();
-  if (!trimmed) return fallback;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  const digits = trimmed.replace(/\D/g, "");
-  if (!digits) return fallback;
-  return `https://wa.me/${digits}`;
 };
 
 const normalizeSection = (sectionKey, payload = {}) => {

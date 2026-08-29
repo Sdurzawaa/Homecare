@@ -180,9 +180,35 @@ function formatDuration(minutes: number) {
   return `${minutes} menit`;
 }
 
+function normalizeWhatsAppLink(value?: string, fallback = DEFAULT_WHATSAPP_LINK) {
+  if (!value || !value.trim()) {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) {
+    return fallback;
+  }
+
+  if (digits.startsWith("62")) {
+    return `https://wa.me/${digits}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return `https://wa.me/62${digits.slice(1)}`;
+  }
+
+  return `https://wa.me/62${digits}`;
+}
+
 function buildWhatsAppLink(title: string, price: number, baseLink?: string) {
   const message = `Halo, saya tertarik dengan layanan "${title}". Apakah bisa dibantu info lebih lanjut?`;
-  const normalizedBase = (baseLink || DEFAULT_WHATSAPP_LINK).trim();
+  const normalizedBase = normalizeWhatsAppLink(baseLink || DEFAULT_WHATSAPP_LINK);
 
   try {
     const url = new URL(normalizedBase);
