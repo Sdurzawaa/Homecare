@@ -114,6 +114,7 @@ const defaultSections = {
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
     phone: "+62 858-9200-6905",
     address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
+    button_link: "",
   },
 } as const;
 
