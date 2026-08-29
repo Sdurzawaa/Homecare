@@ -104,6 +104,7 @@ export default function Admin() {
   const [adminUsername, setAdminUsername] = useState("");
   const [loginError, setLoginError] = useState("");
   const [sectionData, setSectionData] = useState<Record<string, any>>({});
+  const [defaultWaPhone, setDefaultWaPhone] = useState("+62 858-9200-6905");
   const [selectedSection, setSelectedSection] = useState("hero");
   const [pricingItems, setPricingItems] = useState<any[]>([]);
   const [pricingCategoryItems, setPricingCategoryItems] = useState<any[]>([]);
@@ -276,10 +277,11 @@ export default function Admin() {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
-      const [pricingRes, pricingCategoriesRes, sectionsRes, testimoniRes] = await Promise.all([
+      const [pricingRes, pricingCategoriesRes, sectionsRes, defaultWaRes, testimoniRes] = await Promise.all([
         fetch("/api/public/pricing").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/pricing-categories").then((res) => (res.ok ? res.json() : [])),
         fetch("/api/public/site-sections").then((res) => (res.ok ? res.json() : {})),
+        fetch("/api/public/default-wa").then((res) => (res.ok ? res.json() : { phone: "+62 858-9200-6905" })),
         request("/api/testimoni"),
       ]);
 
@@ -287,6 +289,7 @@ export default function Admin() {
       const pricingCategoryData = Array.isArray(pricingCategoriesRes) ? pricingCategoriesRes : [];
       const testimoniData = Array.isArray(testimoniRes) ? testimoniRes : [];
       const sectionDataRes = (sectionsRes && typeof sectionsRes === "object" ? sectionsRes : {}) as Record<string, any>;
+      const defaultWaPhoneValue = typeof defaultWaRes?.phone === "string" ? defaultWaRes.phone : "+62 858-9200-6905";
 
       if (testimoniRes instanceof Response && !testimoniRes.ok) {
         throw new Error("Gagal memuat data ulasan");
@@ -297,10 +300,11 @@ export default function Admin() {
         ...defaultSections,
         hero: { ...defaultSections.hero, ...(sectionDataRes.hero || {}) },
         about: { ...defaultSections.about, ...(sectionDataRes.about || {}) },
-        contact: { ...defaultSections.contact, ...(sectionDataRes.contact || {}) },
-        footer: { ...defaultSections.footer, ...(sectionDataRes.footer || {}) },
+        contact: { ...defaultSections.contact, ...(sectionDataRes.contact || {}), phone: defaultWaPhoneValue },
+        footer: { ...defaultSections.footer, ...(sectionDataRes.footer || {}), phone: defaultWaPhoneValue },
       };
 
+      setDefaultWaPhone(defaultWaPhoneValue);
       setPricingItems(pricingData);
       setPricingCategoryItems(pricingCategoryData);
       setTestimoniItems(Array.isArray(resolvedTestimoniData) ? resolvedTestimoniData : []);
@@ -401,6 +405,38 @@ export default function Admin() {
       openErrorModal("Gagal Upload", error.message || "Gagal upload gambar");
     } finally {
       setUploadingField(null);
+    }
+  };
+
+  const saveDefaultWa = async () => {
+    try {
+      const response = await request("/api/admin/default-wa", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: defaultWaPhone }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Gagal menyimpan nomor WhatsApp default");
+      }
+
+      setDefaultWaPhone(data.phone || defaultWaPhone);
+      setSectionData((prev) => ({
+        ...prev,
+        contact: {
+          ...(prev.contact || defaultSections.contact),
+          phone: data.phone || defaultWaPhone,
+          button_link: data.link || (prev.contact?.button_link || defaultSections.contact.button_link),
+        },
+        footer: {
+          ...(prev.footer || defaultSections.footer),
+          phone: data.phone || defaultWaPhone,
+        },
+      }));
+      openSuccessModal("Nomor WhatsApp berhasil disimpan", "Semua link default WhatsApp akan mengikuti nomor terbaru.");
+    } catch (error: any) {
+      openErrorModal("Gagal Menyimpan WhatsApp", error.message || "Gagal menyimpan nomor WhatsApp default");
     }
   };
 
@@ -1683,16 +1719,33 @@ export default function Admin() {
                     </>
                   )}
 
+                  <div className="mb-4 rounded-xl border border-[var(--pine)]/20 bg-[var(--bg-alt)] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--pine)]">Default WhatsApp</p>
+                        <p className="mt-1 text-sm text-slate-600">Nomor ini dipakai untuk semua CTA/default WA yang tidak memakai link khusus.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={saveDefaultWa}
+                        className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white"
+                      >
+                        Simpan WA
+                      </button>
+                    </div>
+                    <div className="mt-3">
+                      <label className="mb-1 block text-sm font-medium text-slate-700">Nomor WhatsApp Default</label>
+                      <input
+                        value={defaultWaPhone || ""}
+                        onChange={(e) => setDefaultWaPhone(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5"
+                        placeholder="+62 8xx xxx xxx"
+                      />
+                    </div>
+                  </div>
+
                   {selectedSection === "contact" && (
                     <>
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Phone</label>
-                        <input
-                          value={currentSection.phone || ""}
-                          onChange={(e) => handleSectionChange("phone", e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                        />
-                      </div>
                       <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
                         <input
@@ -1736,14 +1789,6 @@ export default function Admin() {
                         <input
                           value={currentSection.brand || ""}
                           onChange={(e) => handleSectionChange("brand", e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Phone</label>
-                        <input
-                          value={currentSection.phone || ""}
-                          onChange={(e) => handleSectionChange("phone", e.target.value)}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
                         />
                       </div>

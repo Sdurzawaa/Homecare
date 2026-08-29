@@ -224,6 +224,9 @@ const upload = multer({
   },
 });
 
+const DEFAULT_WA_PHONE = "+62 858-9200-6905";
+const DEFAULT_WA_LINK = "https://wa.me/6285892006905";
+
 const defaultSections = {
   hero: {
     section_name: "Hero",
@@ -233,7 +236,7 @@ const defaultSections = {
     image: "/Person.jpg",
     badge: "Dipercaya 1000+ keluarga",
     cta_label: "Konsultasi Gratis",
-    cta_link: "#contact",
+    cta_link: DEFAULT_WA_LINK,
     secondary_cta_label: "Lihat Layanan",
     secondary_cta_link: "#services",
   },
@@ -254,20 +257,28 @@ const defaultSections = {
     title: "Siap membantu kebutuhan kesehatan keluarga Anda",
     description:
       "Kami siap memberikan dukungan medis profesional di rumah dengan cara yang aman, cepat, dan nyaman.",
-    phone: "+62 858-9200-6905",
     email: "bidanrismacare@gmail.com",
     address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
     button_label: "Chat via WhatsApp",
-    button_link: "https://wa.me/6285892006905",
+    button_link: DEFAULT_WA_LINK,
   },
   footer: {
     section_name: "Footer",
     brand: "Homecare",
     description:
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
-    phone: "+62 857-7378-0406",
     address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
   },
+};
+
+const normalizeWhatsAppLink = (value, fallback = DEFAULT_WA_LINK) => {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return fallback;
+  return `https://wa.me/${digits}`;
 };
 
 const normalizeSection = (sectionKey, payload = {}) => {
@@ -287,7 +298,6 @@ const normalizeSection = (sectionKey, payload = {}) => {
       payload.secondary_cta_label ?? defaults.secondary_cta_label ?? "",
     secondary_cta_link:
       payload.secondary_cta_link ?? defaults.secondary_cta_link ?? "",
-    phone: payload.phone ?? defaults.phone ?? "",
     email: payload.email ?? defaults.email ?? "",
     address: payload.address ?? defaults.address ?? "",
     button_label: payload.button_label ?? defaults.button_label ?? "",
@@ -361,6 +371,30 @@ async function ensureAdminSessionsTable() {
   `);
 }
 
+async function ensureDefaultWaTable() {
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${table("default_wa")} (
+      id SERIAL PRIMARY KEY,
+      "Phone" TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total FROM ${table("default_wa")}`,
+  );
+
+  if (Number(countResult.rows[0]?.total || 0) === 0) {
+    await pool.query(
+      `INSERT INTO ${table("default_wa")} ("Phone", updated_at)
+       VALUES ($1, NOW())`,
+      [DEFAULT_WA_PHONE],
+    );
+  }
+}
+
 async function ensureSiteSectionsTable() {
   // Ensure the schema exists. Use quoted identifier for mixed-case names.
   await pool.query(`CREATE SCHEMA IF NOT EXISTS ${quoteIdent(schemaName)};`);
@@ -378,7 +412,6 @@ async function ensureSiteSectionsTable() {
       cta_link TEXT,
       secondary_cta_label TEXT,
       secondary_cta_link TEXT,
-      phone TEXT,
       email TEXT,
       address TEXT,
       button_label TEXT,
@@ -392,8 +425,8 @@ async function ensureSiteSectionsTable() {
     const row = normalizeSection(sectionKey, section);
     await pool.query(
       `INSERT INTO ${table("site_sections")}
-       (section_key, section_name, title, description, image, image_2, image_3, badge, cta_label, cta_link, secondary_cta_label, secondary_cta_link, phone, email, address, button_label, button_link, brand, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
+       (section_key, section_name, title, description, image, image_2, image_3, badge, cta_label, cta_link, secondary_cta_label, secondary_cta_link, email, address, button_label, button_link, brand, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
        ON CONFLICT (section_key) DO NOTHING`,
       [
         row.section_key,
@@ -408,7 +441,6 @@ async function ensureSiteSectionsTable() {
         row.cta_link,
         row.secondary_cta_label,
         row.secondary_cta_link,
-        row.phone,
         row.email,
         row.address,
         row.button_label,
@@ -532,6 +564,7 @@ async function ensureCatalogTables() {
 await ensureAdminUsersTable();
 await Promise.all([
   ensureAdminSessionsTable(),
+  ensureDefaultWaTable(),
   ensureSiteSectionsTable(),
   ensureCatalogTables(),
 ]);
@@ -1107,27 +1140,140 @@ app.post(
   },
 );
 
-app.get("/api/public/site-sections", async (req, res) => {
+const getDefaultWaPhone = async () => {
   try {
     const result = await pool.query(
-      `SELECT * FROM ${table("site_sections")} ORDER BY section_key ASC`,
+      `SELECT "Phone" FROM ${table("default_wa")} ORDER BY id ASC LIMIT 1`,
     );
+    const phone = result.rows[0]?.Phone;
+    if (typeof phone === "string" && phone.trim()) {
+      return phone.trim();
+    }
+  } catch (error) {
+    console.error("getDefaultWaPhone error", error);
+  }
+  return DEFAULT_WA_PHONE;
+};
+
+app.get("/api/public/default-wa", async (req, res) => {
+  try {
+    const phone = await getDefaultWaPhone();
+    return res.json({
+      phone,
+      link: normalizeWhatsAppLink(phone, DEFAULT_WA_LINK),
+    });
+  } catch (error) {
+    console.error("GET /api/public/default-wa error", error);
+    return res
+      .status(500)
+      .json({ error: "Gagal mengambil nomor WhatsApp default" });
+  }
+});
+
+app.get("/api/public/site-sections", async (req, res) => {
+  try {
+    const [result, defaultWa] = await Promise.all([
+      pool.query(
+        `SELECT * FROM ${table("site_sections")} ORDER BY section_key ASC`,
+      ),
+      getDefaultWaPhone(),
+    ]);
 
     const sections = Object.fromEntries(
       result.rows.map((row) => [row.section_key, row]),
     );
 
+    const contact = {
+      ...defaultSections.contact,
+      ...(sections.contact || {}),
+      phone: defaultWa,
+      button_link: normalizeWhatsAppLink(
+        defaultWa,
+        defaultSections.contact.button_link,
+      ),
+    };
+
     return res.json({
       hero: { ...defaultSections.hero, ...(sections.hero || {}) },
       about: { ...defaultSections.about, ...(sections.about || {}) },
-      contact: { ...defaultSections.contact, ...(sections.contact || {}) },
-      footer: { ...defaultSections.footer, ...(sections.footer || {}) },
+      contact,
+      footer: {
+        ...defaultSections.footer,
+        ...(sections.footer || {}),
+        phone: defaultWa,
+      },
     });
   } catch (error) {
     console.error("GET /api/public/site-sections error", error);
     return res.status(500).json({ error: "Gagal mengambil data section" });
   }
 });
+
+app.get("/api/admin/default-wa", requireAdminAuth, async (req, res) => {
+  try {
+    const phone = await getDefaultWaPhone();
+    return res.json({
+      phone,
+      link: normalizeWhatsAppLink(phone, DEFAULT_WA_LINK),
+    });
+  } catch (error) {
+    console.error("GET /api/admin/default-wa error", error);
+    return res.status(500).json({ error: "Gagal mengambil nomor WA default" });
+  }
+});
+
+app.put(
+  "/api/admin/default-wa",
+  requireAdminAuth,
+  requireCsrfToken,
+  async (req, res) => {
+    try {
+      const phone =
+        typeof req.body?.phone === "string" ? req.body.phone.trim() : "";
+      if (!phone) {
+        return res.status(400).json({ error: "Nomor WhatsApp wajib diisi" });
+      }
+
+      const normalizedPhone = phone.replace(/\s+/g, " ").trim();
+      const existing = await pool.query(
+        `SELECT id FROM ${table("default_wa")} ORDER BY id DESC LIMIT 1`,
+      );
+
+      if (existing.rows[0]?.id) {
+        const result = await pool.query(
+          `UPDATE ${table("default_wa")}
+         SET "Phone" = $1,
+             updated_at = NOW()
+         WHERE id = $2
+         RETURNING *`,
+          [normalizedPhone, existing.rows[0].id],
+        );
+
+        return res.json({
+          phone: result.rows[0]?.Phone || normalizedPhone,
+          link: normalizeWhatsAppLink(normalizedPhone, DEFAULT_WA_LINK),
+        });
+      }
+
+      const result = await pool.query(
+        `INSERT INTO ${table("default_wa")} ("Phone", updated_at)
+       VALUES ($1, NOW())
+       RETURNING *`,
+        [normalizedPhone],
+      );
+
+      return res.json({
+        phone: result.rows[0]?.Phone || normalizedPhone,
+        link: normalizeWhatsAppLink(normalizedPhone, DEFAULT_WA_LINK),
+      });
+    } catch (error) {
+      console.error("PUT /api/admin/default-wa error", error);
+      return res
+        .status(500)
+        .json({ error: "Gagal menyimpan nomor WA default" });
+    }
+  },
+);
 
 app.get("/api/admin/site-sections", requireAdminAuth, async (req, res) => {
   try {
@@ -1161,8 +1307,8 @@ app.put(
 
       const result = await pool.query(
         `INSERT INTO ${table("site_sections")}
-       (section_key, section_name, title, description, image, image_2, image_3, badge, cta_label, cta_link, secondary_cta_label, secondary_cta_link, phone, email, address, button_label, button_link, brand, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
+       (section_key, section_name, title, description, image, image_2, image_3, badge, cta_label, cta_link, secondary_cta_label, secondary_cta_link, email, address, button_label, button_link, brand, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
        ON CONFLICT (section_key) DO UPDATE SET
          section_name = EXCLUDED.section_name,
          title = EXCLUDED.title,
@@ -1175,7 +1321,6 @@ app.put(
          cta_link = EXCLUDED.cta_link,
          secondary_cta_label = EXCLUDED.secondary_cta_label,
          secondary_cta_link = EXCLUDED.secondary_cta_link,
-         phone = EXCLUDED.phone,
          email = EXCLUDED.email,
          address = EXCLUDED.address,
          button_label = EXCLUDED.button_label,
@@ -1196,7 +1341,6 @@ app.put(
           payload.cta_link,
           payload.secondary_cta_label,
           payload.secondary_cta_link,
-          payload.phone,
           payload.email,
           payload.address,
           payload.button_label,
