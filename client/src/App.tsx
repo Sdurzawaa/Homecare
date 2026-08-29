@@ -6,6 +6,7 @@ import Hero from "./components/Hero-Panel";
 import Achievements from "./components/Achievement";
 import Admin from "./components/admin/Admin";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
+import { Analytics } from "@vercel/analytics/react";
 
 const Pricing = lazy(() => import("./components/Pricing"));
 const Testimonials = lazy(() => import("./components/Testimonials"));
@@ -196,6 +197,7 @@ function App() {
       </main>
 
       <Footer content={siteSections.footer} />
+      <Analytics />
     </div>
   );
 }
