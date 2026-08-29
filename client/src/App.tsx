@@ -72,7 +72,10 @@ function App() {
     const controller = new AbortController();
 
     const loadSiteSections = () => {
-      fetch("/api/public/site-sections", { signal: controller.signal })
+      fetch("/api/public/site-sections", {
+        cache: "no-store",
+        signal: controller.signal,
+      })
         .then((response) => (response.ok ? response.json() : null))
         .then((data) => {
           if (!data) return;
@@ -93,12 +96,23 @@ function App() {
     };
 
     loadSiteSections();
+
     const handleFocus = () => loadSiteSections();
+    const handleVisibility = () => {
+      if (!document.hidden) loadSiteSections();
+    };
+    const refreshTimer = window.setInterval(() => {
+      if (!document.hidden) loadSiteSections();
+    }, 30000);
+
     window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       controller.abort();
+      window.clearInterval(refreshTimer);
       window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [isAdminPath]);
 
