@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import Modal from "./Modal";
 import { optimizeCloudinaryUrl } from "../lib/image";
 
-const WHATSAPP_NUMBER = "6285773780406";
+const WHATSAPP_NUMBER = "6285892006905";
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 const categoryInfo = {
@@ -180,7 +180,7 @@ function formatDuration(minutes: number) {
 }
 
 function buildWhatsAppLink(title: string, price: number) {
-  const message = `Halo, saya tertarik dengan layanan "${title}" (Rp${price.toLocaleString("id-ID")}). Apakah bisa dibantu info lebih lanjut?`;
+  const message = `Halo, saya tertarik dengan layanan "${title}". Apakah bisa dibantu info lebih lanjut?`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 

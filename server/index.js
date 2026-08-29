@@ -1056,8 +1056,10 @@ app.get("/api/public/site-sections", async (req, res) => {
     );
 
     return res.json({
-      ...defaultSections,
-      ...sections,
+      hero: { ...defaultSections.hero, ...(sections.hero || {}) },
+      about: { ...defaultSections.about, ...(sections.about || {}) },
+      contact: { ...defaultSections.contact, ...(sections.contact || {}) },
+      footer: { ...defaultSections.footer, ...(sections.footer || {}) },
     });
   } catch (error) {
     console.error("GET /api/public/site-sections error", error);

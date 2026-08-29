@@ -39,10 +39,17 @@ const defaultSections = {
     brand: "Homecare",
     description:
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
-    phone: "+62 857-7378-0406",
-    address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
+    phone: "+62 858-9200-6905",
+    address: "Jl. Kebon Mangga 1 No. 1 Rt 006/007 Cipulir, Kebayoran lama",
   },
 };
+
+const mergeSiteSections = (data: Record<string, any> = {}) => ({
+  hero: { ...defaultSections.hero, ...(data.hero ?? {}) },
+  about: { ...defaultSections.about, ...(data.about ?? {}) },
+  contact: { ...defaultSections.contact, ...(data.contact ?? {}) },
+  footer: { ...defaultSections.footer, ...(data.footer ?? {}) },
+});
 
 function App() {
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -64,31 +71,35 @@ function App() {
 
     const controller = new AbortController();
 
-    fetch("/api/public/site-sections", { signal: controller.signal })
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => {
-        if (!data) return;
-        const nextSections = {
-          hero: { ...defaultSections.hero, ...(data.hero || {}) },
-          about: { ...defaultSections.about, ...(data.about || {}) },
-          contact: data.contact || {},
-          footer: { ...defaultSections.footer, ...(data.footer || {}) },
-        };
-        setSiteSections((currentSections) =>
-          JSON.stringify(currentSections) === JSON.stringify(nextSections)
-            ? currentSections
-            : nextSections,
-        );
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") return undefined;
-        return undefined;
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setSiteSectionsReady(true);
-      });
+    const loadSiteSections = () => {
+      fetch("/api/public/site-sections", { signal: controller.signal })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => {
+          if (!data) return;
+          const nextSections = mergeSiteSections(data);
+          setSiteSections((currentSections) =>
+            JSON.stringify(currentSections) === JSON.stringify(nextSections)
+              ? currentSections
+              : nextSections,
+          );
+        })
+        .catch((error) => {
+          if (error.name !== "AbortError") return undefined;
+          return undefined;
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSiteSectionsReady(true);
+        });
+    };
 
-    return () => controller.abort();
+    loadSiteSections();
+    const handleFocus = () => loadSiteSections();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      controller.abort();
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [isAdminPath]);
 
   if (isAdminPath) {
