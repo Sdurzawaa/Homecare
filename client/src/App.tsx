@@ -51,6 +51,21 @@ const defaultSections = {
   },
 };
 
+const normalizeWhatsAppLink = (value?: string, fallback = "#") => {
+  if (!value || !value.trim()) return fallback;
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return fallback;
+
+  if (digits.startsWith("62")) return `https://wa.me/${digits}`;
+  if (digits.startsWith("0")) return `https://wa.me/62${digits.slice(1)}`;
+
+  return `https://wa.me/62${digits}`;
+};
+
 const mergeSiteSections = (
   data: Record<string, any> = {},
   defaultWaLinkOverride = "",
@@ -131,6 +146,8 @@ function App() {
 
           if (typeof data.contact?.button_link === "string" && data.contact.button_link.trim()) {
             setDefaultWaLink(data.contact.button_link);
+          } else if (typeof data.contact?.phone === "string" && data.contact.phone.trim()) {
+            setDefaultWaLink(normalizeWhatsAppLink(data.contact.phone, "#"));
           }
 
           setSiteSections((currentSections) =>
@@ -251,7 +268,7 @@ function App() {
               siteSections.contact.button_link ||
               siteSections.footer.button_link ||
               defaultWaLink ||
-              ""
+              normalizeWhatsAppLink(siteSections.contact.phone || siteSections.footer.phone, "#")
             }
           />
         </Suspense>

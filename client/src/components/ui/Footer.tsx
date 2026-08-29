@@ -1,8 +1,25 @@
+function normalizeWhatsAppLink(value?: string, fallback = "#") {
+  if (!value || !value.trim()) return fallback;
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return fallback;
+
+  if (digits.startsWith("62")) return `https://wa.me/${digits}`;
+  if (digits.startsWith("0")) return `https://wa.me/62${digits.slice(1)}`;
+
+  return `https://wa.me/62${digits}`;
+}
+
 function Footer({
   content,
 }: {
   content?: { brand?: string; description?: string; phone?: string; email?: string; address?: string; button_link?: string };
 }) {
+  const waHref = content?.button_link || normalizeWhatsAppLink(content?.phone, "#");
+
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-6 pt-10 sm:px-6 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1240px] md:pl-4 lg:pl-8">
@@ -25,7 +42,7 @@ function Footer({
             </p>
             <div className="mt-1 flex items-center gap-3">
               <a
-                href={content?.button_link || "#"}
+                href={waHref}
                 target="_blank"
                 rel="noreferrer noopener"
                 aria-label="WhatsApp"

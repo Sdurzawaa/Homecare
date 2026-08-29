@@ -270,6 +270,7 @@ const defaultSections = {
     description:
       "Solusi perawatan kesehatan profesional di kenyamanan rumah Anda. Berkualitas, tepercaya, dan penuh kasih sayang.",
     address: "AKR Tower Jl. Panjang No.5 Level M, Jakarta Barat, Indonesia",
+    button_link: DEFAULT_WA_LINK,
   },
 };
 
@@ -1222,6 +1223,10 @@ app.get("/api/public/site-sections", async (req, res) => {
         ...defaultSections.footer,
         ...(sections.footer || {}),
         phone: defaultWa,
+        button_link: normalizeWhatsAppLink(
+          defaultWa,
+          defaultSections.footer.button_link || DEFAULT_WA_LINK,
+        ),
       },
     });
   } catch (error) {
