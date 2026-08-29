@@ -103,7 +103,7 @@ function App() {
     };
     const refreshTimer = window.setInterval(() => {
       if (!document.hidden) loadSiteSections();
-    }, 30000);
+    }, 10000);
 
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibility);
