@@ -294,17 +294,17 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
       )}
 
       <div className="relative z-10 mx-auto mb-14 max-w-[42rem] text-center">
-        <p className="eyebrow">Testimoni</p>
+        <p className="eyebrow">ULASAN BUNDA</p>
         <h3 className="m-0 font-[family-name:var(--font-heading)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium text-[var(--ink)]">
-          Pelanggan merasa lebih tenang dan sehat
+          Ketenangan &amp; Kenyamanan untuk Bunda dan Buah Hati
         </h3>
       </div>
 
       {showForm && (
         <div className="mb-12 rounded-[24px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:p-7">
           <div className="mb-6 text-center sm:text-left">
-            <p className="eyebrow mb-2">Bagikan pengalaman</p>
-            <h4 className="m-0 text-[1.35rem] font-medium text-[var(--ink)]">Tulis testimoni Anda</h4>
+            <p className="eyebrow mb-2">BAGIKAN CERITA</p>
+            <h4 className="m-0 text-[1.35rem] font-medium text-[var(--ink)]">Bagikan Pengalaman Bunda!</h4>
           </div>
 
           <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
