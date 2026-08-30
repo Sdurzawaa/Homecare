@@ -120,7 +120,7 @@ function Hero({ heroRef, content }: HeroProps) {
                   100%
                 </div>
                 <div className="text-[0.9rem] text-[var(--ink-soft,#634b4f)]">
-                  Bidan Tersertifikasi / Resmi
+                  Bidan Tersertifikasi 
                 </div>
               </div>
             </div>
