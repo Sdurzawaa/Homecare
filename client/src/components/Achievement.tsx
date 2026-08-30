@@ -7,36 +7,6 @@ interface AchievementContent {
   image?: string;
   image_2?: string;
   image_3?: string;
-  phone?: string;
-}
-
-function formatPhoneDisplay(phone?: string) {
-  const raw = (phone || "+62 812-8986-1639").replace(/\s+/g, "");
-  const digits = raw.replace(/\D/g, "");
-
-  if (!digits) return "+62 812-8986-1639";
-
-  if (digits.startsWith("62")) {
-    const rest = digits.slice(2);
-    if (rest.length >= 10) {
-      return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
-    }
-    return `+62 ${rest}`;
-  }
-
-  if (digits.startsWith("0")) {
-    const rest = digits.slice(1);
-    if (rest.length >= 10) {
-      return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}-${rest.slice(7, 11)}`;
-    }
-    return `+62 ${rest}`;
-  }
-
-  if (digits.length >= 10) {
-    return `+62 ${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
-  }
-
-  return `+62 ${digits}`;
 }
 
 interface AchievementsProps {
@@ -196,16 +166,6 @@ function Achievements({
         <h2 className="mx-auto m-0 max-w-2xl font-[family-name:var(--font-heading)] text-[clamp(1.55rem,2.4vw,2.05rem)] font-medium leading-[1.3] text-[var(--ink)]">
           {content?.title || "Homecare modern untuk kebutuhan kesehatan keluarga"}
         </h2>
-        <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-[var(--line)] bg-white/80 px-4 py-2.5 shadow-[0_12px_28px_-18px_rgba(119,38,53,0.4)] backdrop-blur-sm">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)] text-white">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-            </svg>
-          </span>
-          <span className="text-sm font-semibold tracking-[0.04em] text-[var(--ink)]">
-            {formatPhoneDisplay(content?.phone || "+62 81289861639")}
-          </span>
-        </div>
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1200px] space-y-[100px] max-[768px]:space-y-[70px]">
