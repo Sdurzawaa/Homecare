@@ -267,8 +267,8 @@ function Achievements({
               badge={
                 <FloatingBadge
                   icon={UsersIcon}
-                  title="10+ Tahun Melayani"
-                  subtitle="Ribuan keluarga terlayani"
+                  title="5+ Tahun Melayani"
+                  subtitle="Ratusan keluarga terlayani"
                   position="right"
                 />
               }
@@ -280,10 +280,10 @@ function Achievements({
               Kepuasan Pelanggan
             </p>
             <h3 className="m-0 mb-5 font-[family-name:var(--font-heading)] text-[1.5rem] font-medium leading-[1.3] text-[var(--ink)]">
-              Dipercaya Ribuan Keluarga
+              Dipercaya Ratusan Keluarga
             </h3>
             <p className="m-0 text-[1rem] leading-[1.75] text-[var(--ink-soft)]">
-              Lebih dari 10 tahun melayani keluarga Indonesia dengan dedikasi
+              Lebih dari 5 tahun melayani keluarga Indonesia dengan dedikasi
               penuh, responsif 24/7, dan harga yang terjangkau untuk semua
               kalangan. Kami bangga menjadi bagian dari perjalanan kesehatan
               keluarga Anda.

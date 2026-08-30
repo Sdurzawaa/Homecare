@@ -301,7 +301,17 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
       </div>
 
       {showForm && (
-        <div className="mb-12 rounded-[24px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:p-7">
+        <div className="relative mb-12 rounded-[24px] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:p-7">
+          <div className="pointer-events-none absolute -right-2 -top-8 z-10 opacity-90 sm:-right-3 sm:-top-10">
+            <img
+              src="/Kupu-kupu-berwarna.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-20 w-20 rotate-[-22deg] drop-shadow-[0_10px_12px_rgba(180,81,100,0.18)] sm:h-24 sm:w-24"
+              style={{ transformOrigin: "bottom center" }}
+            />
+          </div>
+
           <div className="mb-6 text-center sm:text-left">
             <p className="eyebrow mb-2">BAGIKAN CERITA</p>
             <h4 className="m-0 text-[1.35rem] font-medium text-[var(--ink)]">Bagikan Pengalaman Bunda!</h4>
@@ -389,19 +399,39 @@ export default function Testimonials({ testimonialsRef, showForm = false }: Test
       )}
 
       {!showForm && (
-        <div className="mt-10 flex flex-col items-center justify-center gap-4 rounded-[22px] border border-[var(--line)] bg-[var(--card)] px-6 py-7 text-center shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:px-8">
-          <h4 className="m-0 text-[clamp(1.25rem,2vw,1.7rem)] font-medium text-[var(--ink)]">
-            Cerita Bunda Sangat Berarti
-          </h4>
-          <p className="m-0 max-w-[40rem] text-[0.98rem] leading-relaxed text-[var(--ink-soft)]">
-            Bagikan pengalaman Bunda bersama Homecare Bidan Fatimah - Risma. Ulasan Bunda membantu kami terus memberikan pelayanan kebidanan yang nyaman, aman, dan penuh kasih.
-          </p>
-          <a
-            href="/form/testimoni"
-            className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92]"
-          >
-            Tulis Ulasan Sekarang!
-          </a>
+        <div className="relative mt-10">
+          <div className="pointer-events-none absolute -right-3 -top-6 z-10 hidden rotate-[18deg] opacity-90 md:block">
+            <img
+              src="/Kupu-kupu-berwarna.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-24 w-24 drop-shadow-[0_10px_12px_rgba(180,81,100,0.18)] md:h-28 md:w-28"
+            />
+          </div>
+
+          <div className="pointer-events-none absolute -right-2 -top-4 z-10 rotate-[16deg] opacity-70 md:hidden">
+            <img
+              src="/Kupu-kupu-berwarna.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-16 w-16 drop-shadow-[0_8px_10px_rgba(180,81,100,0.12)]"
+            />
+          </div>
+
+          <div className="relative overflow-hidden rounded-[22px] border border-[var(--line)] bg-[var(--card)] px-6 py-7 text-center shadow-[0_18px_40px_-28px_rgba(119,38,53,0.35)] sm:px-8">
+            <h4 className="m-0 text-[clamp(1.25rem,2vw,1.7rem)] font-medium text-[var(--ink)]">
+              Cerita Bunda Sangat Berarti
+            </h4>
+            <p className="m-0 mx-auto max-w-[40rem] text-[0.98rem] leading-relaxed text-[var(--ink-soft)]">
+              Bagikan pengalaman Bunda bersama Homecare Bidan Fatimah - Risma. Ulasan Bunda membantu kami terus memberikan pelayanan kebidanan yang nyaman, aman, dan penuh kasih.
+            </p>
+            <a
+              href="/form/testimoni"
+              className="mt-6 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full bg-[var(--pine)] px-6 py-3 text-[0.92rem] font-semibold text-white no-underline transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[0.92]"
+            >
+              Tulis Ulasan Sekarang!
+            </a>
+          </div>
         </div>
       )}
     </section>
