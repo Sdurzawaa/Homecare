@@ -51,7 +51,7 @@ function Hero({ heroRef, content }: HeroProps) {
               </svg>
             </span>
               <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[#6d3a4d]">
-                {heroContent.badge || "Dipercaya 1000+ keluarga"}
+                {heroContent.badge || "Dipercaya 500+ keluarga"}
               </span>
             </div>
 
@@ -109,10 +109,10 @@ function Hero({ heroRef, content }: HeroProps) {
               </div>
               <div>
                 <div className="font-bold text-[1.5rem] text-[var(--pine-deep,#772635)]">
-                  50+
+                  5+ Thn
                 </div>
                 <div className="text-[0.9rem] text-[var(--ink-soft,#634b4f)]">
-                  Tenaga Ahli
+                  Pengalaman Medis
                 </div>
               </div>
               <div className="hidden sm:block">
@@ -120,7 +120,7 @@ function Hero({ heroRef, content }: HeroProps) {
                   100%
                 </div>
                 <div className="text-[0.9rem] text-[var(--ink-soft,#634b4f)]">
-                  Home Visit
+                  Bidan Tersertifikasi / Resmi
                 </div>
               </div>
             </div>
