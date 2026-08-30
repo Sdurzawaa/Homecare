@@ -2072,10 +2072,95 @@ export default function Admin() {
 
           {/* Testimoni Management - TAB 3 */}
           {adminTab === "testimoni" && (
-          <section className="flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg xl:overflow-hidden xl:flex-1 xl:min-h-0">
-            <div className="p-4 border-b border-slate-200 flex-shrink-0">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold text-slate-900">Kelola Testimoni</h2>
+          <div className="grid gap-3 grid-cols-1 xl:grid-cols-2 auto-rows-max xl:auto-rows-auto h-full xl:h-auto">
+            {/* Pending Testimoni Panel */}
+            <section className="flex flex-col bg-white border border-slate-200 rounded-lg min-h-0 xl:min-h-[600px]">
+              <div className="p-4 border-b border-slate-200 flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h3 className="font-medium text-slate-800">Request / Ulasan Pending ({testimoniItems.filter((item) => item.status !== "approved" && item.status !== "rejected").length})</h3>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari testimoni..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm"
+                  />
+                  <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="hide-scrollbar overflow-y-auto flex-1 p-4">
+                {testimoniItems.filter((item) => item.status !== "approved" && item.status !== "rejected").length === 0 ? (
+                  <p className="text-sm text-slate-500">Belum ada request ulasan yang menunggu persetujuan.</p>
+                ) : (
+                  <div className="space-y-2 min-h-0">
+                    {testimoniItems
+                      .filter((item) => item.status !== "approved" && item.status !== "rejected")
+                      .filter((item) =>
+                        item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((item) => (
+                        <div key={item.id_testi} className="rounded-lg border-2 border-amber-200 bg-amber-50 p-3 transition hover:border-amber-300">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
+                                  {item.initial}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">{item.author}</p>
+                                  <p className="text-xs text-slate-600">{item.latarbelakang}</p>
+                                </div>
+                              </div>
+                              <div className="mb-2 flex items-center gap-2">
+                                <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                                  Menunggu
+                                </span>
+                                <span className="text-[10px] text-slate-500">
+                                  {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
+                            </div>
+                            <div className="flex flex-col gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => approveTestimoni(item.id_testi)}
+                                className="rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
+                              >
+                                Setujui
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  rejectTestimoni(item.id_testi);
+                                }}
+                                className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                              >
+                                Tolak
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Approved Testimoni Panel */}
+            <section className="flex flex-col bg-white border border-slate-200 rounded-lg min-h-0 xl:min-h-[600px]">
+              <div className="p-4 border-b border-slate-200 flex-shrink-0 flex items-center justify-between gap-3">
+                <h3 className="font-medium text-slate-800">Approved Testimoni ({testimoniItems.filter((item) => item.status === "approved").length})</h3>
                 <button
                   type="button"
                   onClick={() => {
@@ -2083,154 +2168,79 @@ export default function Admin() {
                     setTestimoniForm(emptyTestimoniForm());
                     setShowTestimoniFormModal(true);
                   }}
-                  className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white hover:brightness-95"
+                  className="rounded-lg bg-[var(--pine)] px-3 py-2 text-xs font-semibold text-white hover:brightness-95 whitespace-nowrap"
                 >
-                  Tambah Ulasan Manual
+                  + Tambah Manual
                 </button>
               </div>
-            </div>
 
-            <div className="hide-scrollbar overflow-y-auto p-4 xl:max-h-none xl:flex-1">
-              <div className="space-y-6 min-h-0">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-medium text-slate-800">Request / Ulasan Pending ({testimoniItems.filter((item) => item.status !== "approved" && item.status !== "rejected").length})</h3>
-                  </div>
-
-                  {testimoniItems.filter((item) => item.status !== "approved" && item.status !== "rejected").length === 0 ? (
-                    <p className="text-sm text-slate-500">Belum ada request ulasan yang menunggu persetujuan.</p>
-                  ) : (
-                    <div className="max-h-[20rem] min-h-0 space-y-2 overflow-y-auto pr-1">
-                      {testimoniItems
-                        .filter((item) => item.status !== "approved" && item.status !== "rejected")
-                        .filter((item) =>
-                          item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
-                        )
-                        .map((item) => (
-                          <div key={item.id_testi} className="rounded-lg border-2 border-amber-200 bg-amber-50 p-3 transition hover:border-amber-300">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
-                                    {item.initial}
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-semibold text-slate-900">{item.author}</p>
-                                    <p className="text-xs text-slate-600">{item.latarbelakang}</p>
-                                  </div>
+              <div className="hide-scrollbar overflow-y-auto flex-1 p-4">
+                {testimoniItems.filter((item) => item.status === "approved").length === 0 ? (
+                  <p className="text-sm text-slate-500">Belum ada testimoni yang disetujui.</p>
+                ) : (
+                  <div className="space-y-2 min-h-0">
+                    {testimoniItems
+                      .filter((item) => item.status === "approved")
+                      .filter((item) =>
+                        item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((item) => (
+                        <div key={item.id_testi} className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
+                                  {item.initial}
                                 </div>
-                                <div className="mb-2 flex items-center gap-2">
-                                  <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-                                    Menunggu
-                                  </span>
-                                  <span className="text-[10px] text-slate-500">
-                                    {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </span>
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">{item.author}</p>
+                                  <p className="text-xs text-slate-600">{item.latarbelakang}</p>
                                 </div>
-                                <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
                               </div>
-                              <div className="flex flex-col gap-1 flex-shrink-0">
-                                <button
-                                  onClick={() => approveTestimoni(item.id_testi)}
-                                  className="rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
-                                >
-                                  Setujui
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    rejectTestimoni(item.id_testi);
-                                  }}
-                                  className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
-                                >
-                                  Tolak
-                                </button>
+                              <div className="mb-2 flex items-center gap-2">
+                                <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                                  Disetujui
+                                </span>
+                                <span className="text-[10px] text-slate-500">
+                                  {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                </span>
                               </div>
+                              <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
+                            </div>
+                            <div className="flex flex-col gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => {
+                                  editTestimoni(item);
+                                  setShowTestimoniFormModal(true);
+                                }}
+                                className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTestimoni(item.id_testi);
+                                }}
+                                className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                              >
+                                Hapus
+                              </button>
                             </div>
                           </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-medium text-slate-800">Approved Testimoni ({testimoniItems.filter((item) => item.status === "approved").length})</h3>
+                        </div>
+                      ))}
                   </div>
-
-                  {testimoniItems.filter((item) => item.status === "approved").length === 0 ? (
-                    <p className="text-sm text-slate-500">Belum ada testimoni yang disetujui.</p>
-                  ) : (
-                    <div className="max-h-[20rem] min-h-0 space-y-2 overflow-y-auto pr-1">
-                      {testimoniItems
-                        .filter((item) => item.status === "approved")
-                        .filter((item) =>
-                          item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
-                        )
-                        .map((item) => (
-                          <div key={item.id_testi} className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
-                                    {item.initial}
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-semibold text-slate-900">{item.author}</p>
-                                    <p className="text-xs text-slate-600">{item.latarbelakang}</p>
-                                  </div>
-                                </div>
-                                <div className="mb-2 flex items-center gap-2">
-                                  <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                                    Disetujui
-                                  </span>
-                                  <span className="text-[10px] text-slate-500">
-                                    {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
-                              </div>
-                              <div className="flex flex-col gap-1 flex-shrink-0">
-                                <button
-                                  onClick={() => {
-                                    editTestimoni(item);
-                                    setShowTestimoniFormModal(true);
-                                  }}
-                                  className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTestimoni(item.id_testi);
-                                  }}
-                                  className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
-                                >
-                                  Hapus
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
           )}
         </div>
       </div>
