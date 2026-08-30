@@ -949,7 +949,7 @@ export default function Admin() {
     </div>
   );
 
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 5;
 
   const PaginationButtons = ({
     currentPage,
