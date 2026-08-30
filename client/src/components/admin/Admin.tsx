@@ -175,6 +175,9 @@ export default function Admin() {
   ];
   const [showPreview, setShowPreview] = useState(true);
   const [pricingSubTab, setPricingSubTab] = useState<"categories" | "pricing">("categories");
+  const [pricingCurrentPage, setPricingCurrentPage] = useState(1);
+  const [testimoniPendingCurrentPage, setTestimoniPendingCurrentPage] = useState(1);
+  const [testimoniApprovedCurrentPage, setTestimoniApprovedCurrentPage] = useState(1);
   const [successModal, setSuccessModal] = useState<{ title: string; message: string } | null>(null);
   const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
@@ -349,6 +352,10 @@ export default function Admin() {
       setPricingCategoryItems(pricingCategoryData);
       setTestimoniItems(Array.isArray(resolvedTestimoniData) ? resolvedTestimoniData : []);
       setSectionData(merged);
+      // Reset pagination pages when data is loaded
+      setPricingCurrentPage(1);
+      setTestimoniPendingCurrentPage(1);
+      setTestimoniApprovedCurrentPage(1);
     } catch (error: any) {
       console.error(error);
       setLoginError(error.message || "Gagal memuat data admin");
@@ -941,6 +948,43 @@ export default function Admin() {
       {uploadingField === field && <span className="text-xs text-slate-500">Uploading...</span>}
     </div>
   );
+
+  const ITEMS_PER_PAGE = 10;
+
+  const PaginationButtons = ({
+    currentPage,
+    totalItems,
+    onPageChange,
+  }: {
+    currentPage: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+  }) => {
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-center gap-1 pt-3 border-t border-slate-200 mt-3">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="rounded px-2 py-1 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 transition"
+        >
+          ← Prev
+        </button>
+        <span className="px-2 py-1 text-xs text-slate-600">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="rounded px-2 py-1 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 transition"
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   if (!authChecked) {
     return (
@@ -1997,7 +2041,10 @@ export default function Admin() {
                     type="text"
                     placeholder="Cari pricing..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPricingCurrentPage(1);
+                    }}
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm"
                   />
                   <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2006,64 +2053,76 @@ export default function Admin() {
                 </div>
               </div>
 
-              <div className="hide-scrollbar overflow-y-auto flex-1 p-4">
+              <div className="hide-scrollbar overflow-y-auto flex-1 p-4 flex flex-col">
                 {pricingItems.length === 0 ? (
                   <p className="text-sm text-slate-500">Belum ada pricing.</p>
                 ) : (
-                  <div className="space-y-2 min-h-0">
-                    {pricingItems
-                      .filter((item) =>
+                  <>
+                    <div className="space-y-2 min-h-0 flex-1">
+                      {pricingItems
+                        .filter((item) =>
+                          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.description.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .slice((pricingCurrentPage - 1) * ITEMS_PER_PAGE, pricingCurrentPage * ITEMS_PER_PAGE)
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
+                                <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                                <p className="text-xs text-slate-600">
+                                  Rp{Number(item.price).toLocaleString("id-ID")} • {item.duration}m
+                                </p>
+                                {item.recommended && <span className="inline-block text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-semibold">Recommended</span>}
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => {
+                                    setEditId(item.id);
+                                    setPricingForm({
+                                      category: item.category,
+                                      title: item.title,
+                                      description: item.description,
+                                      image: item.image,
+                                      duration: item.duration,
+                                      price: item.price,
+                                      recommended: Boolean(item.recommended),
+                                    });
+                                    setShowPricingFormModal(true);
+                                  }}
+                                  className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deletePricing(item.id);
+                                  }}
+                                  className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                                >
+                                  Hapus
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    <PaginationButtons
+                      currentPage={pricingCurrentPage}
+                      totalItems={pricingItems.filter((item) =>
                         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         item.description.toLowerCase().includes(searchQuery.toLowerCase())
-                      )
-                      .map((item) => (
-                        <div
-                          key={item.id}
-                          className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
-                              <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                              <p className="text-xs text-slate-600">
-                                Rp{Number(item.price).toLocaleString("id-ID")} • {item.duration}m
-                              </p>
-                              {item.recommended && <span className="inline-block text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-semibold">Recommended</span>}
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <button
-                                onClick={() => {
-                                  setEditId(item.id);
-                                  setPricingForm({
-                                    category: item.category,
-                                    title: item.title,
-                                    description: item.description,
-                                    image: item.image,
-                                    duration: item.duration,
-                                    price: item.price,
-                                    recommended: Boolean(item.recommended),
-                                  });
-                                  setShowPricingFormModal(true);
-                                }}
-                                className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deletePricing(item.id);
-                                }}
-                                className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
-                              >
-                                Hapus
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
+                      ).length}
+                      onPageChange={setPricingCurrentPage}
+                    />
+                  </>
                 )}
               </div>
             </section>
@@ -2084,7 +2143,10 @@ export default function Admin() {
                     type="text"
                     placeholder="Cari testimoni..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setTestimoniPendingCurrentPage(1);
+                    }}
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm"
                   />
                   <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2093,66 +2155,80 @@ export default function Admin() {
                 </div>
               </div>
 
-              <div className="hide-scrollbar overflow-y-auto flex-1 p-4">
+              <div className="hide-scrollbar overflow-y-auto flex-1 p-4 flex flex-col">
                 {testimoniItems.filter((item) => item.status !== "approved" && item.status !== "rejected").length === 0 ? (
                   <p className="text-sm text-slate-500">Belum ada request ulasan yang menunggu persetujuan.</p>
                 ) : (
-                  <div className="space-y-2 min-h-0">
-                    {testimoniItems
-                      .filter((item) => item.status !== "approved" && item.status !== "rejected")
-                      .filter((item) =>
-                        item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
-                      )
-                      .map((item) => (
-                        <div key={item.id_testi} className="rounded-lg border-2 border-amber-200 bg-amber-50 p-3 transition hover:border-amber-300">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
-                                  {item.initial}
+                  <>
+                    <div className="space-y-2 min-h-0 flex-1">
+                      {testimoniItems
+                        .filter((item) => item.status !== "approved" && item.status !== "rejected")
+                        .filter((item) =>
+                          item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .slice((testimoniPendingCurrentPage - 1) * ITEMS_PER_PAGE, testimoniPendingCurrentPage * ITEMS_PER_PAGE)
+                        .map((item) => (
+                          <div key={item.id_testi} className="rounded-lg border-2 border-amber-200 bg-amber-50 p-3 transition hover:border-amber-300">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
+                                    {item.initial}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-slate-900">{item.author}</p>
+                                    <p className="text-xs text-slate-600">{item.latarbelakang}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-sm font-semibold text-slate-900">{item.author}</p>
-                                  <p className="text-xs text-slate-600">{item.latarbelakang}</p>
+                                <div className="mb-2 flex items-center gap-2">
+                                  <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                                    Menunggu
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">
+                                    {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
                                 </div>
+                                <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
                               </div>
-                              <div className="mb-2 flex items-center gap-2">
-                                <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-                                  Menunggu
-                                </span>
-                                <span className="text-[10px] text-slate-500">
-                                  {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </span>
+                              <div className="flex flex-col gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => approveTestimoni(item.id_testi)}
+                                  className="rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
+                                >
+                                  Setujui
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    rejectTestimoni(item.id_testi);
+                                  }}
+                                  className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
+                                >
+                                  Tolak
+                                </button>
                               </div>
-                              <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
-                            </div>
-                            <div className="flex flex-col gap-1 flex-shrink-0">
-                              <button
-                                onClick={() => approveTestimoni(item.id_testi)}
-                                className="rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
-                              >
-                                Setujui
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  rejectTestimoni(item.id_testi);
-                                }}
-                                className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-200"
-                              >
-                                Tolak
-                              </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                  </div>
+                        ))}
+                    </div>
+                    <PaginationButtons
+                      currentPage={testimoniPendingCurrentPage}
+                      totalItems={testimoniItems
+                        .filter((item) => item.status !== "approved" && item.status !== "rejected")
+                        .filter((item) =>
+                          item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                        ).length}
+                      onPageChange={setTestimoniPendingCurrentPage}
+                    />
+                  </>
                 )}
               </div>
             </section>
@@ -2174,69 +2250,83 @@ export default function Admin() {
                 </button>
               </div>
 
-              <div className="hide-scrollbar overflow-y-auto flex-1 p-4">
+              <div className="hide-scrollbar overflow-y-auto flex-1 p-4 flex flex-col">
                 {testimoniItems.filter((item) => item.status === "approved").length === 0 ? (
                   <p className="text-sm text-slate-500">Belum ada testimoni yang disetujui.</p>
                 ) : (
-                  <div className="space-y-2 min-h-0">
-                    {testimoniItems
-                      .filter((item) => item.status === "approved")
-                      .filter((item) =>
-                        item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
-                      )
-                      .map((item) => (
-                        <div key={item.id_testi} className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
-                                  {item.initial}
+                  <>
+                    <div className="space-y-2 min-h-0 flex-1">
+                      {testimoniItems
+                        .filter((item) => item.status === "approved")
+                        .filter((item) =>
+                          item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .slice((testimoniApprovedCurrentPage - 1) * ITEMS_PER_PAGE, testimoniApprovedCurrentPage * ITEMS_PER_PAGE)
+                        .map((item) => (
+                          <div key={item.id_testi} className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pine)]/10 text-xs font-semibold text-[var(--pine)]">
+                                    {item.initial}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-slate-900">{item.author}</p>
+                                    <p className="text-xs text-slate-600">{item.latarbelakang}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-sm font-semibold text-slate-900">{item.author}</p>
-                                  <p className="text-xs text-slate-600">{item.latarbelakang}</p>
+                                <div className="mb-2 flex items-center gap-2">
+                                  <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                                    Disetujui
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">
+                                    {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
                                 </div>
+                                <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
                               </div>
-                              <div className="mb-2 flex items-center gap-2">
-                                <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                                  Disetujui
-                                </span>
-                                <span className="text-[10px] text-slate-500">
-                                  {new Date(item.created_at || Date.now()).toLocaleDateString("id-ID", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </span>
+                              <div className="flex flex-col gap-1 flex-shrink-0">
+                                <button
+                                  onClick={() => {
+                                    editTestimoni(item);
+                                    setShowTestimoniFormModal(true);
+                                  }}
+                                  className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTestimoni(item.id_testi);
+                                  }}
+                                  className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                                >
+                                  Hapus
+                                </button>
                               </div>
-                              <p className="text-xs text-slate-600 italic line-clamp-2">"{item.teks}"</p>
-                            </div>
-                            <div className="flex flex-col gap-1 flex-shrink-0">
-                              <button
-                                onClick={() => {
-                                  editTestimoni(item);
-                                  setShowTestimoniFormModal(true);
-                                }}
-                                className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-200"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteTestimoni(item.id_testi);
-                                }}
-                                className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
-                              >
-                                Hapus
-                              </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                  </div>
+                        ))}
+                    </div>
+                    <PaginationButtons
+                      currentPage={testimoniApprovedCurrentPage}
+                      totalItems={testimoniItems
+                        .filter((item) => item.status === "approved")
+                        .filter((item) =>
+                          item.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.teks.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.latarbelakang.toLowerCase().includes(searchQuery.toLowerCase())
+                        ).length}
+                      onPageChange={setTestimoniApprovedCurrentPage}
+                    />
+                  </>
                 )}
               </div>
             </section>
