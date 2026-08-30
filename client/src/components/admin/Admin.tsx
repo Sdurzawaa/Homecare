@@ -174,6 +174,7 @@ export default function Admin() {
     },
   ];
   const [showPreview, setShowPreview] = useState(true);
+  const [pricingSubTab, setPricingSubTab] = useState<"categories" | "pricing">("categories");
   const [successModal, setSuccessModal] = useState<{ title: string; message: string } | null>(null);
   const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
@@ -1923,77 +1924,74 @@ export default function Admin() {
 
           {/* Pricing Management - TAB 2 */}
           {adminTab === "pricing" && (
-          <section className="flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg xl:overflow-hidden xl:flex-1 xl:min-h-0">
-            <div className="p-4 border-b border-slate-200 flex-shrink-0">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold text-slate-900">Kelola Pricing</h2>
+          <div className="grid gap-3 grid-cols-1 xl:grid-cols-2 auto-rows-max xl:auto-rows-auto h-full">
+            {/* Categories Tab Panel */}
+            <section className={`flex flex-col bg-white border border-slate-200 rounded-lg min-h-0 ${pricingSubTab === "categories" ? "xl:col-span-2" : "hidden xl:flex"}`}>
+              <div className="p-4 border-b border-slate-200 flex-shrink-0 flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-slate-900">Kategori Layanan ({pricingCategoryItems.length})</h2>
                 <button
                   type="button"
                   onClick={() => {
-                    setEditId(null);
-                    setPricingForm(emptyPricingForm());
-                    setShowPricingFormModal(true);
+                    setEditPricingCategoryId(null);
+                    setPricingCategoryForm(emptyPricingCategoryForm());
+                    setShowPricingCategoryFormModal(true);
                   }}
-                  className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white hover:brightness-95"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 whitespace-nowrap"
                 >
-                  Tambah Pricing
+                  + Tambah Kategori
                 </button>
               </div>
-            </div>
-
-            <div className="hide-scrollbar overflow-y-auto p-4 xl:max-h-none xl:flex-1">
-              <div className="space-y-3 min-h-0">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <h3 className="font-medium text-slate-800">Kategori Layanan ({pricingCategoryItems.length})</h3>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditPricingCategoryId(null);
-                        setPricingCategoryForm(emptyPricingCategoryForm());
-                        setShowPricingCategoryFormModal(true);
-                      }}
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                    >
-                      + Tambah Kategori
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {pricingCategoryItems.length === 0 ? (
-                      <p className="text-xs text-slate-500">Belum ada kategori layanan.</p>
-                    ) : (
-                      pricingCategoryItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white p-2">
-                          <div>
-                            <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
-                            <p className="text-xs text-slate-600">{item.title}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => editPricingCategory(item)}
-                              className="rounded bg-blue-100 px-2 py-1 text-[10px] font-medium text-blue-600 hover:bg-blue-200"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deletePricingCategory(item.id)}
-                              className="rounded bg-red-100 px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-200"
-                            >
-                              Hapus
-                            </button>
-                          </div>
+              <div className="hide-scrollbar overflow-y-auto flex-1">
+                <div className="space-y-2 p-4">
+                  {pricingCategoryItems.length === 0 ? (
+                    <p className="text-xs text-slate-500">Belum ada kategori layanan.</p>
+                  ) : (
+                    pricingCategoryItems.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                        <div>
+                          <p className="text-xs font-bold uppercase text-[var(--pine)]">{item.category}</p>
+                          <p className="text-xs text-slate-600">{item.title}</p>
                         </div>
-                      ))
-                    )}
-                  </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => editPricingCategory(item)}
+                            className="rounded bg-blue-100 px-2 py-1 text-[10px] font-medium text-blue-600 hover:bg-blue-200"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deletePricingCategory(item.id)}
+                            className="rounded bg-red-100 px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-200"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
+              </div>
+            </section>
 
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-medium text-slate-800">Pricing List ({pricingItems.length})</h3>
+            {/* Pricing List Tab Panel */}
+            <section className={`flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg overflow-hidden ${pricingSubTab === "pricing" ? "xl:col-span-2" : "hidden xl:flex"}`}>
+              <div className="p-4 border-b border-slate-200 flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h2 className="text-base font-semibold text-slate-900">Pricing List ({pricingItems.length})</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditId(null);
+                      setPricingForm(emptyPricingForm());
+                      setShowPricingFormModal(true);
+                    }}
+                    className="rounded-lg bg-[var(--pine)] px-3 py-2 text-sm font-semibold text-white hover:brightness-95 whitespace-nowrap"
+                  >
+                    Tambah Pricing
+                  </button>
                 </div>
-
                 <div className="relative">
                   <input
                     type="text"
@@ -2006,11 +2004,13 @@ export default function Admin() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
+              </div>
 
+              <div className="hide-scrollbar overflow-y-auto flex-1 p-4">
                 {pricingItems.length === 0 ? (
                   <p className="text-sm text-slate-500">Belum ada pricing.</p>
                 ) : (
-                  <div className="max-h-[28rem] min-h-0 space-y-2 overflow-y-auto pr-1 xl:max-h-[40rem]">
+                  <div className="space-y-2 min-h-0">
                     {pricingItems
                       .filter((item) =>
                         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -2031,7 +2031,7 @@ export default function Admin() {
                               </p>
                               {item.recommended && <span className="inline-block text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-semibold">Recommended</span>}
                             </div>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 flex-shrink-0">
                               <button
                                 onClick={() => {
                                   setEditId(item.id);
@@ -2066,8 +2066,32 @@ export default function Admin() {
                   </div>
                 )}
               </div>
+            </section>
+
+            {/* Tab Navigation for Mobile */}
+            <div className="xl:hidden col-span-1 flex border border-slate-200 rounded-lg overflow-hidden bg-white">
+              <button
+                onClick={() => setPricingSubTab("categories")}
+                className={`flex-1 py-3 font-medium text-sm transition ${
+                  pricingSubTab === "categories"
+                    ? "border-b-2 border-[var(--pine)] text-[var(--pine)] bg-blue-50"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Kategori
+              </button>
+              <button
+                onClick={() => setPricingSubTab("pricing")}
+                className={`flex-1 py-3 font-medium text-sm transition ${
+                  pricingSubTab === "pricing"
+                    ? "border-b-2 border-[var(--pine)] text-[var(--pine)] bg-blue-50"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Pricing
+              </button>
             </div>
-          </section>
+          </div>
           )}
 
           {/* Testimoni Management - TAB 3 */}
