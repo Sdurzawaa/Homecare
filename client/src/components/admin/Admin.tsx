@@ -1924,9 +1924,9 @@ export default function Admin() {
 
           {/* Pricing Management - TAB 2 */}
           {adminTab === "pricing" && (
-          <div className="grid gap-3 grid-cols-1 xl:grid-cols-2 auto-rows-max xl:auto-rows-auto h-full">
+          <div className="grid gap-3 grid-cols-1 xl:grid-cols-2 auto-rows-max xl:auto-rows-auto h-full xl:h-auto">
             {/* Categories Tab Panel */}
-            <section className={`flex flex-col bg-white border border-slate-200 rounded-lg min-h-0 ${pricingSubTab === "categories" ? "xl:col-span-2" : "hidden xl:flex"}`}>
+            <section className="flex flex-col bg-white border border-slate-200 rounded-lg min-h-0 xl:min-h-[600px]">
               <div className="p-4 border-b border-slate-200 flex-shrink-0 flex items-center justify-between gap-3">
                 <h2 className="text-base font-semibold text-slate-900">Kategori Layanan ({pricingCategoryItems.length})</h2>
                 <button
@@ -1976,7 +1976,7 @@ export default function Admin() {
             </section>
 
             {/* Pricing List Tab Panel */}
-            <section className={`flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg overflow-hidden ${pricingSubTab === "pricing" ? "xl:col-span-2" : "hidden xl:flex"}`}>
+            <section className="flex min-h-0 flex-col bg-white border border-slate-200 rounded-lg overflow-hidden xl:min-h-[600px]">
               <div className="p-4 border-b border-slate-200 flex-shrink-0">
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <h2 className="text-base font-semibold text-slate-900">Pricing List ({pricingItems.length})</h2>
@@ -2067,30 +2067,6 @@ export default function Admin() {
                 )}
               </div>
             </section>
-
-            {/* Tab Navigation for Mobile */}
-            <div className="xl:hidden col-span-1 flex border border-slate-200 rounded-lg overflow-hidden bg-white">
-              <button
-                onClick={() => setPricingSubTab("categories")}
-                className={`flex-1 py-3 font-medium text-sm transition ${
-                  pricingSubTab === "categories"
-                    ? "border-b-2 border-[var(--pine)] text-[var(--pine)] bg-blue-50"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Kategori
-              </button>
-              <button
-                onClick={() => setPricingSubTab("pricing")}
-                className={`flex-1 py-3 font-medium text-sm transition ${
-                  pricingSubTab === "pricing"
-                    ? "border-b-2 border-[var(--pine)] text-[var(--pine)] bg-blue-50"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Pricing
-              </button>
-            </div>
           </div>
           )}
 
