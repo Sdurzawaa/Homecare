@@ -2,23 +2,22 @@
 
 import * as React from "react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { Navigation, Menu, X, ChevronDown, Home, Info, MessageSquareQuote, Phone } from "lucide-react";
+import { Navigation, Menu, X, ChevronDown, Info, MessageSquareQuote, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { name: "Beranda", href: "/", icon: Home },
-  { name: "Kenapa Kami", href: "#about", icon: Info },
-  { name: "Kontak", href: "#contact", icon: Phone },
+  { name: "Kenapa Kami", href: "/#about", icon: Info },
+  { name: "Kontak", href: "/#contact", icon: Phone },
 ];
 
 const DEFAULT_SERVICE_ITEMS = [
-  { name: "Perawatan Kehamilan", href: "#services" },
-  { name: "Persalinan", href: "#services" },
-  { name: "Perawatan Nifas", href: "#services" },
-  { name: "Perawatan Bayi Baru Lahir", href: "#services" },
-  { name: "Imunisasi", href: "#services" },
-  { name: "Keluarga Berencana", href: "#services" },
-  { name: "Kesehatan Reproduksi", href: "#services" },
+  { name: "Perawatan Kehamilan", href: "/#services" },
+  { name: "Persalinan", href: "/#services" },
+  { name: "Perawatan Nifas", href: "/#services" },
+  { name: "Perawatan Bayi Baru Lahir", href: "/#services" },
+  { name: "Imunisasi", href: "/#services" },
+  { name: "Keluarga Berencana", href: "/#services" },
+  { name: "Kesehatan Reproduksi", href: "/#services" },
 ];
 
 const COLLAPSE_SCROLL_THRESHOLD = 50;
@@ -319,7 +318,7 @@ export function AnimatedNavFramer() {
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setServiceItems(data.map((item) => ({ name: item.category, href: "#services" })));
+          setServiceItems(data.map((item) => ({ name: item.category, href: "/#services" })));
         } else {
           setServiceItems(DEFAULT_SERVICE_ITEMS);
         }
@@ -330,7 +329,8 @@ export function AnimatedNavFramer() {
   }, []);
 
   React.useEffect(() => {
-    const hashList = [...NAV_LINKS.map((link) => link.href), "#services"];
+    const hashList = [...NAV_LINKS.map((link) => link.href), "/#services"]
+      .map((href) => href.slice(href.indexOf("#")));
     const sections = hashList
       .filter((href) => href.startsWith("#"))
       .map((href) => document.querySelector(href));
@@ -438,7 +438,7 @@ export function AnimatedNavFramer() {
     window.dispatchEvent(
       new CustomEvent("select-service-category", { detail: item.name })
     );
-    setActiveHash(item.href);
+    setActiveHash(item.href.slice(item.href.indexOf("#")));
     closeAllMenus();
     setExpanded(false);
     setLockedOpen(false); // Hilangkan kunci saat navigasi link diklik
@@ -490,9 +490,9 @@ export function AnimatedNavFramer() {
             )}
           >
             <motion.a
-              href="#home"
+              href="/#home"
               variants={logoVariants}
-              onClick={(e) => handleLinkClick(e, "#home")}
+              onClick={(e) => handleLinkClick(e, "/#home")}
               className="flex flex-shrink-0 items-center gap-2 pl-4 pr-3 text-[var(--ink-soft)] transition-colors duration-200 hover:text-[var(--pine)]"
             >
               <img src="/Logo.svg" alt="Homecare" className="h-7 w-7" />
@@ -508,8 +508,8 @@ export function AnimatedNavFramer() {
                 !isExpanded && "pointer-events-none"
               )}
             >
-              {NAV_LINKS.filter((item) => item.href !== "#home").map((item) => {
-                const isActive = activeHash === item.href;
+              {NAV_LINKS.map((item) => {
+                const isActive = activeHash === item.href.slice(item.href.indexOf("#"));
                 return (
                   <motion.a
                     key={item.name}
@@ -610,8 +610,8 @@ export function AnimatedNavFramer() {
         style={{ transitionProperty: "transform, opacity, top, background-color, border-color, box-shadow" }}
       >
         <a
-          href="#home"
-          onClick={(e) => handleLinkClick(e, "#home")}
+          href="/#home"
+          onClick={(e) => handleLinkClick(e, "/#home")}
           className="flex items-center gap-2 text-[var(--pine-deep)]"
         >
           <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
@@ -646,8 +646,8 @@ export function AnimatedNavFramer() {
             {/* Header row inside fullscreen overlay (tetap fixed, gak ikut scroll) */}
             <div className="relative flex items-center justify-between border-b border-[var(--line)]/70 px-6 py-5 flex-shrink-0">
               <a
-                href="#home"
-                onClick={(e) => handleLinkClick(e, "#home")}
+                href="/#home"
+                onClick={(e) => handleLinkClick(e, "/#home")}
                 className="flex items-center gap-2 text-[var(--pine-deep)]"
               >
                 <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
@@ -687,7 +687,7 @@ export function AnimatedNavFramer() {
               <div className="flex flex-col gap-1">
                 {NAV_LINKS.map((item, i) => {
                   const ItemIcon = item.icon;
-                  const isActive = activeHash === item.href;
+                  const isActive = activeHash === item.href.slice(item.href.indexOf("#"));
                   return (
                     <motion.div
                       key={item.name}

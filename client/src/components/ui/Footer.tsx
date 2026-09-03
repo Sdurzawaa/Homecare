@@ -133,19 +133,19 @@ function Footer({
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem]">
               <a
-                href="#about"
+                href="/#about"
                 className="w-fit text-white/70 no-underline transition-colors hover:text-white"
               >
                 Tentang Kami
               </a>
               <a
-                href="#"
+                href="/#"
                 className="w-fit text-white/70 no-underline transition-colors hover:text-white"
               >
                 Karir
               </a>
               <a
-                href="#services"
+                href="/#services"
                 className="w-fit text-white/70 no-underline transition-colors hover:text-white"
               >
                 Layanan Utama

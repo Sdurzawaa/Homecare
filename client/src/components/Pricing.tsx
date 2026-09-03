@@ -354,8 +354,8 @@ const TreatmentCard = memo(function TreatmentCard({
 });
 
 function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
-  const [treatments, setTreatments] = useState<Treatment[]>(DEFAULT_TREATMENTS);
-  const [loading, setLoading] = useState(false);
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -439,7 +439,7 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
   }, [tabsEl]);
 
   const fetchPricing = async (signal: AbortSignal) => {
-    setLoading(treatments.length === 0);
+    setLoading(true);
     setError(null);
     try {
       let url = `${API_URL}/api/public/pricing`;
@@ -798,7 +798,14 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
       )}
 
       {loading && (
-        <div className="grid grid-cols-1 gap-[1.6rem] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="relative grid grid-cols-1 gap-[1.6rem] sm:grid-cols-2 lg:grid-cols-4">
+          <div className="absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 justify-center">
+            <div
+              className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--line)] border-t-[var(--pine)] bg-white/80"
+              role="status"
+              aria-label="Memuat layanan"
+            />
+          </div>
           {Array.from({ length: 8 }).map((_, i) => (
             <CardSkeleton key={i} />
           ))}
