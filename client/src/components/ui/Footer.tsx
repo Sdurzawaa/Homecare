@@ -56,7 +56,7 @@ function Footer({
           {/* Brand */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f4dde5] ring-1 ring-[#e8c3cb]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f8d4dc] ring-1 ring-[#ef8fa1]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
                 <img
                   src="/Logo.svg"
                   alt={content?.brand || "Homecare"}

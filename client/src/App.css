@@ -1,21 +1,21 @@
 :root {
-  --bg: #f4dde5;
-  --bg-alt: #ead7e8;
-  --ink: #2D2A26;
-  --ink-soft: #61515d;
-  --primary: #b9789f;
-  --secondary: #8b7dbd;
-  --accent: #cfd8f5;
-  --accent-2: #f0c9d8;
-  --accent-3: #e2d6ec;
+  --bg: #fff8f5;
+  --bg-alt: #fff0f4;
+  --ink: #3d242b;
+  --ink-soft: #5f454b;
+  --primary: #5e2638;
+  --secondary: #a8b8ef;
+  --accent: #ef8fa1;
+  --accent-2: #f8d4dc;
+  --accent-3: #d6defc;
   --card: #ffffff;
-  --line: #d9c7d2;
+  --line: #eedcc6;
 
   /* compatibility aliases weor the rest of thew UI w*/
   --pine: var(--primary);
-  --pine-deep: #714a66;
+  --pine-deep: #451b29;
   --honey: var(--accent);
-  --honey-deep: #9aa8de;
+  --honey-deep: #d26f83;
 
   --font-heading: 'Lora', Georgia, serif;
   --font-body: 'Figtree', ui-sans-serif, system-ui, sans-serif;

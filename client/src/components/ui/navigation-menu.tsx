@@ -495,7 +495,9 @@ export function AnimatedNavFramer() {
               onClick={(e) => handleLinkClick(e, "/#home")}
               className="flex flex-shrink-0 items-center gap-2 pl-4 pr-3 text-[var(--ink-soft)] transition-colors duration-200 hover:text-[var(--pine)]"
             >
-              <img src="/Logo.svg" alt="Homecare" className="h-7 w-7" />
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#f8d4dc] ring-1 ring-[#ef8fa1]/70">
+                <img src="/Logo.svg" alt="Homecare" className="h-6 w-6 object-contain" />
+              </span>
               <span className="text-sm font-semibold">Homecare</span>
             </motion.a>
 
@@ -614,7 +616,9 @@ export function AnimatedNavFramer() {
           onClick={(e) => handleLinkClick(e, "/#home")}
           className="flex items-center gap-2 text-[var(--pine-deep)]"
         >
-          <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#f8d4dc] ring-1 ring-[#ef8fa1]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+            <img src="/Logo.svg" alt="Homecare" className="h-7 w-7 object-contain drop-shadow-sm" />
+          </span>
           <span className="text-sm font-bold tracking-wide">Homecare</span>
         </a>
 
@@ -650,7 +654,9 @@ export function AnimatedNavFramer() {
                 onClick={(e) => handleLinkClick(e, "/#home")}
                 className="flex items-center gap-2 text-[var(--pine-deep)]"
               >
-                <img src="/Logo.svg" alt="Homecare" className="h-8 w-8 object-contain drop-shadow-sm" />
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#f8d4dc] ring-1 ring-[#ef8fa1]/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+                  <img src="/Logo.svg" alt="Homecare" className="h-7 w-7 object-contain drop-shadow-sm" />
+                </span>
                 <span className="text-sm font-bold tracking-wider uppercase text-[var(--pine-deep)]">Homecare</span>
               </a>
 

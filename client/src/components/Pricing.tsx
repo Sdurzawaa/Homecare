@@ -393,21 +393,17 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
       event.stopPropagation();
 
       const delta = event.deltaX !== 0 ? event.deltaX : event.deltaY;
-      
       targetScrollLeft = Math.max(
         0,
-        Math.min(
-          tabsEl.scrollWidth - tabsEl.clientWidth,
-          targetScrollLeft + delta
-        )
+        Math.min(tabsEl.scrollWidth - tabsEl.clientWidth, targetScrollLeft + delta),
       );
 
       const animate = () => {
         const current = tabsEl.scrollLeft;
         const diff = targetScrollLeft - current;
-        
+
         if (Math.abs(diff) > 0.5) {
-          tabsEl.scrollLeft += diff * 0.15; // smooth lerp speed
+          tabsEl.scrollLeft += diff * 0.15;
           animationFrameId = requestAnimationFrame(animate);
         } else {
           tabsEl.scrollLeft = targetScrollLeft;
@@ -594,7 +590,7 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [cardsPerPage, selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
@@ -621,15 +617,9 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
     [currentPage, totalPages],
   );
 
-  const activeInfo =
-    selectedCategory === "Semua"
-      ? undefined
-      : categoryMap.get(selectedCategory as string) ??
-        categoryInfo[selectedCategory as ServiceCategory];
-
   const paginationControls = totalPages > 1 && (
     <nav
-      className="mt-6 flex flex-wrap items-center justify-center gap-2"
+      className="mt-10 flex flex-wrap items-center justify-center gap-2"
       aria-label="Navigasi halaman layanan"
     >
       <button
@@ -676,14 +666,14 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
       id="services"
       ref={pricingRef}
     >
-      <div className="mb-12 max-w-3xl">
-        <span className="mb-4 inline-block text-[0.75rem] font-bold uppercase tracking-[0.15em] text-[var(--pine)]">
+      <div className="mx-auto mb-10 max-w-3xl text-center">
+        <span className="mb-3 inline-block text-[0.75rem] font-bold uppercase tracking-[0.15em] text-[var(--accent)]">
           Layanan &amp; Tarif
         </span>
-        <h3 className="m-0 mb-4 font-[family-name:var(--font-heading)] text-[clamp(1.9rem,3.6vw,3rem)] font-semibold leading-tight text-[var(--pine-deep)]">
+        <h3 className="m-0 mb-3 font-[family-name:var(--font-heading)] text-[clamp(1.9rem,3.6vw,3rem)] font-semibold leading-tight text-[var(--pine-deep)]">
           Pilihan Perawatan Terbaik Untuk Ibu &amp; Buah Hati
         </h3>
-        <p className="m-0 text-[1.05rem] leading-relaxed font-[family-name:var(--font-body)] text-[var(--ink-soft)]">
+        <p className="mx-auto m-0 max-w-2xl text-[0.95rem] leading-relaxed font-[family-name:var(--font-body)] text-[var(--ink-soft)]">
           Perawatan individual yang dirancang khusus untuk kenyamanan dan
           pemulihan, memberikan relaksasi maksimal untuk Anda dan buah hati.
           Setiap layanan ditangani langsung oleh bidan berpengalaman dengan
@@ -709,7 +699,7 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
 
       {!error && (
         <div className="mb-12">
-          <div className="mb-8 p-1.5 bg-[var(--pine)]/[0.03] border border-[var(--line)]/50 rounded-2xl">
+          <div className="mb-6 rounded-2xl border border-[var(--line)]/70 bg-white/45 p-1.5">
             <div
               ref={setTabsEl}
               className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -722,12 +712,12 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
                     type="button"
                     data-category={category}
                     onClick={() => setSelectedCategory(category)}
-                    className="relative min-w-max flex-shrink-0 px-5 py-2 text-sm font-semibold transition-colors duration-200 rounded-xl cursor-pointer"
+                    className="relative min-w-max flex-shrink-0 cursor-pointer rounded-full px-4 py-2 text-xs font-semibold transition-colors duration-200 sm:px-5"
                   >
                     {isActive && (
                       <motion.span
                         layoutId="active-pricing-tab"
-                        className="absolute inset-0 bg-[var(--pine)] rounded-xl shadow-md shadow-[var(--pine)]/15"
+                        className="absolute inset-0 rounded-full bg-[var(--pine)] shadow-md shadow-[var(--pine)]/15"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -744,18 +734,8 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="max-w-xl">
-              <h2 className="m-0 mb-2 font-[family-name:var(--font-heading)] text-[1.6rem] font-semibold text-[var(--pine-deep)] sm:text-[1.95rem]">
-                {activeInfo?.title || selectedCategory}
-              </h2>
-              <p className="m-0 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
-                {activeInfo?.description ||
-                  "Pilih kategori untuk melihat layanan yang tersedia."}
-              </p>
-            </div>
-
-            <div className="relative w-full sm:w-72 sm:flex-shrink-0">
+          <div className="mx-auto max-w-md">
+            <div className="relative w-full">
               <span className="pointer-events-none absolute left-4 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center text-[var(--ink-soft)]">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
                   <circle cx="11" cy="11" r="8" />
@@ -793,7 +773,6 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
               {searchQuery ? ` untuk "${searchQuery}"` : ""}.
             </p>
           )}
-          {paginationControls}
         </div>
       )}
 
@@ -835,6 +814,7 @@ function Pricing({ pricingRef, defaultWhatsAppLink }: PricingProps) {
             />
           ))}
           </div>
+          {paginationControls}
         </>
       )}
 
