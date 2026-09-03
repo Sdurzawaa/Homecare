@@ -1,3 +1,19 @@
+import { useEffect, useState } from "react";
+import Modal from "../Modal";
+import { optimizeCloudinaryUrl } from "../../lib/image";
+
+interface RecommendedService {
+  id: number | string;
+  category: string;
+  title: string;
+  description: string;
+  image: string;
+  duration: number;
+  price: number;
+  recommended?: boolean;
+  benefits?: string[];
+}
+
 function formatPhoneDisplay(phone?: string) {
   const raw = (phone || "+62 812-8986-1639").replace(/\s+/g, "");
   const digits = raw.replace(/\D/g, "");
@@ -42,12 +58,43 @@ function normalizeWhatsAppLink(value?: string, fallback = "https://wa.me/6285892
   return `https://wa.me/62${digits}`;
 }
 
+function formatDuration(minutes: number) {
+  if (minutes >= 1440) return `${Math.floor(minutes / 1440)} hari`;
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return rest > 0 ? `${hours} jam ${rest} menit` : `${hours} jam`;
+  }
+  return `${minutes} menit`;
+}
+
 function Footer({
   content,
 }: {
   content?: { brand?: string; description?: string; phone?: string; email?: string; address?: string; button_link?: string };
 }) {
   const waHref = content?.button_link || normalizeWhatsAppLink(content?.phone, "https://wa.me/6285892006905");
+  const [recommendedServices, setRecommendedServices] = useState<RecommendedService[]>([]);
+  const [selectedService, setSelectedService] = useState<RecommendedService | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/public/pricing", { cache: "no-store", signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+        setRecommendedServices(
+          data.filter((item) => item?.recommended === true).slice(0, 4),
+        );
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setRecommendedServices([]);
+      });
+
+    return () => controller.abort();
+  }, []);
 
   return (
     <footer className="w-full bg-[var(--pine-deep,#1c3a30)] px-5 pb-6 pt-10 sm:px-6 md:px-8 lg:px-12">
@@ -126,30 +173,25 @@ function Footer({
             </div>
           </div>
 
-          {/* Tautan Cepat */}
+          {/* Layanan populer */}
           <div className="flex flex-col gap-3">
             <h4 className="m-0 text-[0.85rem] font-semibold uppercase tracking-wide text-white/40">
-              Tautan Cepat
+              Layanan Populer
             </h4>
             <div className="flex flex-col gap-2.5 text-[0.9rem]">
-              <a
-                href="/#about"
-                className="w-fit text-white/70 no-underline transition-colors hover:text-white"
-              >
-                Tentang Kami
-              </a>
-              <a
-                href="/#"
-                className="w-fit text-white/70 no-underline transition-colors hover:text-white"
-              >
-                Karir
-              </a>
-              <a
-                href="/#services"
-                className="w-fit text-white/70 no-underline transition-colors hover:text-white"
-              >
-                Layanan Utama
-              </a>
+              {recommendedServices.map((service) => (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => setSelectedService(service)}
+                  className="w-fit max-w-full truncate bg-transparent p-0 text-left text-white/70 transition-colors hover:text-white"
+                >
+                  {service.title}
+                </button>
+              ))}
+              {recommendedServices.length === 0 && (
+                <span className="text-white/45">Belum ada layanan rekomendasi.</span>
+              )}
             </div>
           </div>
 
@@ -197,6 +239,54 @@ function Footer({
           </p>
         </div>
       </div>
+
+      <Modal
+        isOpen={!!selectedService}
+        onClose={() => setSelectedService(null)}
+        title={selectedService?.title || null}
+      >
+        {selectedService && (
+          <div className="flex flex-col md:flex-row">
+            <div className="relative min-h-[220px] overflow-hidden bg-[var(--bg-alt)] md:w-5/12">
+              <img
+                src={optimizeCloudinaryUrl(selectedService.image, 800)}
+                alt={selectedService.title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            </div>
+            <div className="flex flex-1 flex-col p-6 sm:p-8">
+              <span className="mb-2 text-[0.7rem] font-bold uppercase tracking-widest text-[var(--pine)]">
+                {selectedService.category}
+              </span>
+              <h3 className="m-0 font-[family-name:var(--font-heading)] text-2xl font-semibold text-[var(--pine-deep)]">
+                {selectedService.title}
+              </h3>
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--ink-soft)]">
+                <span>{formatDuration(selectedService.duration)}</span>
+                <span>Rp{selectedService.price.toLocaleString("id-ID")}</span>
+              </div>
+              <p className="mt-5 text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
+                {selectedService.description}
+              </p>
+              {selectedService.benefits?.length ? (
+                <ul className="mt-2 space-y-2 pl-5 text-sm text-[var(--ink-soft)]">
+                  {selectedService.benefits.map((benefit) => (
+                    <li key={benefit}>{benefit}</li>
+                  ))}
+                </ul>
+              ) : null}
+              <a
+                href={`${waHref}${waHref.includes("?") ? "&" : "?"}text=${encodeURIComponent(`Halo, saya tertarik dengan layanan ${selectedService.title}.`)}`}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="mt-6 inline-flex w-fit rounded-full bg-[var(--pine)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--pine-deep)]"
+              >
+                Pesan Layanan
+              </a>
+            </div>
+          </div>
+        )}
+      </Modal>
     </footer>
   );
 }
